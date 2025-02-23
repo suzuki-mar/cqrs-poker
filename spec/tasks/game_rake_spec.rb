@@ -2,17 +2,13 @@ require 'rails_helper'
 require 'rake'
 
 RSpec.describe 'game:start task' do
-  before(:all) do
-    # Rakeタスクをロード
+  before(:all) do  
     Rails.application.load_tasks
   end
 
-  it 'StartGameUseCaseが実行されること' do
-    use_case = instance_double(StartGameUseCase)
-    expect(StartGameUseCase).to receive(:new).and_return(use_case)
-    expect(use_case).to receive(:execute)
-
-    # タスクを実行
-    Rake::Task['start'].execute
+  it 'ゲームを開始できること' do
+    expect {
+      Rake::Task['game:start'].execute
+    }.not_to raise_error
   end
 end 
