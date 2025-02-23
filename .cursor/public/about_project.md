@@ -75,63 +75,35 @@ Rank ├── name: string (定数)  # "PAIR", "STRAIGHT", "FLUSH" など ├�
 
 ## 4. テーブル設計
 
-EventStore（イベントストア）
 
-カラム名
+### EventStore（イベントストア）
 
-型
+| カラム名 | 型 | 説明 |
+|----------|-------|------|
+| id | BIGSERIAL | 主キー、自動採番 |
+| event_type | TEXT | イベントの種類 (GameStarted, CardExchanged, GameEnded など) |
+| event_data | JSONB | イベントの詳細データ |
+| occurred_at | TIMESTAMP | イベントが発生した時間 |
 
-説明
-
-id
-
-BIGSERIAL
-
-主キー、自動採番
-
-event_type
-
-TEXT
-
-イベントの種類 (GameStarted, CardExchanged, GameEnded など)
-
-event_data
-
-JSONB
-
-イベントの詳細データ
-
-occurred_at
-
-TIMESTAMP
-
-イベントが発生した時間
-
-GameState（リードモデル）
+### GameState（リードモデル）
 
 GameState には id を設けていない。これは GameState がリードモデルであり、過去の状態を保持する必要がないためである。リードモデルは常に最新の情報を反映するため、プライマリキーとしての id を持たなくても一意にデータを管理できる。
 
 ポーカーは手札が5枚というのが大前提なため、hand_1 〜 hand_5 のカラムの方が良い。
 
-📌 そのメリット
+📌 そのメリット：
 
-データの一貫性を保証できる
+1. データの一貫性を保証できる
+   - 5枚の手札を必ず持つというルールをDBレベルで保証できる
+   - NULL や可変長リストの管理を考える必要がなくなる
 
-5枚の手札を必ず持つというルールをDBレベルで保証できる。
+2. SQL のクエリがシンプルになる
+   - SELECT hand_1, hand_2, hand_3, hand_4, hand_5 FROM GameState で直接手札を取得できる
+   - JSONB だと配列をパースする必要があるが、個別カラムならクエリだけで処理できる
 
-NULL や可変長リストの管理を考える必要がなくなる。
-
-SQL のクエリがシンプルになる
-
-SELECT hand_1, hand_2, hand_3, hand_4, hand_5 FROM GameState で直接手札を取得できる。
-
-JSONB だと配列をパースする必要があるが、個別カラムならクエリだけで処理できる。
-
-パフォーマンスの向上
-
-JSONB よりもカラムアクセスのほうが一般的に高速。
-
-インデックスを活用しやすく、データアクセスの最適化が可能。
+3. パフォーマンスの向上
+   - JSONB よりもカラムアクセスのほうが一般的に高速
+   - インデックスを活用しやすく、データアクセスの最適化が可能
 
 ## 5. ターミナルの表示形式
 
