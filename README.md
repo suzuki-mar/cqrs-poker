@@ -1,24 +1,11 @@
-# README
+# CQRS Poker
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+ポーカーゲームを例に、CQRSパターンの実装方法を学ぶプロジェクトです。シンプルなドメインで、コマンドとクエリの分離やイベントソーシングの本質を理解します。
 
-Things you may want to cover:
+## プロジェクトの目的
 
-* Ruby version
+このプロジェクトでは、以下の実装に焦点を当てています：
 
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+- イベントソーシングを使った状態管理の実装
+- コマンドとクエリの明確な責務の分離
+- シンプルなドメインでのCQRSパターンの適用
