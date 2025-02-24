@@ -13,4 +13,7 @@ class Card
     VALID_SUITS.include?(@suit) && VALID_RANKS.include?(@rank)
   end
 
+  def to_s
+    "#{@suit}#{@rank}"
+  end
 end 

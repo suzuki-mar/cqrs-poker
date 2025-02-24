@@ -18,8 +18,7 @@ module Faker
       end
 
       def valid_card
-        card = ::Card.new(card_str)
-        card.valid? ? card : valid_card
+        ::Card.new(card_str)  # シンプルに
       end
 
       def invalid_card
