@@ -2,81 +2,31 @@ require 'rails_helper'
 
 RSpec.describe GameState, type: :model do
   shared_examples '手札のバリデーション' do |hand_number|
-    it { should validate_presence_of(:"hand_#{hand_number}") }
+    describe "hand_#{hand_number}" do
+      let(:card_value) { nil }
+      subject { build(:game_state, "hand_#{hand_number}": card_value) }
+
+      it { should validate_presence_of(:"hand_#{hand_number}") }
+
+      context '正常な値の場合' do
+        let(:card_value) { Faker::Card.valid_card.to_s }
+        it { should be_valid }
+      end
+
+      context '不正な値の場合' do
+        let(:card_value) { '@1' }
+        it { should be_invalid }
+      end
+    end
   end
 
   describe 'バリデーション' do
     describe '手札' do
-      describe 'hand_1' do
-        include_examples '手札のバリデーション', 1
-
-        describe 'フォーマット' do
-          subject { build(:game_state, hand_1: card_value) }
-
-          context '正常なフォーマット' do
-            context 'スートがあっている場合' do
-              let!(:suit) { '♠' }
-                
-              context '数字が仕様をみたしている場合' do
-                context '2-10の場合' do
-                  %w[2 3 4 5 6 7 8 9 10].each do |number|
-                    let(:card_value) { "#{suit}#{number}" }
-                    it { should be_valid }
-                  end
-                end
-
-                context '数字がA,J,Q,Kの場合' do
-                  %w[A J Q K].each do |face|
-                    let(:card_value) { "#{suit}#{face}" }
-                    it { should be_valid }
-                  end
-                end
-              end
-
-              context '数字が仕様をみたしていない場合' do
-                context '1は不正な値' do
-                  let(:card_value) { "#{suit}1" }
-                  it { should be_invalid }
-                end
-
-                context '11は不正な値' do
-                  let(:card_value) { "#{suit}11" }
-                  it { should be_invalid }
-                end
-
-                context '指定したアルファベットではない場合' do
-                  let(:card_value) { "#{suit}x" }
-                  it { should be_invalid }
-                end
-              end
-            end
-
-            context 'スートが間違っている場合' do
-              context 'トランプのスート以外の文字の場合' do
-                let(:card_value) { '@A' }  # 明らかに不正なスート
-                it { should be_invalid }
-              end
-              
-            end
-          end # 正常なフォーマット
-        end # フォーマット
-      end
-
-      # describe 'hand_2' do
-      #   include_examples '手札のバリデーション', 2
-      # end
-
-      # describe 'hand_3' do
-      #   include_examples '手札のバリデーション', 3
-      # end
-
-      # describe 'hand_4' do
-      #   include_examples '手札のバリデーション', 4
-      # end
-
-      # describe 'hand_5' do
-      #   include_examples '手札のバリデーション', 5
-      # end
+      it_behaves_like '手札のバリデーション', 1
+      it_behaves_like '手札のバリデーション', 2
+      it_behaves_like '手札のバリデーション', 3
+      it_behaves_like '手札のバリデーション', 4
+      it_behaves_like '手札のバリデーション', 5
     end
 
     describe 'current_rank' do
