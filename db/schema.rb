@@ -10,17 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_02_21_091142) do
+ActiveRecord::Schema[8.0].define(version: 2025_02_24_064113) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "event_stores", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "event_type", null: false
+    t.jsonb "event_data", null: false
+    t.datetime "occurred_at", null: false
   end
 
   create_table "game_states", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "hand_1", null: false
+    t.string "hand_2", null: false
+    t.string "hand_3", null: false
+    t.string "hand_4", null: false
+    t.string "hand_5", null: false
+    t.string "current_rank", null: false
+    t.integer "current_turn", null: false
   end
 end
