@@ -25,14 +25,23 @@ module Hand
     ].freeze
   end
 
-  class Evaluator
+  class Hand
     def initialize(cards)
       @cards = cards
     end
 
+    def valid?
+      return false unless @cards.is_a?(Array)
+      return false unless @cards.length == 5
+      
+      @cards.all? do |card|
+        card.is_a?(Card) && card.valid?
+      end
+    end
+
     def evaluate
-      # TODO: 役の評価ロジックを実装
-      Rank::HIGH_CARD
+      raise ArgumentError, '手札が不正です' unless valid?
+      Evaluate.call(@cards)
     end
   end
 end 
