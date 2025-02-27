@@ -60,3 +60,6 @@ capybara-*.html
 /yarn-error.log
 yarn-debug.log*
 .yarn-integrity
+
+# AIのキャラクラー設定をしているのでプロジェクトとは関係ないためGitではあつかわない
+.cursor/rules/ai-assistant.md
