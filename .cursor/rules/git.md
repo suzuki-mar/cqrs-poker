@@ -1,3 +1,7 @@
+---
+description: 
+globs: 
+---
 # Git Rules
 
 ## コミットの方針

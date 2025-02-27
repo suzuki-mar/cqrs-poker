@@ -1,3 +1,7 @@
+---
+description: 
+globs: 
+---
 # CQRS Poker
 
 ## 1. このプロジェクトの目的

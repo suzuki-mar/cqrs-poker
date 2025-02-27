@@ -1,3 +1,7 @@
+---
+description: 
+globs: 
+---
 # TDD Approach
 
 ## 基本方針
