@@ -12,36 +12,40 @@ module Hand
     ROYAL_FLUSH = 'ROYAL_FLUSH'
 
     ALL = [
-      HIGH_CARD,      # ハイカード
-      ONE_PAIR,       # ワンペア
-      TWO_PAIR,       # ツーペア
-      THREE_OF_A_KIND, # スリーカード
-      STRAIGHT,       # ストレート
-      FLUSH,          # フラッシュ
-      FULL_HOUSE,     # フルハウス
-      FOUR_OF_A_KIND, # フォーカード
-      STRAIGHT_FLUSH, # ストレートフラッシュ
-      ROYAL_FLUSH     # ロイヤルストレートフラッシュ
+      HIGH_CARD,      
+      ONE_PAIR,      
+      TWO_PAIR,      
+      THREE_OF_A_KIND,
+      STRAIGHT,       
+      FLUSH,          
+      FULL_HOUSE,     
+      FOUR_OF_A_KIND,
+      STRAIGHT_FLUSH, 
     ].freeze
   end
 
   class Hand
+    attr_reader :cards
+
     def initialize(cards)
       @cards = cards
     end
 
-    def valid?
-      return false unless @cards.is_a?(Array)
-      return false unless @cards.length == 5
-      
-      @cards.all? do |card|
-        card.is_a?(Card) && card.valid?
-      end
+    def redraw(discard_cards, new_cards)
+      remaining_cards = @cards - discard_cards
+      new_hand_cards = remaining_cards + new_cards
+      self.class.new(new_hand_cards)
     end
 
     def evaluate
       raise ArgumentError, '手札が不正です' unless valid?
       Evaluate.call(@cards)
+    end
+
+    def valid?
+      return false unless @cards.is_a?(Array)
+      return false unless @cards.size == 5
+      @cards.all?(&:valid?)
     end
   end
 end 
