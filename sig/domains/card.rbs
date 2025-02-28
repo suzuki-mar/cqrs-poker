@@ -1,0 +1,19 @@
+class Card
+  @suit: untyped
+
+  @rank: untyped
+
+  VALID_SUITS: ::Array[::String]
+
+  VALID_RANKS: ::Array["A" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "J" | "Q" | "K"]
+
+  attr_reader suit: untyped
+
+  attr_reader rank: untyped
+
+  def initialize: (untyped card_str) -> void
+
+  def valid?: () -> untyped
+
+  def to_s: () -> ::String
+end

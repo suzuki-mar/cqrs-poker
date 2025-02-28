@@ -1,0 +1,9 @@
+# GameStateからバリデーションを分離している理由：
+# GameStateには複数の手札カラム（hand_1〜hand_5）があり、
+# 各カラムに同じバリデーションロジックが必要。
+# バリデータとして分離することで：
+# - 重複したバリデーションコードを避ける
+# - GameStateのコードをシンプルに保つ
+class HandValidator < ActiveModel::EachValidator
+  def validate_each: (untyped record, untyped attribute, untyped value) -> (nil | untyped)
+end

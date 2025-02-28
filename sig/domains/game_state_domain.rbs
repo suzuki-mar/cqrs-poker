@@ -1,0 +1,15 @@
+class GameStateDomain
+  @record: untyped
+
+  def initialize: (untyped record) -> void
+
+  def save_current_state: () -> untyped
+
+  def player_hand: (untyped player_id) -> (nil | untyped)
+
+  def current_player_id: () -> untyped
+
+  def can_exchange_cards?: () -> untyped
+
+  def deck: () -> nil
+end

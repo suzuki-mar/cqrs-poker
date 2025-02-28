@@ -1,0 +1,7 @@
+class EventStore
+  # イベントを発行する
+  def self.publish: (untyped event) -> untyped
+
+  # イベントを永続化する（例：データベースに保存）
+  def self.persist_event: (untyped event) -> untyped
+end

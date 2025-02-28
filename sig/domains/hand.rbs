@@ -1,0 +1,43 @@
+module Hand
+  module Rank
+    HIGH_CARD: "HIGH_CARD"
+
+    ONE_PAIR: "ONE_PAIR"
+
+    TWO_PAIR: "TWO_PAIR"
+
+    THREE_OF_A_KIND: "THREE_OF_A_KIND"
+
+    STRAIGHT: "STRAIGHT"
+
+    FLUSH: "FLUSH"
+
+    FULL_HOUSE: "FULL_HOUSE"
+
+    FOUR_OF_A_KIND: "FOUR_OF_A_KIND"
+
+    STRAIGHT_FLUSH: "STRAIGHT_FLUSH"
+
+    ROYAL_FLUSH: "ROYAL_FLUSH"
+
+    ALL: ::Array[untyped]
+  end
+
+  class Hand
+    @cards: untyped
+
+    attr_reader cards: untyped
+
+    # @rbs cards: Array[Card]
+    def initialize: (untyped cards) -> void
+
+    # @rbs (Array[Card], Array[Card]) -> Hand
+    def redraw: (untyped discard_cards, untyped new_cards) -> untyped
+
+    # @rbs () -> Rank
+    def evaluate: () -> untyped
+
+    # @rbs () -> bool
+    def valid?: () -> (false | untyped)
+  end
+end

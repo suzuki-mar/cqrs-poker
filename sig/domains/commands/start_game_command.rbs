@@ -1,0 +1,5 @@
+module Commands
+  class StartGameCommand
+    def execute: () -> nil
+  end
+end

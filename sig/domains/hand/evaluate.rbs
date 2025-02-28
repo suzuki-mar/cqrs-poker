@@ -1,0 +1,49 @@
+module Hand
+  class Evaluate
+    @cards: untyped
+
+    def self.call: (untyped cards) -> untyped
+
+    def call: (untyped cards) -> untyped
+
+    private
+
+    def one_pair?: () -> untyped
+
+    def two_pair?: () -> untyped
+
+    def three_of_a_kind?: () -> untyped
+
+    def four_of_a_kind?: () -> untyped
+
+    def full_house?: () -> untyped
+
+    def flush?: () -> untyped
+
+    def straight?: () -> untyped
+
+    def straight_flush?: () -> untyped
+
+    def suits: () -> untyped
+
+    def rank_combinations: () -> untyped
+
+    def rank_counts: () -> untyped
+
+    def ranks: () -> untyped
+
+    class RankCombinations
+      @groups: untyped
+
+      def initialize: (untyped rank_counts) -> void
+
+      def pair_count: () -> untyped
+
+      def three_of_a_kind?: () -> untyped
+
+      def four_of_a_kind?: () -> untyped
+
+      def full_house?: () -> untyped
+    end
+  end
+end
