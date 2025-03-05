@@ -61,6 +61,10 @@ module Faker
         ])
       end
 
+      def from_cards(cards)
+        create_hand(cards)
+      end
+
       private
 
       def create_hand(cards)

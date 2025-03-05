@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe EventStoreDomain do
   describe '#append' do
-    let(:initial_hand) { Deck.instance.generate_hand }
+    let(:initial_hand) { Deck.instance.generate_hand_set }
     let(:event) { GameStartedEvent.new(initial_hand) }
     let(:event_store_domain) { EventStoreDomain.new }
 

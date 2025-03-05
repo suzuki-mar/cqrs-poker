@@ -7,7 +7,7 @@ RSpec.describe GameStartCommand do
 
     it 'ゲーム開始イベントを作成して返すこと' do
       fixed_hand = Faker.high_card_hand
-      allow(Deck.instance).to receive(:generate_hand).and_return(fixed_hand)
+      allow(Deck.instance).to receive(:generate_hand_set).and_return(fixed_hand)
 
       result = command.execute
 

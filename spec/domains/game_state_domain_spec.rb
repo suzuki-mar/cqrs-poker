@@ -1,5 +1,4 @@
 require 'rails_helper'
-require_relative '../../app/domains/card'  # Cardクラスを読み込む
 
 RSpec.describe GameStateDomain do
   describe '#start_game' do
@@ -11,9 +10,9 @@ RSpec.describe GameStateDomain do
 
       game_state = GameState.first
 
-      expect(game_state.hand_cards).to eq(initial_hand.cards.map(&:to_s))
-      expect(game_state.current_rank).to eq(initial_hand.evaluate)
       expect(game_state.current_turn).to eq(1)
+      expect(game_state.current_rank).to eq(initial_hand.evaluate)
+      expect(game_state.hand_cards).to eq(initial_hand.cards.map(&:to_s))
     end
   end
 end

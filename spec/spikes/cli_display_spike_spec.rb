@@ -1,10 +1,19 @@
 require 'rails_helper'
 require 'tty-prompt'
 require 'pastel'
+require 'stringio'
 
 RSpec.describe 'CLIの表示のスパイクテスト' do
   let(:prompt) { TTY::Prompt.new }
   let(:pastel) { Pastel.new }
+  let(:output) { StringIO.new }
+
+  around do |example|
+    original_stdout = $stdout
+    $stdout = output
+    example.run
+    $stdout = original_stdout
+  end
 
   it 'ゲーム開始時の表示と入力を確認する' do
     display_text = <<~TEXT
@@ -18,28 +27,30 @@ RSpec.describe 'CLIの表示のスパイクテスト' do
 
     puts display_text
 
-    # 実際に選択できるようにコメントアウトを外す
+    expect(output.string).to include('ポーカーゲーム開始')
+
+    # テスト用に入力をシミュレートする
+    allow(prompt).to receive(:select).and_return(1)
+
     selected = prompt.select('コマンドを選択してください:', [
       { name: '交換する', value: 1 },
       { name: 'ゲーム終了', value: 2 }
     ])
 
-    puts "選択されたコマンド: #{selected}"
+    expect(selected).to eq(1)
 
-    # 交換する場合は、どのカードを交換するか選択
-    if selected == 1
-      card = prompt.select('交換するカードを選択してください:', [
-        { name: '♥5', value: '♥5' },
-        { name: '♠A', value: '♠A' },
-        { name: '♦K', value: '♦K' },
-        { name: '♣7', value: '♣7' },
-        { name: '♠9', value: '♠9' }
-      ])
-      
-      puts "交換するカード: #{card}"
-    end
+    # 交換するカードの選択もシミュレート
+    allow(prompt).to receive(:select).and_return('♠A')
 
-    expect(true).to be true
+    card = prompt.select('交換するカードを選択してください:', [
+      { name: '♥5', value: '♥5' },
+      { name: '♠A', value: '♠A' },
+      { name: '♦K', value: '♦K' },
+      { name: '♣7', value: '♣7' },
+      { name: '♠9', value: '♠9' }
+    ])
+
+    expect(card).to eq('♠A')
   end
 
   it 'カード交換時の表示を確認する' do
@@ -53,6 +64,6 @@ RSpec.describe 'CLIの表示のスパイクテスト' do
 
     puts display_text
 
-    expect(true).to be true
+    expect(output.string).to include('交換:')
   end
-end 
+end

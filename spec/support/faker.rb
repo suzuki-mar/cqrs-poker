@@ -71,6 +71,10 @@ module Faker
       Hand.three_of_a_kind
     end
 
+    def hand_from_cards(cards)
+      Hand.from_cards(cards)
+    end
+
     private
 
     def double(attrs)

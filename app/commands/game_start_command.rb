@@ -4,18 +4,9 @@ class GameStartCommand
   end
 
   def execute
-    # 初期手札を生成
-    initial_hand_set = Deck.instance.generate_hand_set
-
-    # イベントを生成
-    event = GameStartedEvent.new(initial_hand_set)
-
-    # イベントをイベントストアに追加
+    initial_hand = Deck.instance.generate_hand_set
+    event = GameStartedEvent.new(initial_hand)
     @event_store_domain.append(event)
-
-    # アクション完了通知
-    EventBus.instance.notify_when_action_completed("game_started")
-
     event
   end
 end

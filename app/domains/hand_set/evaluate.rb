@@ -7,6 +7,10 @@ class HandSet
         def call(cards)
             @cards = cards
 
+            unless valid_hand?(@cards)
+                raise ArgumentError, "\u624B\u672D\u304C\u4E0D\u6B63\u3067\u3059"
+            end
+
             if straight_flush?
                 Rank::STRAIGHT_FLUSH
             elsif four_of_a_kind?
@@ -80,6 +84,12 @@ class HandSet
 
         def ranks
             @cards.map(&:rank)
+        end
+
+        def valid_hand?(cards)
+            return false unless cards.is_a?(Array)
+            return false unless cards.size == 5
+            cards.all?(&:valid?)
         end
 
         class RankCombinations
