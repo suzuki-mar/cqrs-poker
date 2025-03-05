@@ -37,8 +37,8 @@ gem "thruster", require: false
 # gem "rack-cors"
 
 # CLI tools
-gem 'tty-prompt'
-gem 'pastel'
+gem "tty-prompt"
+gem "pastel"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -50,18 +50,19 @@ group :development, :test do
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
 
-  gem 'rspec-rails'
+  gem "rspec-rails"
 
-  gem 'factory_bot_rails'
+  gem "factory_bot_rails"
 
-  gem 'rbs'
-  gem 'steep', require: false
-  gem 'rbs-inline', require: false
+  gem "rbs"
+  gem "steep", require: false
+  gem "rbs-inline", require: false
 
+
+  gem "spring"
+  gem "spring-commands-rspec"
 end
 
 group :test do
-  gem 'shoulda-matchers', '~> 5.0'
+  gem "shoulda-matchers", "~> 5.0"
 end
-
-

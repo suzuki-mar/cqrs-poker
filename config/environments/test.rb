@@ -50,4 +50,56 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Configure static file server for tests with Cache-Control for performance.
+  config.static_cache_control = "public, max-age=3600"
+
+  # Show full error reports and disable caching.
+  config.consider_all_requests_local       = true
+  config.action_controller.perform_caching = false
+
+  # Raise exceptions instead of rendering exception templates.
+  config.action_dispatch.show_exceptions = false
+
+  # Disable request forgery protection in test environment.
+  config.action_controller.allow_forgery_protection = false
+
+  # Store uploaded files on the local file system in a temporary directory.
+  config.active_storage.service = :test
+
+  # Configure public file server for tests with Cache-Control for performance.
+  config.public_file_server.enabled = true
+  config.public_file_server.headers = {
+    "Cache-Control" => "public, max-age=#{1.hour.to_i}"
+  }
+
+  # Tell Action Mailer not to deliver emails to the real world.
+  # The :test delivery method accumulates sent emails in the
+  # ActionMailer::Base.deliveries array.
+  config.action_mailer.delivery_method = :test
+
+  # Randomize the order test cases are executed.
+  config.active_support.test_order = :random
+
+  # Print deprecation notices to the stderr.
+  config.active_support.deprecation = :stderr
+
+  # Raises error for missing translations.
+  # config.action_view.raise_on_missing_translations = true
+
+  # Use default logging formatter so that PID and timestamp are not suppressed.
+  config.log_formatter = ::Logger::Formatter.new
+
+  # ログレベルをDEBUGに設定して、すべてのログをキャプチャ
+  config.log_level = :debug
+
+  # デフォルトではログをtest.logに出力
+  config.logger = ActiveSupport::Logger.new("log/test.log")
+
+  # ログを標準出力にリダイレクトする場合は以下の行のコメントを解除
+  # config.logger = ActiveSupport::TaggedLogging.new(Logger.new(STDOUT))
+
+  # テスト環境でもリロードを有効にする（Spring用）
+  config.cache_classes = false
+  config.eager_load = false
 end
