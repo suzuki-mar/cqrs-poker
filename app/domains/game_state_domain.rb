@@ -6,5 +6,5 @@ class GameStateDomain
   def save_current_state
     @record.save
   end
-  
+    
 end 

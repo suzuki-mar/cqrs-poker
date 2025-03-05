@@ -1,51 +1,62 @@
-module Hand
+# rbs_inline: enabled
+
+class Hand
   module Rank
-    HIGH_CARD = 'HIGH_CARD'
-    ONE_PAIR = 'ONE_PAIR'
-    TWO_PAIR = 'TWO_PAIR'
-    THREE_OF_A_KIND = 'THREE_OF_A_KIND'
-    STRAIGHT = 'STRAIGHT'
-    FLUSH = 'FLUSH'
-    FULL_HOUSE = 'FULL_HOUSE'
-    FOUR_OF_A_KIND = 'FOUR_OF_A_KIND'
-    STRAIGHT_FLUSH = 'STRAIGHT_FLUSH'
-    ROYAL_FLUSH = 'ROYAL_FLUSH'
+    HIGH_CARD = "HIGH_CARD" # : String
+    ONE_PAIR = "ONE_PAIR" # : String
+    TWO_PAIR = "TWO_PAIR" # : String
+    THREE_OF_A_KIND = "THREE_OF_A_KIND" # : String
+    STRAIGHT = "STRAIGHT" # : String
+    FLUSH = "FLUSH" # : String
+    FULL_HOUSE = "FULL_HOUSE" # : String
+    FOUR_OF_A_KIND = "FOUR_OF_A_KIND" # : String
+    STRAIGHT_FLUSH = "STRAIGHT_FLUSH" # : String
+    ROYAL_FLUSH = "ROYAL_FLUSH" # : String
 
     ALL = [
-      HIGH_CARD,      
-      ONE_PAIR,      
-      TWO_PAIR,      
+      HIGH_CARD,
+      ONE_PAIR,
+      TWO_PAIR,
       THREE_OF_A_KIND,
-      STRAIGHT,       
-      FLUSH,          
-      FULL_HOUSE,     
+      STRAIGHT,
+      FLUSH,
+      FULL_HOUSE,
       FOUR_OF_A_KIND,
-      STRAIGHT_FLUSH, 
-    ].freeze
+      STRAIGHT_FLUSH,
+      ROYAL_FLUSH
+    ].freeze # : Array[String]
   end
 
-  class Hand
-    attr_reader :cards
+  attr_reader :cards # : Array[Card]
 
-    def initialize(cards)
-      @cards = cards
-    end
+  private_class_method :new
 
-    def redraw(discard_cards, new_cards)
-      remaining_cards = @cards - discard_cards
-      new_hand_cards = remaining_cards + new_cards
-      self.class.new(new_hand_cards)
-    end
-
-    def evaluate
-      raise ArgumentError, '手札が不正です' unless valid?
-      Evaluate.call(@cards)
-    end
-
-    def valid?
-      return false unless @cards.is_a?(Array)
-      return false unless @cards.size == 5
-      @cards.all?(&:valid?)
-    end
+  def initialize(cards)
+    @cards = cards
   end
-end 
+
+  def self.generate_initial
+    deck = Deck.instance
+    cards = deck.draw(5)
+    new(cards)
+  end
+
+  # @rbs (Array[Card], Array[Card]) -> Hand
+  def redraw(discard_cards, new_cards)
+    remaining_cards = @cards - discard_cards
+    new_hand_cards = remaining_cards + new_cards
+    self.class.new(new_hand_cards)
+  end
+
+  # @rbs () -> Rank
+  def evaluate
+    Evaluate.call(@cards)
+  end
+
+  # @rbs () -> bool
+  def valid?
+    return false unless @cards.is_a?(Array)
+    return false unless @cards.size == 5
+    @cards.all?(&:valid?)
+  end
+end
