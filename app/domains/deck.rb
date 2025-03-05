@@ -37,8 +37,8 @@ class Deck
   end
 
   # 手札を生成するメソッドを追加
-  def generate_hand
-    Hand.generate_initial
+  def generate_hand_set
+    HandSet.generate_initial
   end
 
   private

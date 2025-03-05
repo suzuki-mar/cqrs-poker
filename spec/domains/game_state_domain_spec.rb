@@ -1,30 +1,19 @@
 require 'rails_helper'
+require_relative '../../app/domains/card'  # Cardクラスを読み込む
 
 RSpec.describe GameStateDomain do
-  
-  describe '#save_current_state' do
-    let(:record) { build(:game_state) }
-    let(:game_state_domain) { GameStateDomain.new(record) }
-    subject { game_state_domain.save_current_state }
-    
-    context '正常系' do
-      it 'レコードの状態が保存される' do        
-        record.current_turn = 2
-        
-        subject
-                
-        saved_record = ::GameState.find(record.id)
-        expect(saved_record.current_turn).to eq(2)
-      end
-    end
+  describe '#start_game' do
+    let(:initial_hand) { Faker.high_card_hand }
 
-    context '異常系' do
-      it '不正なデータの場合は保存に失敗する' do        
-        record.current_turn = 999999  
-                
-        expect(subject).to be_falsey
-      end
+    it 'ゲームの状態が開始されていること' do
+      domain = described_class.new
+      domain.start_game(initial_hand)
+
+      game_state = GameState.first
+
+      expect(game_state.hand_cards).to eq(initial_hand.cards.map(&:to_s))
+      expect(game_state.current_rank).to eq(initial_hand.evaluate)
+      expect(game_state.current_turn).to eq(1)
     end
   end
-    
-end 
+end
