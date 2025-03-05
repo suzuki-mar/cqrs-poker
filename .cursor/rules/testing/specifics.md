@@ -113,3 +113,41 @@ describe "CLI Interface Spike" do
   end
 end
 ```
+
+## バリデーションテストの実装方針
+
+バリデーションテストでは、主にモデルが適切にバリデーションを行っているかどうかを確認します。以下の点に注意してください：
+
+- バリデーションテストでは、エラーメッセージの内容をチェックするのではなく、モデルのインスタンスが有効か無効かのみを検証します。
+- `expect(model).not_to be_valid` や `expect(model).to be_invalid` を使用して、バリデーションが正しく機能しているかを確認します。
+- エラーメッセージの具体的な内容は、テストの対象から外します。これにより、エラーメッセージの文言が変更された場合でもテストが失敗することはありません。
+
+### 例：
+```ruby
+describe "event_type" do
+  it 'nilの場合は無効であること' do
+    event_store = build(:event_store, event_type: nil)
+    expect(event_store).not_to be_valid
+  end
+end
+```
+
+この方針により、テストはより堅牢になり、実装の変更に強くなります。また、テストのメンテナンスが容易になります。
+
+## `shoulda-matchers` の使用方針
+
+`shoulda-matchers` は、Railsアプリケーションのテストをより簡潔に、かつ表現力豊かに書くためのライブラリです。特にモデルのバリデーション、アソシエーション、データベースのカラムのテストに有効です。
+
+- `shoulda-matchers` を使用することで、一行で明確かつ簡潔にバリデーションのテストを記述できます。
+- モデルが期待通りのバリデーションを持っているか、正しくアソシエーションが設定されているかをテストするのに適しています。
+
+### 例：
+```ruby
+describe User do
+  it { should validate_presence_of(:email) }
+  it { should validate_uniqueness_of(:email).case_insensitive }
+  it { should have_many(:posts) }
+end
+```
+
+このライブラリを使用することで、テストコードの量を減らし、読みやすく、保守しやすいテストを書くことができます。プロジェクトのテスト戦略に`shoulda-matchers`を組み込むことを検討してください。

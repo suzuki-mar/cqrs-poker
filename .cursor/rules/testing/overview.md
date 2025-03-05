@@ -263,3 +263,120 @@ end
 ##### 例外
 - 複数のテストで共有する必要があるダミークラスは、`spec/support`ディレクトリに配置
 - 大規模なダミークラスは、可読性のために別ファイルに分離することも検討
+
+## 新規追加
+
+### テスト記述の言語
+
+- テストケースの記述には日本語を使用することを推奨します。
+  - `describe`, `context`, `it` ブロック内の説明は、プロジェクトの可読性を高めるために日本語で記述してください。
+  - 例: `it "ユーザーが正しく保存されること" do ... end`
+
+### テストの命名規則
+
+- テストの命名には以下のガイドラインに従ってください：
+  - テストの目的が明確に伝わるように具体的な表現を用いる。
+  - 動作や期待される結果を具体的に記述する。
+  - 例: `it "登録したユーザーの数が正しくカウントされること" do ... end`
+
+### テストの構造とフォーマット
+
+- テストコードは以下の構造に従ってください：
+  - **準備（Arrange）**：オブジェクトの生成や設定を行います。
+  - **実行（Act）**：テスト対象のメソッドを実行します。
+  - **検証（Assert）**：期待する結果をアサートします。
+  - 例:
+    ```ruby
+    it "ユーザーが正しく保存されること" do
+      user = build(:user)
+      user.save
+      expect(user).to be_persisted
+    end
+    ```
+
+
+## テストコードの構造化
+
+### 学んだこと
+- テストは各カラムごとに`describe`ブロックでグループ化する
+- `shoulda-matchers`を使用して簡潔にバリデーションをテストする
+- バリデーションテストではエラーメッセージの内容よりも、バリデーションが機能しているかに焦点を当てる
+
+### 実装例
+```ruby
+RSpec.describe EventStore, type: :model do
+  describe 'バリデーション' do
+    describe 'event_type' do
+      it { should validate_presence_of(:event_type) }
+    end
+
+    describe 'event_data' do
+      it { should validate_presence_of(:event_data) }
+      
+      it '不正なJSONの場合はエラーがおきること' do
+        event_store = build(:event_store, event_data: 'invalid_json')
+        expect(event_store).not_to be_valid
+      end
+    end
+  end
+end
+```    
+
+## FactoryBotの効果的な使用
+
+### 学んだこと
+- テストデータの作成にはFactoryBotを使用する
+- 基本的な有効なデータをファクトリで定義し、テストケースごとに必要な属性だけを上書きする
+
+### 実装例
+ruby
+# ファクトリの定義
+FactoryBot.define do
+  factory :event_store do
+    event_type { 'game_started' }
+    event_data { { key: 'value' }.to_json }
+    occurred_at { Time.current }
+  end
+end
+
+#### テストでの使用
+event_store = build(:event_store, event_data: 'invalid
+
+
+## テストの命名と構造
+
+### 学んだこと
+- テストの説明は日本語で明確に記述する
+- `context`と`it`を使い分けて、テストの意図を明確にする
+- テストケースは「〜の場合は〜であること」という形式で記述すると理解しやすい
+
+### 実装例
+```ruby
+describe 'event_data' do
+  it { should validate_presence_of(:event_data) }
+
+  context '無効なJSONの場合' do
+    it '有効でないこと' do
+      event_store = build(:event_store, event_data: 'invalid_json')
+      expect(event_store).not_to be_valid
+    end
+  end
+end
+```
+
+## バリデーションエラーのテスト方法
+
+### 学んだこと
+- バリデーションテストでは、エラーメッセージの内容よりもバリデーションが機能しているかに焦点を当てる
+- `expect(model).not_to be_valid`を使用して、バリデーションが失敗することを確認する
+- 特定のエラーメッセージをテストする必要がある場合は、`expect(model.errors[:attribute]).to include("message")`を使用する
+
+### 実装例
+```ruby
+it '未来の日付の場合はエラーがおきること' do
+  event_store = build(:event_store, occurred_at: 1.second.from_now)
+  expect(event_store).not_to be_valid
+  # エラーメッセージのテストは必要な場合のみ
+  # expect(event_store.errors[:occurred_at]).to include("can't be in the future")
+end
+```

@@ -74,3 +74,41 @@ def send_notification(user, message)
 end
 ```
 
+## エラーハンドリングの適切な実装
+
+### 学んだこと
+- nil値のチェックを忘れずに行う
+  - 特にJSONのパースなど、特定の型を期待する処理の前には必ずnilチェックを行う
+  - 例: return false if json.nil?
+- 例外が発生する可能性のある処理は適切に捕捉する
+  - 例: rescue JSON::ParserError
+
+### 実装例
+ruby
+def valid_json?(json)
+  return false if json.nil?  # nilチェックを忘れない
+  JSON.parse(json)
+  true
+rescue JSON::ParserError
+  false
+end
+
+## コマンドパターンの実装
+
+### 学んだこと
+- コマンドクラスは単一責任の原則に従って設計する
+- 初期化時に必要な依存関係を注入し、実行時のパラメータは最小限に抑える
+- `execute`メソッドを公開インターフェースとして提供する
+
+### 実装例
+```ruby
+class GameStartCommand
+  def initialize(event_store)
+    @event_store = event_store
+  end
+
+  def execute
+    @event_store.publish("game_started")
+  end
+end
+```
