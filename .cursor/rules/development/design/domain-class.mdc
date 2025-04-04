@@ -1,0 +1,79 @@
+---
+description: Domainクラスについて話しているとき
+globs: 
+alwaysApply: false
+---
+# 詳細クラス設計（最終更新日: 2025/03/02）
+
+## 1. クラスの概要
+
+このプロジェクトは、CQRS をシンプルに実装することを目的としており、以下のようなクラス構成を定義しています。
+
+### **Game（エンティティ）**
+
+- `Game` クラスは、ポーカーゲームの状態を管理するエンティティです。
+- `currentRank` により現在の手札ランクにアクセスできます。
+- プレイヤーの手札とその交換ロジックを提供します。
+
+```plaintext
+Game
+├── currentRank: Rank  # ✅ 現在の手札ランクを取得
+├── hand: Hand         # ✅ 現在の手札（5枚）
+├── giveCard(): Card   # ✅ 山札の一番上のカードを引く
+└── receiveExchange(oldCard: Card, newCard: Card)  # ✅ カード交換処理を行う
+```
+
+---
+
+### **Card（値オブジェクト）**
+
+- `Card` はスート（♠, ♥, ♦, ♣）とランク（2～10, J, Q, K, A）を保持します。
+- `equals()` メソッドでカードの等価性を判定します。
+
+```plaintext
+Card
+├── suit: string  # スート（♠, ♥, ♦, ♣）
+├── rank: string  # ランク（2～10, J, Q, K, A）
+├── equals(other: Card): bool  # 2枚のカードが等しいか比較
+└── toString(): string  # カードの文字列表現（例：♠A）を返す
+```
+
+---
+
+### **Hand（値オブジェクト）**
+
+- `Hand` クラスは 5 枚の `Card` を保持し、交換ロジックを提供します。
+- `contains()` で特定のカードが手札にあるか確認できます。
+- `exchange()` でカードを入れ替え、新しい `Hand` を返します。
+
+```plaintext
+Hand
+├── cards: array  # 現在の手札（最大5枚）
+├── contains(card: Card): bool  # 指定したカードが含まれているか確認
+├── exchange(oldCard: Card, newCard: Card): Hand  # カードを交換して新しい手札を返す
+└── fromPrevious(previousHand: Hand, newCards: array): Hand  # 前の手札と新カードから新しい手札を生成
+```
+
+---
+
+### **Rank（値オブジェクト）**
+
+- `Rank` は ONE PAIR、STRAIGHT、FLUSH などの手札ランクを表します。
+- `determine()` で手札からランクを評価します。
+- `equals()` で 2つのランクを比較します。
+
+```plaintext
+Rank
+├── name: string (定数)  # "PAIR", "STRAIGHT", "FLUSH" など
+├── determine(hand: Hand): Rank  # 手札からランクを判定
+└── equals(other: Rank): bool  # ランク同士を比較
+```
+
+---
+
+## 2. CQRS の適用
+
+- **コマンドサイド**：`Game` が状態を変化するロジックを含んでいます (カード交換やゲーム進行など)。
+- **クエリサイド**：`GameState`や読み取りモデルが `EventStore` から現在の状態を再構成します。
+
+上記のクラス設計は CQRS の原則を明確に適用するために考慮されています。

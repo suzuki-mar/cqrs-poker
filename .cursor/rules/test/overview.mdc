@@ -1,0 +1,141 @@
+---
+description: テストを実装していたり、テストについて話をしているとき
+globs: 
+alwaysApply: false
+---
+# テストガイドライン
+
+## 基本原則
+- テストファーストの開発を基本とする
+- 小さなステップで進める：
+  - 一度に大きな変更をしない
+  - 各ステップで動作する状態を保つ
+- モックの使用は最小限に：
+  - 可能な限り実オブジェクトを使う
+  - 外部サービスなど必要な場合に限定してモックを使用
+
+## テストの記述
+
+### 命名と構造
+- テスト名は日本語で記述し、何を検証しているかを明示する
+  - 例：`it "ユーザーが正しく保存されること"`
+- `describe`、`context`、`it`を使って意図を明確にする
+- 「Given-When-Then」形式を意識：Xが起きたとき、Yが起きるべき
+
+### テストの構造化
+- Arrange（準備） → Act（実行） → Assert（検証）の構造に従う
+- 各ステップの間に空行を入れて視覚的に分ける
+- 例：
+```ruby
+it "ユーザーが正しく保存されること" do
+  # Arrange
+  user = build(:user)
+  
+  # Act
+  user.save
+  
+  # Assert
+  expect(user).to be_persisted
+end
+```
+
+### コードの整理
+- 各テストは1つの振る舞いだけを確認する
+- テストコードは自己説明的にし、過剰なコメントは避ける
+- 複雑なセットアップが必要な場合のみ簡潔にコメントを添える
+- テスト中の不要な出力（`puts`など）は避ける
+
+## テストデータの準備
+
+### FactoryBotの使用
+- デフォルトは`build`を使用（DBに保存しない）
+- `create`は以下の場合のみ使用：
+  - 関連オブジェクトが必要なとき
+  - DBに依存する機能をテストするとき
+  - 外部キー制約などのバリデーションがあるとき
+- 有効な初期値をファクトリに定義し、テストごとに必要な属性のみ上書き
+```ruby
+# ファクトリ定義
+FactoryBot.define do
+  factory :event_store do
+    event_type { 'game_started' }
+    event_data { { key: 'value' }.to_json }
+    occurred_at { Time.current }
+  end
+end
+```
+
+### モック・スタブの使用
+- テスト用ダミークラスはテストケース内で定義する
+- 複数テストで共有する場合は`spec/support`に配置
+- ダミークラスが大きい場合は別ファイルに分割
+```ruby
+RSpec.describe SomeClass do
+  class DummyCollaborator
+    def perform_action
+      "dummy result"
+    end
+  end
+
+  it "ダミーと連携する" do
+    dummy = DummyCollaborator.new
+    result = subject.work_with(dummy)
+    expect(result).to eq("expected result")
+  end
+end
+```
+
+## 特殊なテスト
+
+### バリデーションテスト
+- バリデーションが機能しているかに注目し、メッセージ内容には依存しない
+- `shoulda-matchers`を使って簡潔に記述
+- エラーメッセージの確認は必要な場合のみ行う
+```ruby
+RSpec.describe EventStore, type: :model do
+  describe 'バリデーション' do
+    it { should validate_presence_of(:event_type) }
+    
+    it '不正なJSONは無効であること' do
+      event_store = build(:event_store, event_data: 'invalid_json')
+      expect(event_store).not_to be_valid
+    end
+  end
+end
+```
+
+### スパイクテスト
+- 新しい技術や手法を試すための実験的なテスト
+- `spec/spikes`ディレクトリに配置し、一時的な検証コードとして扱う
+- ファイル名は`*_spike_spec.rb`の形式で`type: :spike`を指定
+
+#### 利用シーン
+- 新しいgemやライブラリの検証時
+- 設計パターンの実験時
+- パフォーマンス改善案の検証時
+- アーキテクチャの変更検討時
+
+#### 制約
+- 本番環境のコードに依存しすぎない
+- テストデータベースを使用する場合は、テスト後に確実にクリーンアップ
+- 実験が成功した場合は、正式なテストとして書き直す
+
+#### 例
+```ruby
+# typed: true
+require 'rails_helper'
+
+# 新機能のスパイクテスト
+RSpec.describe "NewFeatureSpike", type: :spike do
+  class TemporaryClass
+    def some_method
+      # 実験的な実装
+    end
+  end
+
+  it "新機能の検証" do
+    # 実験的な実装のテスト
+  end
+end
+```
+```
