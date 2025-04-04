@@ -20,6 +20,8 @@ gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
 
+# Pub/Sub pattern implementation
+gem "wisper"
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false

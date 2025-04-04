@@ -416,6 +416,7 @@ DEPENDENCIES
   thruster
   tty-prompt
   tzinfo-data
+  wisper
 
 BUNDLED WITH
    2.6.5
