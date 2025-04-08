@@ -1,7 +1,7 @@
 ---
-description: 学習帳にかいてといったらフォーマットに従って書く
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # ボブくん学習帳
 これはボグくんが新しいことを教わったときに書くものです

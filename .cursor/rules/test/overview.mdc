@@ -1,7 +1,7 @@
 ---
-description: テストを実装していたり、テストについて話をしているとき
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # テストガイドライン
 
