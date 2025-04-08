@@ -1,19 +1,21 @@
 require 'rails_helper'
 
 RSpec.describe GameStartCommand do
-  describe '#execute' do
-    let(:event_store_domain) { EventStoreDomain.new }
-    let(:command) { described_class.new(event_store_domain: event_store_domain) }
+  let(:deck) { Deck.instance }
 
-    it 'ゲーム開始イベントを作成して返すこと' do
-      result = command.execute
-      expect(result).to be_a(GameStartedEvent)
-    end
+  describe '.execute' do
+    subject { described_class.execute(deck) }
 
-    it 'イベントストアにイベントを保存すること' do
-      expect {
-        command.execute
-      }.to change(EventStore, :count).by(1)
+    it 'ゲーム開始イベントが正しく生成されること' do
+      event = subject
+
+      aggregate_failures do
+        expect(event.event_type).to eq EventType::GAME_STARTED
+        expect(event.initial_hand.cards.size).to eq HandSet::CARDS_IN_HAND
+        expect(event.to_event_data).to include(
+          initial_hand: be_an(Array)
+        )
+      end
     end
   end
 end

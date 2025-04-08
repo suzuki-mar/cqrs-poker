@@ -1,12 +1,21 @@
 class GameStartCommand
-  def initialize(event_store_domain:)
-    @event_store_domain = event_store_domain
+  def self.execute(deck)
+    new(deck).execute
+  end
+
+  private :initialize
+
+  def initialize(deck)
+    raise ArgumentError, "deck is required" if deck.nil?
+    @deck = deck
   end
 
   def execute
-    initial_hand = Deck.instance.generate_hand_set
-    event = GameStartedEvent.new(initial_hand)
-    @event_store_domain.append(event)
-    event
+    initial_hand = deck.generate_hand_set
+    GameStartedEvent.new(initial_hand)
   end
+
+  private
+
+  attr_reader :deck
 end
