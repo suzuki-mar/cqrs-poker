@@ -13,6 +13,7 @@ class GameState < ApplicationRecord
               less_than_or_equal_to: 100
             }
 
+
   def assign_hand_number_from_set(hand_set)
     self.hand_1 = hand_set.cards[0].to_s
     self.hand_2 = hand_set.cards[1].to_s

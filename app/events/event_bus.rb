@@ -1,35 +1,17 @@
-# typed: true
-
-require "singleton"
-require "active_support/notifications"
+# frozen_string_literal: true
 
 class EventBus
-  include Singleton
-
-  def initialize
-    @action_completed_listener = nil
+  def initialize(event_publisher:, event_listener:)
+    @event_publisher = event_publisher
+    @event_listener = event_listener
   end
 
-  # アクションが完了したときにイベントを発行する
-  def notify_when_action_completed(action)
-    ActiveSupport::Notifications.instrument("action_completed", action: action)
-    @action_completed_listener.call(action) if @action_completed_listener
-    Rails.logger.info "Action completed: #{action}"
-  end
+  # イベントをリスナーに送信する
+  def publish(event)
+    Rails.logger.info "Event published: #{event.class.name}"
+    @event_publisher.broadcast(event.class.name.underscore, event)
 
-  # アクション完了のリスナーを登録する
-  def register_action_completed_listener(listener)
-    if @action_completed_listener.nil?
-      @action_completed_listener = listener
-      @subscription = ActiveSupport::Notifications.subscribe("action_completed") do |_name, _start, _finish, _id, payload|
-        listener.call(payload[:action])
-      end
-      Rails.logger.debug "Listener registered: #{@subscription}"
-    else
-      Rails.logger.debug "Listener registration skipped: already registered"
-    end
+    # イベントリスナーに通知
+    @event_listener.handle_event(event)
   end
-
-  private
-  attr_reader :action_completed_listener
 end

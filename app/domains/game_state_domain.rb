@@ -1,14 +1,14 @@
 class GameStateDomain
-  def initialize
-    @record = GameState.first_or_initialize
+  def initialize(game_state)
+    @game_state = game_state
   end
 
-  def start_game(initial_hand_set)
-    refresh_hand(initial_hand_set)
-    @record.current_rank = initial_hand_set.evaluate
-    start_first_turn
+  def start_game(initial_hand)
+    @game_state.update!(initial_hand: initial_hand, status: :started)
+  end
 
-    save_current_state
+  def end_game
+    @game_state.update!(status: :ended)
   end
 
   private
