@@ -24,3 +24,60 @@ alwaysApply: true
   - 例：  
     - `valid_json_...
 
+## ファンクショナルクラスの実装
+
+### メソッド名の規約
+- Commandパターンを実装する場合は`call`ではなく`execute`を使用する
+- `execute`の方がCommandパターンの意図をより明確に表現できる
+
+#### 例
+```ruby
+# 良い例：executeを使用
+class GameStartCommand
+  def self.execute(deck)
+    new(deck).execute
+  end
+
+  private :initialize
+
+  def initialize(deck)
+    @deck = deck
+  end
+
+  def execute
+    initial_hand = deck.generate_hand_set
+    GameStartedEvent.new(initial_hand)
+  end
+end
+```
+
+### インスタンス変数の定義
+- インスタンス変数は必ずattr_readerで定義する
+- インスタンス変数への直接アクセスは避ける
+- attr_readerは必要になるまではprivateとして定義する
+
+#### 例
+```ruby
+# 良い例
+class GameStartCommand
+  def self.execute(deck)
+    new(deck).execute
+  end
+
+  private :initialize
+
+  def initialize(deck)
+    @deck = deck
+  end
+
+  def execute
+    initial_hand = deck.generate_hand_set  # attr_readerを通してアクセス
+    GameStartedEvent.new(initial_hand)
+  end
+
+  private
+
+  attr_reader :deck
+end
+```    
+

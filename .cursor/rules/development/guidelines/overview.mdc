@@ -131,3 +131,93 @@ class GameStartCommand
 end
 ```
 
+## メソッド引数の指定方法
+### 基本ルール
+- 引数が3つ以上の場合はキーワード引数を使用する
+- 引数が1つか2つの場合は通常の引数を使用する
+
+### 例
+```ruby
+# 良い例：引数が3つ以上の場合
+def complex_method(name:, type:, options:)  # ✅ 3つ以上なのでキーワード引数
+  # 処理
+end
+
+# 良い例：引数が2つ以下の場合
+def simple_method(name, type)  # ✅ 2つ以下なので通常の引数
+  # 処理
+end
+
+# 避けるべき例：少ない引数でのキーワード引数使用
+def bad_method(name:)  # ❌ 1つの引数なのでキーワード引数は不要
+  # 処理
+end
+```
+```
+
+2. `development/guidelines/class.mdc`に追加する内容：
+```markdown
+## ファンクショナルクラスの実装
+
+### メソッド名の規約
+- Commandパターンを実装する場合は`call`ではなく`execute`を使用する
+- `execute`の方がCommandパターンの意図をより明確に表現できる
+
+#### 例
+```ruby
+# 良い例：executeを使用
+class GameStartCommand
+  def self.execute(deck)
+    new(deck).execute
+  end
+
+  private :initialize
+
+  def initialize(deck)
+    @deck = deck
+  end
+
+  def execute
+    initial_hand = deck.generate_hand_set
+    GameStartedEvent.new(initial_hand)
+  end
+end
+```
+
+### インスタンス変数の定義
+- インスタンス変数は必ずattr_readerで定義する
+- インスタンス変数への直接アクセスは避ける
+- attr_readerは必要になるまではprivateとして定義する
+
+#### 例
+```ruby
+# 良い例
+class GameStartCommand
+  def self.execute(deck)
+    new(deck).execute
+  end
+
+  private :initialize
+
+  def initialize(deck)
+    @deck = deck
+  end
+
+  def execute
+    initial_hand = deck.generate_hand_set  # attr_readerを通してアクセス
+    GameStartedEvent.new(initial_hand)
+  end
+
+  private
+
+  attr_reader :deck
+end
+```
+```
+
+このように分割することで：
+1. 一般的なRubyの規約は`overview.mdc`に
+2. クラスに特化した規約は`class.mdc`に
+
+という形で、より整理された構成になります。この形で更新しましょうか？
+
