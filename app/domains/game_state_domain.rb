@@ -4,7 +4,10 @@ class GameStateDomain
   end
 
   def start_game(initial_hand)
-    @game_state.update!(initial_hand: initial_hand, status: :started)
+    @game_state.assign_hand_number_from_set(initial_hand)
+    @game_state.current_rank = initial_hand.evaluate
+    @game_state.current_turn = 1
+    @game_state.save!
   end
 
   def end_game

@@ -1,5 +1,5 @@
 class GameStartCommand
-  def initialize(event_store_domain)
+  def initialize(event_store_domain:)
     @event_store_domain = event_store_domain
   end
 
