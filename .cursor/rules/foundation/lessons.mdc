@@ -4,14 +4,56 @@ globs:
 alwaysApply: true
 ---
 # ボブくん学習帳
-これはボグくんが新しいことを教わったときに書くものです
+これはボブくんが新しいことを教わったときに書くものです
+
+## 📝 学習記録テンプレート
+各トピックは以下の形式で記録します：
+- タイトルは `##` で始め、適切な絵文字を付けます
+- 学んだ要点は箇条書きで簡潔に記載
+- コード例がある場合は Good/Bad パターンを含めます
+
 ## 📌 学んだことの要点
 - 短く、何を学んだかを書く（例：責務を分離する設計が保守性を上げる）
 
 ## 🧪 具体例（コード・状況など）
+### 具体例の記述
+🧪 テストの構造化：aggregate_failuresの適切な使い方
 ```ruby
-# ここにサンプルコードや実際の状況を書く
-```
+# ✅ Good：準備と実行は外側、検証は内側
+it 'ゲームが正しく開始されること' do
+  # 準備と実行
+  command = GameStartCommand.new
+  command_handler.handle(command)
+
+  # 検証
+  aggregate_failures do
+    expect(logger.messages_for_level(:info)).to include(/イベント受信: ゲーム開始/)
+    expect(GameState.last.status).to eq('started')
+  end
+end
+
+# ❌ Bad：準備や実行もaggregate_failuresの中に含めている
+it 'ゲームが正しく開始されること' do
+  command = GameStartCommand.new
+
+  aggregate_failures do
+    command_handler.handle(command)  # 実行をブロック内に入れてしまっている
+    expect(logger.messages_for_level(:info)).to include(/イベント受信: ゲーム開始/)
+    expect(GameState.last.status).to eq('started')
+  end
+end
+
+# ❌ Bad：検証が外側にもある
+it 'ゲームが正しく開始されること' do
+  command = GameStartCommand.new
+  command_handler.handle(command)
+  expect(command).to be_valid  # 検証が外側にある
+
+  aggregate_failures do
+    expect(logger.messages_for_level(:info)).to include(/イベント受信: ゲーム開始/)
+    expect(GameState.last.status).to eq('started')
+  end
+end
 ```
 
 これで完了と考えてよろしいでしょうか？
@@ -21,3 +63,42 @@ alwaysApply: true
 3. 各ドキュメントの責務が明確になった
 
 コミットを作成して良いでしょうか？
+
+## 🧪 テストの構造化：aggregate_failuresの適切な使い方
+```ruby
+# ✅ Good：準備と実行は外側、検証は内側
+it 'ゲームが正しく開始されること' do
+  # 準備と実行
+  command = GameStartCommand.new
+  command_handler.handle(command)
+
+  # 検証
+  aggregate_failures do
+    expect(logger.messages_for_level(:info)).to include(/イベント受信: ゲーム開始/)
+    expect(GameState.last.status).to eq('started')
+  end
+end
+
+# ❌ Bad：準備や実行もaggregate_failuresの中に含めている
+it 'ゲームが正しく開始されること' do
+  command = GameStartCommand.new
+
+  aggregate_failures do
+    command_handler.handle(command)  # 実行をブロック内に入れてしまっている
+    expect(logger.messages_for_level(:info)).to include(/イベント受信: ゲーム開始/)
+    expect(GameState.last.status).to eq('started')
+  end
+end
+
+# ❌ Bad：検証が外側にもある
+it 'ゲームが正しく開始されること' do
+  command = GameStartCommand.new
+  command_handler.handle(command)
+  expect(command).to be_valid  # 検証が外側にある
+
+  aggregate_failures do
+    expect(logger.messages_for_level(:info)).to include(/イベント受信: ゲーム開始/)
+    expect(GameState.last.status).to eq('started')
+  end
+end
+```

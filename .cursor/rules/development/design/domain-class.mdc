@@ -3,77 +3,123 @@ description: Domainクラスについて話しているとき
 globs: 
 alwaysApply: false
 ---
-# 詳細クラス設計（最終更新日: 2025/03/02）
+# 📘 詳細クラス設計 & ディレクトリガイド（最終更新日: 2025/04/16）
 
-## 1. クラスの概要
+## 🌟 プロジェクト概要
+このプロジェクトは、CLIベースのポーカーゲームにおいて、**CQRS※Command Query Responsibility Segregation※**をシンプルかつ実践的に導入することを目的としています。
 
-このプロジェクトは、CQRS をシンプルに実装することを目的としており、以下のようなクラス構成を定義しています。
+状態変更と読み取りを明確に分離し、以下の3つの層を中心に構成されます：
 
-### **Game（エンティティ）**
+- Command層
+- Query層
+- DomainShared層（共通ドメインロジック）
 
-- `Game` クラスは、ポーカーゲームの状態を管理するエンティティです。
-- `currentRank` により現在の手札ランクにアクセスできます。
-- プレイヤーの手札とその交換ロジックを提供します。
-
-```plaintext
-Game
-├── currentRank: Rank  # ✅ 現在の手札ランクを取得
-├── hand: Hand         # ✅ 現在の手札（5枚）
-├── giveCard(): Card   # ✅ 山札の一番上のカードを引く
-└── receiveExchange(oldCard: Card, newCard: Card)  # ✅ カード交換処理を行う
-```
 
 ---
 
-### **Card（値オブジェクト）**
+## ✅ Command層（`app/commands`）
 
-- `Card` はスート（♠, ♥, ♦, ♣）とランク（2～10, J, Q, K, A）を保持します。
-- `equals()` メソッドでカードの等価性を判定します。
+### 📌 役割：
+ユーザーの入力操作を受け取り、**ゲーム状態を変更する処理**を実行します。
 
+### 📁 配置するもの：
+- **コマンドオブジェクト**（例: `GameStartCommand`, `ExchangeCardCommand`）
+- **ユースケース実行クラス**（例: `CommandHandler`）
+- **状態変更ロジックとの接続**（`Game` エンティティなど）
+
+
+---
+
+## 🔍 Query層（`app/queries`）
+
+### 📌 役割：
+発行されたイベントをもとに、**現在の状態を読み取る処理**を提供します。
+
+### 📁 配置するもの：
+- **Projectionクラス**：イベントから状態を再構築（例: `Projection`）
+- **Read Model**：状態を表示用に整形（例: `GameStateReadModel`）
+
+
+---
+
+## ⚙️ DomainShared層（`app/domain_shared`）
+
+### 📌 役割：
+Command・Queryのどちらからも利用される、**中立的で再利用可能なドメインロジック**を集積する層です。
+
+### 📁 配置するもの：
+- **値オブジェクト**：`Card`, `Hand`, `Rank`
+- **共通型/Enum/定数**：`Suit`, `RankValue`（必要に応じて）
+
+### ⚠️ 配置ルール：
+- ✅ CommandとQueryの両方で使われるクラスのみ
+- ❌ 片方からしか使われないものは、それぞれの層に配置
+- ❌ 状態変更を伴うエンティティ（例: `Game`）は配置しない
+
+
+---
+
+## 🧱 クラス定義一覧（DomainShared）
+
+### 🃏 Card（値オブジェクト）
 ```plaintext
 Card
-├── suit: string  # スート（♠, ♥, ♦, ♣）
-├── rank: string  # ランク（2～10, J, Q, K, A）
-├── equals(other: Card): bool  # 2枚のカードが等しいか比較
-└── toString(): string  # カードの文字列表現（例：♠A）を返す
+├── suit: string
+├── rank: string
+├── equals(other: Card): bool
+└── toString(): string
 ```
 
----
-
-### **Hand（値オブジェクト）**
-
-- `Hand` クラスは 5 枚の `Card` を保持し、交換ロジックを提供します。
-- `contains()` で特定のカードが手札にあるか確認できます。
-- `exchange()` でカードを入れ替え、新しい `Hand` を返します。
-
+### ✋ Hand（値オブジェクト）
 ```plaintext
 Hand
-├── cards: array  # 現在の手札（最大5枚）
-├── contains(card: Card): bool  # 指定したカードが含まれているか確認
-├── exchange(oldCard: Card, newCard: Card): Hand  # カードを交換して新しい手札を返す
-└── fromPrevious(previousHand: Hand, newCards: array): Hand  # 前の手札と新カードから新しい手札を生成
+├── cards: Card[]
+├── contains(card: Card): bool
+├── exchange(oldCard, newCard): Hand
+└── fromPrevious(previous: Hand, newCards: Card[]): Hand
 ```
 
----
-
-### **Rank（値オブジェクト）**
-
-- `Rank` は ONE PAIR、STRAIGHT、FLUSH などの手札ランクを表します。
-- `determine()` で手札からランクを評価します。
-- `equals()` で 2つのランクを比較します。
-
+### 🎖️ Rank（値オブジェクト）
 ```plaintext
 Rank
-├── name: string (定数)  # "PAIR", "STRAIGHT", "FLUSH" など
-├── determine(hand: Hand): Rank  # 手札からランクを判定
-└── equals(other: Rank): bool  # ランク同士を比較
+├── name: string
+├── determine(hand: Hand): Rank
+└── equals(other: Rank): bool
 ```
+
 
 ---
 
-## 2. CQRS の適用
+## 🗃 その他のクラス群（要約）
 
-- **コマンドサイド**：`Game` が状態を変化するロジックを含んでいます (カード交換やゲーム進行など)。
-- **クエリサイド**：`GameState`や読み取りモデルが `EventStore` から現在の状態を再構成します。
+### commands/
+- `CommandHandler`: ユースケース実行のルーティング
+- `GameStartCommand`, `ExchangeCardCommand`: ユーザー操作の意図を表現
 
-上記のクラス設計は CQRS の原則を明確に適用するために考慮されています。
+### queries/
+- `GameStateReadModel`: 表示用の状態構築
+- `Projection`: イベント適用による状態更替
+
+### events/
+- `EventBus`, `EventHandler`, `EventType`, `Events`
+- `GameStartedEvent`, `HandCardsExchangedEvent`, `LogEventListener`
+
+### infrastructure/
+- `EventPublisher`: イベントの保存と通知を担当
+
+### models/
+- `EventStore`: イベントの永続化とリプレイ
+- `GameState`: 最新状態を表現（Query用）
+
+
+---
+
+## 🧹 まとめ
+| 層名 | 主な責務 | 配置するもの |
+|------|----------|--------------|
+| `commands/` | 状態の変更 | コマンド、ユースケース、Aggregate |
+| `queries/` | 状態の読み取り | Projection、ReadModel、クエリロジック |
+| `domain_shared/` | 共通ドメイン矩形 | 値オブジェクト、評価・検証ロジック |
+
+この構成により、責務の明確化・依存の整理・変更耐性の向上が実現されます。
+
