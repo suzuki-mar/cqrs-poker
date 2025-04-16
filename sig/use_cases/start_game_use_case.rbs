@@ -1,3 +1,0 @@
-class StartGameUseCase
-  def execute: () -> untyped
-end
