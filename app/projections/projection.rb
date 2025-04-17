@@ -9,7 +9,7 @@ class Projection
 
   def receive(event)
     case event.event_type
-    when EventType::GAME_STARTED
+    when GameStartedEvent::EVENT_TYPE
       @read_model.update_for_game_started(event)
       Rails.logger.info "ゲーム開始イベントを処理しました: #{event.to_event_data}"
     else

@@ -16,7 +16,7 @@ class EventStoreHolder
 
     event_data = JSON.parse(store.event_data, symbolize_names: true)
     case store.event_type
-    when EventType::GAME_STARTED
+    when GameStartedEvent::EVENT_TYPE
       initial_hand = HandSet.generate_initial(event_data[:initial_hand].map { |card_str| Card.new(card_str) })
       GameStartedEvent.new(initial_hand)
     else

@@ -12,7 +12,7 @@ RSpec.describe EventStoreDomain do
       }.to change(EventStore, :count).by(1)
 
       saved_event = EventStore.last
-      expect(saved_event.event_type).to eq(EventType::GAME_STARTED)
+      expect(saved_event.event_type).to eq(GameStartedEvent::EVENT_TYPE)
       expect(saved_event.event_data).to eq(event.to_event_data.to_json)
     end
   end

@@ -17,7 +17,7 @@ RSpec.describe 'ゲーム開始' do
 
     context '正常系' do
       describe 'ゲームが正しく開始されること' do
-        let(:command) { GameStartCommand.new }
+        let(:command) { GameStartCommand }
 
         before do
           command_handler.handle(command)
@@ -67,30 +67,26 @@ RSpec.describe 'ゲーム開始' do
       context 'ゲームがすでに開始されている場合' do
         before do
           # 最初のゲーム開始
-          first_command = GameStartCommand.new
-          command_handler.handle(first_command)
+          command_handler.handle(GameStartCommand)
         end
 
         it 'InvalidCommandエラーが発生すること' do
           # 2回目のゲーム開始
-          second_command = GameStartCommand.new
           expect {
-            command_handler.handle(second_command)
+            command_handler.handle(GameStartCommand)
           }.to raise_error(InvalidCommand, "ゲームはすでに開始されています")
         end
 
         it 'GameStartedイベントが2回記録されないこと' do
           expect {
-            second_command = GameStartCommand.new
-            command_handler.handle(second_command) rescue nil
+            command_handler.handle(GameStartCommand) rescue nil
           }.not_to change(EventStore, :count)
         end
 
         it 'GameStateが変更されないこと' do
           original_game_state = GameState.last.attributes
 
-          second_command = GameStartCommand.new
-          command_handler.handle(second_command) rescue nil
+          command_handler.handle(GameStartCommand) rescue nil
 
           expect(GameState.last.attributes).to eq(original_game_state)
         end

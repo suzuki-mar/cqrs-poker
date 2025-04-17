@@ -1,7 +1,17 @@
 # frozen_string_literal: true
 
 class GameStartCommand
-  def execute(deck)
+  def self.execute(deck)
+    new(deck).execute
+  end
+
+  private :initialize
+
+  def initialize(deck)
+    @deck = deck
+  end
+
+  def execute
     raise InvalidCommand, "ゲームはすでに開始されています" if GameState.exists?(status: :started)
 
     initial_hand = deck.draw_initial_hand
@@ -11,4 +21,8 @@ class GameStartCommand
 
     GameStartedEvent.new(initial_hand)
   end
+
+  private
+
+  attr_reader :deck
 end

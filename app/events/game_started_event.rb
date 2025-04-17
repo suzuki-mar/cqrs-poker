@@ -1,4 +1,6 @@
 class GameStartedEvent
+  EVENT_TYPE = "game_started"
+
   attr_reader :initial_hand
 
   def initialize(initial_hand)
@@ -6,7 +8,7 @@ class GameStartedEvent
   end
 
   def event_type
-    EventType::GAME_STARTED
+    EVENT_TYPE
   end
 
   def evaluate

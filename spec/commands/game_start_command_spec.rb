@@ -10,7 +10,7 @@ RSpec.describe GameStartCommand do
       event = subject
 
       aggregate_failures do
-        expect(event.event_type).to eq EventType::GAME_STARTED
+        expect(event.event_type).to eq GameStartedEvent::EVENT_TYPE
         expect(event.initial_hand.cards.size).to eq HandSet::CARDS_IN_HAND
         expect(event.to_event_data).to include(
           initial_hand: be_an(Array)
