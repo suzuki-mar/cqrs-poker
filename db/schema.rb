@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_02_24_064113) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_09_032635) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -32,5 +32,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_02_24_064113) do
     t.string "hand_5", null: false
     t.string "current_rank", null: false
     t.integer "current_turn", null: false
+    t.integer "status", null: false
+    t.index ["status"], name: "index_game_states_on_status"
   end
 end
