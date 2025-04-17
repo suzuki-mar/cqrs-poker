@@ -1,21 +1,26 @@
 require 'rails_helper'
 
 RSpec.describe HandSet do
-  describe '#valid?' do
-    subject { hand_set.valid? }
-    # HandSet.new は private_class_method :new により
-    # テストコードから直接呼び出せないため、send(:new, cards) を使用
-    let(:hand_set) { Faker.hand_from_cards(cards) }
+  describe '.generate_initial' do
+    subject { described_class.generate_initial(cards) }
 
     context '正常な手札の場合' do
       let(:cards) { 5.times.map { Faker.valid_card } }
-      it { should be true }
+
+      it '有効なHandSetインスタンスを生成すること' do
+        hand_set = subject
+        expect(hand_set).to be_a(HandSet)
+        expect(hand_set).to be_valid
+      end
     end
 
     context '不正な手札の場合' do
       context 'カードが5枚ではない場合' do
         let(:cards) { 4.times.map { Faker.valid_card } }
-        it { should be false }
+
+        it 'ArgumentErrorが発生すること' do
+          expect { subject }.to raise_error(ArgumentError, 'Invalid hand')
+        end
       end
 
       context '不正なカードが含まれる場合' do
@@ -23,12 +28,10 @@ RSpec.describe HandSet do
           valid_cards = 4.times.map { Faker.valid_card }
           valid_cards + [ Card.new('@1') ]
         end
-        it { should be false }
-      end
 
-      context '配列ではない場合' do
-        let(:cards) { 'not an array' }
-        it { should be false }
+        it 'ArgumentErrorが発生すること' do
+          expect { subject }.to raise_error(ArgumentError, 'Invalid hand')
+        end
       end
     end
   end
@@ -90,5 +93,19 @@ RSpec.describe HandSet do
         it { should eq HandSet::Rank::HIGH_CARD }
       end
     end
+  end
+
+  describe '#rank_name' do
+    subject { hand_set.rank_name }
+    let(:hand_set) { HandSet.generate_initial(cards) }
+
+    context 'ハイカードの場合' do
+      let(:cards) { [
+        Card.new('♠A'), Card.new('♥K'), Card.new('♦3'), Card.new('♣5'), Card.new('♠7')
+      ] }
+      it { should eq('ハイカード') }
+    end
+
+    # 他の役のテストも同様に...
   end
 end

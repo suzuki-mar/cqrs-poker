@@ -1,7 +1,11 @@
 class GameState < ApplicationRecord
+  enum :status, { initial: 0, started: 1 }
+
+  scope :started, -> { where(status: :started) }
+
   validates :hand_1, :hand_2, :hand_3, :hand_4, :hand_5,
             presence: true,
-            hand: { message: "\u30AB\u30FC\u30C9\u306E\u8868\u793A\u5F62\u5F0F\u304C\u4E0D\u6B63\u3067\u3059" }
+            hand: { message: "カードの表示形式が不正です" }
 
   validates :current_rank, presence: true,
             inclusion: { in: HandSet::Rank::ALL }
@@ -13,6 +17,7 @@ class GameState < ApplicationRecord
               less_than_or_equal_to: 100
             }
 
+  after_initialize :set_default_values
 
   def assign_hand_number_from_set(hand_set)
     self.hand_1 = hand_set.cards[0].to_s
@@ -24,5 +29,17 @@ class GameState < ApplicationRecord
 
   def hand_cards
     [ hand_1, hand_2, hand_3, hand_4, hand_5 ]
+  end
+
+  def started?
+    status == "started"
+  end
+
+  private
+
+  def set_default_values
+    self.status ||= :initial
+    self.current_turn ||= 1
+    self.current_rank ||= HandSet::Rank::HIGH_CARD
   end
 end

@@ -1,4 +1,6 @@
 class GameStartedEvent
+  attr_reader :initial_hand
+
   def initialize(initial_hand)
     @initial_hand = initial_hand
   end
@@ -16,7 +18,4 @@ class GameStartedEvent
       initial_hand: @initial_hand.cards.map(&:to_s)
     }
   end
-
-  private
-  attr_reader :initial_hand
 end

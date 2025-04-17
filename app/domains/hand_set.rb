@@ -23,6 +23,23 @@ class HandSet
       STRAIGHT_FLUSH,
       ROYAL_FLUSH
     ].freeze
+
+    NAMES = {
+      HIGH_CARD => "\u30CF\u30A4\u30AB\u30FC\u30C9",
+      ONE_PAIR => "\u30EF\u30F3\u30DA\u30A2",
+      TWO_PAIR => "\u30C4\u30FC\u30DA\u30A2",
+      THREE_OF_A_KIND => "\u30B9\u30EA\u30FC\u30AB\u30FC\u30C9",
+      STRAIGHT => "\u30B9\u30C8\u30EC\u30FC\u30C8",
+      FLUSH => "\u30D5\u30E9\u30C3\u30B7\u30E5",
+      FULL_HOUSE => "\u30D5\u30EB\u30CF\u30A6\u30B9",
+      FOUR_OF_A_KIND => "\u30D5\u30A9\u30FC\u30AB\u30FC\u30C9",
+      STRAIGHT_FLUSH => "\u30B9\u30C8\u30EC\u30FC\u30C8\u30D5\u30E9\u30C3\u30B7\u30E5",
+      ROYAL_FLUSH => "\u30ED\u30A4\u30E4\u30EB\u30B9\u30C8\u30EC\u30FC\u30C8\u30D5\u30E9\u30C3\u30B7\u30E5"
+    }.freeze
+
+    def self.japanese_name(rank)
+      NAMES[rank]
+    end
   end
 
   CARDS_IN_HAND = 5
@@ -31,14 +48,13 @@ class HandSet
 
   private_class_method :new
 
-  def initialize(cards)
-    @cards = cards.freeze
+  def self.generate_initial(cards)
+    raise ArgumentError, "Invalid hand" unless valid_cards?(cards)
+    new(cards)
   end
 
-  def self.generate_initial
-    deck = Deck.instance
-    cards = deck.draw(CARDS_IN_HAND)
-    new(cards)
+  def initialize(cards)
+    @cards = cards.freeze
   end
 
   def redraw(discard_cards, new_cards)
@@ -51,9 +67,19 @@ class HandSet
     Evaluate.call(@cards)
   end
 
+  def rank_name
+    Rank::NAMES[evaluate]
+  end
+
   def valid?
-    return false unless @cards.is_a?(Array)
-    return false unless @cards.size == CARDS_IN_HAND
-    @cards.all?(&:valid?)
+    self.class.valid_cards?(@cards)
+  end
+
+  private
+
+  def self.valid_cards?(cards)
+    return false unless cards.is_a?(Array)
+    return false unless cards.size == CARDS_IN_HAND
+    cards.all?(&:valid?)
   end
 end

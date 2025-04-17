@@ -6,9 +6,9 @@ RSpec.describe 'ゲーム開始' do
   let(:logger) { TestLogger.new }
   let(:event_publisher) { EventPublisher.new(projection: Projection.new, event_listener: log_event_listener) }
   let(:log_event_listener) { LogEventListener.new(logger) }
-  let(:event_bus) { EventBus.new(event_publisher: event_publisher) }
+  let(:event_bus) { EventBus.new(event_publisher) }
   let(:command_handler) { CommandHandler.new(event_bus) }
-  let(:deck) { Faker.deck }
+  let(:deck) { DeckAggregate.build }
 
   describe 'ゲーム開始時' do
     before do
@@ -17,7 +17,7 @@ RSpec.describe 'ゲーム開始' do
 
     context '正常系' do
       describe 'ゲームが正しく開始されること' do
-        let(:command) { GameStartCommand.new(deck) }
+        let(:command) { GameStartCommand.new }
 
         before do
           command_handler.handle(command)
@@ -52,6 +52,14 @@ RSpec.describe 'ゲーム開始' do
             expect(display_data[:turn]).to eq(1)
           end
         end
+
+        it 'デッキから配られたカードが確実に除かれていること' do
+          event = EventStoreHolder.new.latest_event
+
+          event.initial_hand.cards.each do |card|
+            expect(deck.cards).not_to include(card)
+          end
+        end
       end
     end
 
@@ -59,14 +67,13 @@ RSpec.describe 'ゲーム開始' do
       context 'ゲームがすでに開始されている場合' do
         before do
           # 最初のゲーム開始
-          first_command = GameStartCommand.new(deck)
+          first_command = GameStartCommand.new
           command_handler.handle(first_command)
         end
 
         it 'InvalidCommandエラーが発生すること' do
           # 2回目のゲーム開始
-          second_command = GameStartCommand.new(deck)
-
+          second_command = GameStartCommand.new
           expect {
             command_handler.handle(second_command)
           }.to raise_error(InvalidCommand, "ゲームはすでに開始されています")
@@ -74,7 +81,7 @@ RSpec.describe 'ゲーム開始' do
 
         it 'GameStartedイベントが2回記録されないこと' do
           expect {
-            second_command = GameStartCommand.new(deck)
+            second_command = GameStartCommand.new
             command_handler.handle(second_command) rescue nil
           }.not_to change(EventStore, :count)
         end
@@ -82,7 +89,7 @@ RSpec.describe 'ゲーム開始' do
         it 'GameStateが変更されないこと' do
           original_game_state = GameState.last.attributes
 
-          second_command = GameStartCommand.new(deck)
+          second_command = GameStartCommand.new
           command_handler.handle(second_command) rescue nil
 
           expect(GameState.last.attributes).to eq(original_game_state)

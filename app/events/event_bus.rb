@@ -1,17 +1,18 @@
 # frozen_string_literal: true
 
 class EventBus
-  def initialize(event_publisher:, event_listener:)
+  def initialize(event_publisher)
     @event_publisher = event_publisher
-    @event_listener = event_listener
+    @event_store_holder = EventStoreHolder.new
   end
 
-  # イベントをリスナーに送信する
   def publish(event)
     Rails.logger.info "Event published: #{event.class.name}"
-    @event_publisher.broadcast(event.class.name.underscore, event)
-
-    # イベントリスナーに通知
-    @event_listener.handle_event(event)
+    @event_store_holder.append(event)
+    @event_publisher.broadcast(:handle_event, event)
   end
+
+  private
+
+  attr_reader :event_publisher, :event_store_holder
 end

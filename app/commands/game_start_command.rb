@@ -1,21 +1,14 @@
+# frozen_string_literal: true
+
 class GameStartCommand
-  def self.execute(deck)
-    new(deck).execute
-  end
+  def execute(deck)
+    raise InvalidCommand, "ゲームはすでに開始されています" if GameState.exists?(status: :started)
 
-  private :initialize
+    initial_hand = deck.draw_initial_hand
+    game_state = GameState.new(status: :started)
+    game_state.assign_hand_number_from_set(initial_hand)
+    game_state.save!
 
-  def initialize(deck)
-    raise ArgumentError, "deck is required" if deck.nil?
-    @deck = deck
-  end
-
-  def execute
-    initial_hand = deck.generate_hand_set
     GameStartedEvent.new(initial_hand)
   end
-
-  private
-
-  attr_reader :deck
 end
