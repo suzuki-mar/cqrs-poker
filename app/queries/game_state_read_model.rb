@@ -3,11 +3,24 @@ class GameStateReadModel
     @game_state = GameState.last || GameState.new
   end
 
-  def update_for_game_started(event)
+  def start_new_game!(event)
+    @game_state = GameState.new
     @game_state.status = :started
     @game_state.current_rank = event.evaluate
     @game_state.current_turn = 1
     @game_state.assign_hand_number_from_set(event.initial_hand)
+    @game_state.save!
+  end
+
+  def exchange_card!(event)
+    # 現在の手札をHandSetとして再構築
+    hand_set = HandSet.build(@game_state.hand_cards.map { |str| Card.new(str) })
+    # 手札を交換
+    new_hand_set = hand_set.rebuild_after_exchange(event.discarded_card, event.new_card)
+    # GameStateを更新
+    @game_state.assign_hand_number_from_set(new_hand_set)
+    @game_state.current_rank = new_hand_set.evaluate
+    @game_state.current_turn += 1
     @game_state.save!
   end
 

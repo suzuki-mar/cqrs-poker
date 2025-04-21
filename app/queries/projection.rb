@@ -1,10 +1,12 @@
 class Projection
-  def receive(event)
+  def handle_event(event)
     read_model = GameStateReadModel.new
 
     case event
     when GameStartedEvent
-      read_model.update_for_game_started(event)
+      read_model.start_new_game!(event)
+    when CardExchangedEvent
+      read_model.exchange_card!(event)
     else
       raise ArgumentError, "未対応のイベントです: #{event.class.name}"
     end

@@ -23,13 +23,17 @@ class EventStoreHolder
     build_event_from_store(store)
   end
 
+  def game_already_started?
+    EventStore.where(event_type: GameStartedEvent::EVENT_TYPE).exists?
+  end
+
   private
 
   def build_event_from_store(store)
     event_data = JSON.parse(store.event_data, symbolize_names: true)
     case store.event_type
     when GameStartedEvent::EVENT_TYPE
-      initial_hand = HandSet.generate_initial(event_data[:initial_hand].map { |card_str| Card.new(card_str) })
+      initial_hand = HandSet.build(event_data[:initial_hand].map { |card_str| Card.new(card_str) })
       GameStartedEvent.new(initial_hand)
     when "card_exchanged"
       discarded_card = Card.new(event_data[:discarded_card])
