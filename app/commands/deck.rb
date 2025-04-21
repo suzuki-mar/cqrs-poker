@@ -23,6 +23,12 @@ class Deck
     draw
   end
 
+  def remove(card)
+    raise ArgumentError, "指定したカードはデッキに存在しません" unless cards.include?(card)
+    @cards = cards - [ card ]
+    card
+  end
+
   private
 
   def initialize

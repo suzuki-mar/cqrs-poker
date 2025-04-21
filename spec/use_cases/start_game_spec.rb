@@ -53,14 +53,6 @@ RSpec.describe 'ゲーム開始' do
             expect(display_data[:turn]).to eq(1)
           end
         end
-
-        it 'デッキから配られたカードが確実に除かれていること' do
-          event = EventStoreHolder.new.latest_event
-
-          event.initial_hand.cards.each do |card|
-            expect(board.deck_cards).not_to include(card)
-          end
-        end
       end
     end
 

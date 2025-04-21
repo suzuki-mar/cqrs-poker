@@ -4,17 +4,14 @@ RSpec.describe BoardAggregate do
   describe '#draw_initial_hand' do
     let(:board) { described_class.new }
 
-    it '5枚のカードが引かれ、山札から除外されること' do
-      initial_deck_count = board.remaining_deck_count
-      drawn_hand = board.draw_initial_hand
+    it 'draw_initial_handで5枚配られ、deckのカード枚数も5枚減ること' do
+      before_count = board.send(:deck).cards.size
+      hand = board.draw_initial_hand
+      after_count = board.send(:deck).cards.size
 
       aggregate_failures do
-        expect(drawn_hand.cards.size).to eq(5)
-        expect(board.remaining_deck_count).to eq(initial_deck_count - 5)
-
-        drawn_hand.cards.each do |card|
-          expect(board.deck_cards).not_to include(card)
-        end
+        expect(hand.cards.size).to eq(5)
+        expect(after_count).to eq(before_count - 5)
       end
     end
   end

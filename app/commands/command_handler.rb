@@ -7,12 +7,13 @@ class CommandHandler
   end
 
   def handle(command, context)
-    deck = restore_deck
+    events = event_store_holder.load_all_events_in_order
+    board = BoardAggregate.load_from_events(events)
 
     # TODO: 異常系のテストのときにコメントアウトを解除する
     #    validate_command(command, context)
 
-    event = build_event_by_executing(command, deck, context)
+    event = build_event_by_executing(command, board, context)
 
     event_bus.publish(event)
     event
@@ -22,35 +23,18 @@ class CommandHandler
 
   attr_reader :event_bus, :event_store_holder
 
-  def restore_deck
-    deck = Deck.build
-
-    event_store_holder.load_all_events_in_order.each do |event|
-      case event
-      when GameStartedEvent
-        event.initial_hand.cards.each do |card|
-          deck.remove_card(card)
-        end
-      when CardExchangedEvent
-        deck.remove_card(event.new_card)
-      end
-    end
-
-    deck
-  end
-
   def game_started?
     EventStore.exists?(event_type: "game_started")
   end
 
-  def build_event_by_executing(command, deck, context)
+  def build_event_by_executing(command, board, context)
     case command
     when GameStartCommand
-      initial_hand = command.execute(deck)
+      initial_hand = command.execute(board)
       GameStartedEvent.new(initial_hand)
     when ExchangeCardCommand
       discarded_card = context.discarded_card if context.respond_to?(:discarded_card)
-      new_card = command.execute(deck)
+      new_card = command.execute(board)
       CardExchangedEvent.new(discarded_card, new_card)
     else
       raise InvalidCommand, "不明なコマンドです: #{command.class.name}"
