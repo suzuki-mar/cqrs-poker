@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class CardExchangedEvent
+  attr_reader :discarded_card, :new_card
+
   def initialize(discarded_card, new_card)
     @discarded_card = discarded_card
     @new_card = new_card
@@ -17,7 +19,10 @@ class CardExchangedEvent
     }
   end
 
-  private
-
-  attr_reader :discarded_card, :new_card
+  def to_event_data
+    {
+      discarded_card: discarded_card.to_s,
+      new_card: new_card.to_s
+    }
+  end
 end

@@ -1,15 +1,7 @@
 # frozen_string_literal: true
 
 class ExchangeCardCommand
-  def initialize(payload)
-    @payload = payload
+  def execute(board, discarded_card)
+    board.exchange(discarded_card)
   end
-
-  def execute(deck)
-    deck.exchange(payload[:discarded_card])
-  end
-
-  private
-
-  attr_reader :payload
 end

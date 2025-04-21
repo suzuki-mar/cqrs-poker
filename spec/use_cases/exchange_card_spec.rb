@@ -13,43 +13,66 @@ RSpec.describe 'カード交換' do
     before do
       GameState.destroy_all
       # ゲームを開始した状態にする
-      command_handler.handle(GameStartCommand.execute(Deck.build))
+      command_handler.handle(GameStartCommand.new, CommandContext.build_for_game_start)
+      @events = EventStoreHolder.new.load_all_events_in_order
+      @board = BoardAggregate.load_from_events(@events)
     end
 
     context '正常系' do
       describe '手札のカードを1枚交換できること' do
-        it 'イベントが正しく発行されること' do
-          discarded_card = Faker.valid_card
-          command = ExchangeCardCommand.new
-          payload = { discarded_card: discarded_card }
-
-          expect {
-            published_event = command_handler.handle(command, payload)
-            expect(published_event).to be_a(CardExchangedEvent)
-            expect(published_event.discarded_card.to_s).to eq(discarded_card)
-          }.to change(EventStore, :count).by(1)
-
-          # イベントストアに正しく記録されていることを検証
-          stored_event = EventStore.last
-          expect(stored_event.event_type).to eq('card_exchanged')
-          expect(stored_event.event_data).to include_json(discarded_card: discarded_card)
+        before do
+          @discarded_card = GameState.last.hand_cards.first
+          @command = ExchangeCardCommand.new
+          @context = CommandContext.build_for_exchange(@discarded_card)
         end
 
+        it 'イベントが正しく発行されること' do
+          expect {
+            published_event = command_handler.handle(@command, @context)
+            expect(published_event).to be_a(CardExchangedEvent)
+            expect(published_event.discarded_card.to_s).to eq(@discarded_card.to_s)
+          }.to change(EventStore, :count).by(1)
 
+          stored_event = EventStore.last
+          expect(stored_event.event_type).to eq('card_exchanged')
+          expect(stored_event.event_data).to include(@discarded_card.to_s)
+        end
 
-        xit '新しいカードが手札に加わること' do
-          game_state = GameState.last
-          original_hand = game_state.current_hand_set.dup
-          discarded_card = game_state.hand_1
-          payload = { discarded_card: discarded_card }
+        it '1回だけ手札を交換しても正しく状態が変化すること' do
+          # 1回目の交換
+          read_model = GameStateReadModel.new
+          original_hand = read_model.current_state_for_display[:hand].split(' ')
+          discarded_card1 = original_hand.first
+          context1 = CommandContext.build_for_exchange(discarded_card1)
+          command_handler.handle(ExchangeCardCommand.new, context1)
 
-          command_handler.handle(ExchangeCardCommand.new, payload)
+          hand_after_first = read_model.current_state_for_display[:hand].split(' ')
+          expect(hand_after_first).not_to include(discarded_card1)
+          expect(hand_after_first.size).to eq(original_hand.size)
+          expect(hand_after_first).not_to eq(original_hand)
+        end
 
-          game_state.reload
-          new_hand = game_state.current_hand_set
-          expect(new_hand).not_to include(discarded_card)
-          expect(new_hand.size).to eq(original_hand.size)
-          expect(new_hand).not_to eq(original_hand)
+        it '2回連続で手札を交換しても正しく状態が変化すること' do
+          # 1回目の交換
+          read_model = GameStateReadModel.new
+          original_hand = read_model.current_state_for_display[:hand].split(' ')
+          discarded_card1 = original_hand.first
+          context1 = CommandContext.build_for_exchange(discarded_card1)
+          command_handler.handle(ExchangeCardCommand.new, context1)
+
+          # 2回目の交換
+          hand_after_first = read_model.current_state_for_display[:hand].split(' ')
+          discarded_card2 = hand_after_first.first
+          context2 = CommandContext.build_for_exchange(discarded_card2)
+          command_handler.handle(ExchangeCardCommand.new, context2)
+
+          # 2回目の交換後の手札を検証
+          read_model = GameStateReadModel.new
+          hand_after_second = read_model.current_state_for_display[:hand].split(' ')
+          expect(hand_after_second).not_to include(discarded_card1)
+          expect(hand_after_second).not_to include(discarded_card2)
+          expect(hand_after_second.size).to eq(original_hand.size)
+          expect(hand_after_second).not_to eq(original_hand)
         end
       end
     end

@@ -34,7 +34,7 @@ class CommandHandler
       GameStartedEvent.new(initial_hand)
     when ExchangeCardCommand
       discarded_card = context.discarded_card if context.respond_to?(:discarded_card)
-      new_card = command.execute(board)
+      new_card = command.execute(board, discarded_card)
       CardExchangedEvent.new(discarded_card, new_card)
     else
       raise InvalidCommand, "不明なコマンドです: #{command.class.name}"

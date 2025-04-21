@@ -32,9 +32,10 @@ class BoardAggregate
 
   # カードを捨て札置き場に捨てる
   def discard_to_trash(card)
-    deck.remove(card)
     trash.accept(card)
   end
 
   private
+
+  attr_reader :deck, :trash
 end

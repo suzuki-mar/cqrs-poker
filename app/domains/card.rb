@@ -26,4 +26,16 @@ class Card
   def to_s
     "#{@suit}#{@rank}"
   end
+
+  def ==(other)
+    other.is_a?(Card) && suit == other.suit && rank == other.rank
+  end
+
+  def eql?(other)
+    self == other
+  end
+
+  def hash
+    [ suit, rank ].hash
+  end
 end

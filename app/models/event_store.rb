@@ -1,3 +1,6 @@
+# このクラスはRDBのテーブルを表すActiveRecordモデルです。
+# イベントオブジェクトの生成・復元はEventStoreHolderで行います。
+
 class EventStore < ApplicationRecord
   validates :event_type, presence: true
   validates :event_data, presence: true
