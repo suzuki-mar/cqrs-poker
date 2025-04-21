@@ -13,8 +13,7 @@ class Deck
 
   def draw_initial_hand
     drawn_cards = HandSet::CARDS_IN_HAND.times.map { draw }
-    # TODO ハンドセットは引数としてわたさない
-    HandSet.generate_initial(drawn_cards)
+    HandSet.build(drawn_cards)
   end
 
   def exchange(discarded_card)

@@ -3,8 +3,8 @@
 require 'rails_helper'
 
 RSpec.describe HandSet do
-  describe '.generate_initial' do
-    subject { described_class.generate_initial(cards) }
+  describe '.build' do
+    subject { described_class.build(cards) }
 
     context '正常な手札の場合' do
       let(:cards) { 5.times.map { Faker.valid_card } }
@@ -99,7 +99,7 @@ RSpec.describe HandSet do
 
   describe '#rank_name' do
     subject { hand_set.rank_name }
-    let(:hand_set) { HandSet.generate_initial(cards) }
+    let(:hand_set) { HandSet.build(cards) }
 
     context 'ハイカードの場合' do
       let(:cards) { [

@@ -21,7 +21,7 @@ RSpec.describe 'カード交換' do
     context '正常系' do
       describe '手札のカードを1枚交換できること' do
         before do
-          @discarded_card = GameState.last.hand_cards.first
+          @discarded_card = Card.new(GameState.last.hand_cards.first)
           @command = ExchangeCardCommand.new
           @context = CommandContext.build_for_exchange(@discarded_card)
         end
@@ -39,10 +39,9 @@ RSpec.describe 'カード交換' do
         end
 
         it '1回だけ手札を交換しても正しく状態が変化すること' do
-          # 1回目の交換
           read_model = GameStateReadModel.new
           original_hand = read_model.current_state_for_display[:hand].split(' ')
-          discarded_card1 = original_hand.first
+          discarded_card1 = Card.new(original_hand.first)
           context1 = CommandContext.build_for_exchange(discarded_card1)
           command_handler.handle(ExchangeCardCommand.new, context1)
 
@@ -53,20 +52,17 @@ RSpec.describe 'カード交換' do
         end
 
         it '2回連続で手札を交換しても正しく状態が変化すること' do
-          # 1回目の交換
           read_model = GameStateReadModel.new
           original_hand = read_model.current_state_for_display[:hand].split(' ')
-          discarded_card1 = original_hand.first
+          discarded_card1 = Card.new(original_hand.first)
           context1 = CommandContext.build_for_exchange(discarded_card1)
           command_handler.handle(ExchangeCardCommand.new, context1)
 
-          # 2回目の交換
           hand_after_first = read_model.current_state_for_display[:hand].split(' ')
-          discarded_card2 = hand_after_first.first
+          discarded_card2 = Card.new(hand_after_first.first)
           context2 = CommandContext.build_for_exchange(discarded_card2)
           command_handler.handle(ExchangeCardCommand.new, context2)
 
-          # 2回目の交換後の手札を検証
           read_model = GameStateReadModel.new
           hand_after_second = read_model.current_state_for_display[:hand].split(' ')
           expect(hand_after_second).not_to include(discarded_card1)

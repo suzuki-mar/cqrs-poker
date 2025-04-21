@@ -50,7 +50,7 @@ class HandSet
 
   private_class_method :new
 
-  def self.generate_initial(cards)
+  def self.build(cards)
     raise ArgumentError, "Invalid hand" unless valid_cards?(cards)
     new(cards)
   end
@@ -60,12 +60,17 @@ class HandSet
   end
 
   def rebuild_after_exchange(discarded_card, new_card)
-    new_cards = cards.map do |card|
-      card.to_s == discarded_card ? new_card : card
-    end
+    raise ArgumentError, "discarded_cardはCardでなければなりません" unless discarded_card.is_a?(Card)
+    raise ArgumentError, "new_cardはCardでなければなりません" unless new_card.is_a?(Card)
+
+    index = cards.find_index { |card| card == discarded_card }
+    raise ArgumentError, "交換対象のカードが手札に存在しません" if index.nil?
+
+    new_cards = cards.dup
+    new_cards[index] = new_card
 
     raise ArgumentError, "Invalid hand" unless self.class.valid_cards?(new_cards)
-    self.class.new(new_cards)
+    self.class.build(new_cards)
   end
 
   def evaluate
