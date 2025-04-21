@@ -5,12 +5,14 @@ require 'rails_helper'
 RSpec.describe LogEventListener do
   let(:logger) { TestLogger.new }
   let(:listener) { described_class.new(logger) }
+  let(:board) { BoardAggregate.new }
+  let(:initial_hand) { board.draw_initial_hand }
 
   describe '#handle_event' do
-    it 'イベントを受信してログ出力できること' do
-      event = GameStartedEvent.new(HandSet.generate_initial)
+    it 'GameStartedEventのログ出力' do
+      event = GameStartedEvent.new(initial_hand)
       listener.handle_event(event)
-      expect(logger.messages_for_level(:info)).to include(/イベント受信:/)
+      expect(logger.messages_for_level(:info).last).to match(/ゲーム開始/)
     end
 
     it '未知のイベントも受信してログ出力できること' do

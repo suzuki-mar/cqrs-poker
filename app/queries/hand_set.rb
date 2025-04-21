@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class HandSet
   module Rank
     HIGH_CARD = "HIGH_CARD"
@@ -25,16 +27,16 @@ class HandSet
     ].freeze
 
     NAMES = {
-      HIGH_CARD => "\u30CF\u30A4\u30AB\u30FC\u30C9",
-      ONE_PAIR => "\u30EF\u30F3\u30DA\u30A2",
-      TWO_PAIR => "\u30C4\u30FC\u30DA\u30A2",
-      THREE_OF_A_KIND => "\u30B9\u30EA\u30FC\u30AB\u30FC\u30C9",
-      STRAIGHT => "\u30B9\u30C8\u30EC\u30FC\u30C8",
-      FLUSH => "\u30D5\u30E9\u30C3\u30B7\u30E5",
-      FULL_HOUSE => "\u30D5\u30EB\u30CF\u30A6\u30B9",
-      FOUR_OF_A_KIND => "\u30D5\u30A9\u30FC\u30AB\u30FC\u30C9",
-      STRAIGHT_FLUSH => "\u30B9\u30C8\u30EC\u30FC\u30C8\u30D5\u30E9\u30C3\u30B7\u30E5",
-      ROYAL_FLUSH => "\u30ED\u30A4\u30E4\u30EB\u30B9\u30C8\u30EC\u30FC\u30C8\u30D5\u30E9\u30C3\u30B7\u30E5"
+      HIGH_CARD => "ハイカード",
+      ONE_PAIR => "ワンペア",
+      TWO_PAIR => "ツーペア",
+      THREE_OF_A_KIND => "スリーカード",
+      STRAIGHT => "ストレート",
+      FLUSH => "フラッシュ",
+      FULL_HOUSE => "フルハウス",
+      FOUR_OF_A_KIND => "フォーカード",
+      STRAIGHT_FLUSH => "ストレートフラッシュ",
+      ROYAL_FLUSH => "ロイヤルストレートフラッシュ"
     }.freeze
 
     def self.japanese_name(rank)
@@ -57,10 +59,13 @@ class HandSet
     @cards = cards.freeze
   end
 
-  def redraw(discard_cards, new_cards)
-    remaining_cards = @cards - discard_cards
-    new_hand_cards = remaining_cards + new_cards
-    self.class.new(new_hand_cards)
+  def rebuild_after_exchange(discarded_card, new_card)
+    new_cards = cards.map do |card|
+      card.to_s == discarded_card ? new_card : card
+    end
+
+    raise ArgumentError, "Invalid hand" unless self.class.valid_cards?(new_cards)
+    self.class.new(new_cards)
   end
 
   def evaluate

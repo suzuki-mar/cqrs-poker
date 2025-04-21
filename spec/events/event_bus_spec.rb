@@ -17,20 +17,15 @@ RSpec.describe EventBus do
       end
     end
 
-    let(:event_publisher) { EventPublisher.new }
     let(:event_listener) { TestEventListener.new }
-    let(:event_bus) { EventBus.new(event_publisher: event_publisher, event_listener: event_listener) }
-
-    # テスト用のイベントクラス
-    class TestEvent
-      def self.name
-        'TestEvent'
-      end
-    end
+    let(:projection) { Projection.new }
+    let(:event_publisher) { EventPublisher.new(projection: projection, event_listener: event_listener) }
+    let(:event_bus) { EventBus.new(event_publisher) }
+    let(:board) { BoardAggregate.new }
+    let(:initial_hand) { board.draw_initial_hand }
+    let(:event) { GameStartedEvent.new(initial_hand) }
 
     it 'イベントがリスナーに届くこと' do
-      event = TestEvent.new
-
       # イベントを発行
       event_bus.publish(event)
 

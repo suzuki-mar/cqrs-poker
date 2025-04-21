@@ -3,17 +3,24 @@
 require 'rails_helper'
 
 RSpec.describe CommandHandler do
-  let(:event_publisher) { double('EventPublisher') }
+  let(:event_publisher) do
+    EventPublisher.new(
+      projection: Projection.new,
+      event_listener: LogEventListener.new(TestLogger.new)
+    )
+  end
+
   let(:event_bus) { EventBus.new(event_publisher) }
   let(:command_handler) { described_class.new(event_bus) }
 
   describe "#handle" do
-    it "コマンドを実行できること" do
+    it "コマンドを実行し、イベントを発行できること" do
       allow(event_publisher).to receive(:broadcast)
 
-      command_handler.handle(GameStartCommand)
+      event = command_handler.handle(GameStartCommand.new, CommandContext.build_for_game_start)
 
-      expect(GameState.last).to have_attributes(status: "started")
+      expect(event).to be_a(GameStartedEvent)
+      expect(event_publisher).to have_received(:broadcast)
     end
   end
 end

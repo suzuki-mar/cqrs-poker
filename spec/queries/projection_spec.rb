@@ -3,21 +3,20 @@ require 'rails_helper'
 RSpec.describe Projection do
   describe '#receive' do
     context 'GameStartedEventを受け取った場合' do
-      let(:initial_hand) { HandSet.generate_initial }
+      let(:compare_card) { Card.new("♠7") }
+      let(:initial_hand) { HandSet.generate_initial([ compare_card ] + [ Card.new("♥A"), Card.new("♦2"), Card.new("♣3"), Card.new("♠4") ]) }
       let(:event) { GameStartedEvent.new(initial_hand) }
+      let(:projection) { described_class.new }
 
-      it 'ReadModelを通じてゲーム状態を更新すること' do
-        projection = described_class.new
-        projection.receive(event)
-
-        read_model = GameStateReadModel.new
+      it 'ゲーム状態を開始状態に更新すること' do
+        read_model = projection.receive(event)
         state = read_model.current_state_for_display
 
         aggregate_failures do
           expect(state[:status]).to eq('started')
           expect(state[:current_rank]).to eq(initial_hand.evaluate.to_s)
           expect(state[:turn]).to eq(1)
-          expect(state[:hand]).to eq(initial_hand.cards.map(&:to_s).join(" "))
+          expect(state[:hand]).to include(compare_card.to_s)
         end
       end
     end

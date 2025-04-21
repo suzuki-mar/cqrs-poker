@@ -5,7 +5,7 @@ require 'rails_helper'
 # イベント購読のスパイクテスト
 RSpec.describe "EventSubscriptionSpike", type: :spike do
   # シンプルなイベント
-  class CardExchangedEvent
+  class SampleCardExchangedEvent
     # @!sig attr_reader game_id: String
     # @!sig attr_reader player_id: String
     attr_reader :game_id, :player_id
@@ -66,7 +66,7 @@ RSpec.describe "EventSubscriptionSpike", type: :spike do
       subscriber.handle(payload)
     end
 
-    event = CardExchangedEvent.new(game_id: "game-123", player_id: "player-456")
+    event = SampleCardExchangedEvent.new(game_id: "game-123", player_id: "player-456")
     event.publish
     ActiveSupport::Notifications.instrument("card_exchanged_event", event.to_h)
 

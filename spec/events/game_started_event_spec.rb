@@ -1,7 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe GameStartedEvent do
-  let(:hand) { HandSet.generate_initial }
+  let(:board) { BoardAggregate.new }
+  let(:hand) { board.draw_initial_hand }
   let(:event) { described_class.new(hand) }
 
   describe '#event_type' do

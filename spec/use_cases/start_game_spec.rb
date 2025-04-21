@@ -8,7 +8,8 @@ RSpec.describe 'ゲーム開始' do
   let(:log_event_listener) { LogEventListener.new(logger) }
   let(:event_bus) { EventBus.new(event_publisher) }
   let(:command_handler) { CommandHandler.new(event_bus) }
-  let(:deck) { DeckAggregate.build }
+  let(:board) { BoardAggregate.new }
+  let(:context) { CommandContext.build_for_game_start }
 
   describe 'ゲーム開始時' do
     before do
@@ -17,10 +18,10 @@ RSpec.describe 'ゲーム開始' do
 
     context '正常系' do
       describe 'ゲームが正しく開始されること' do
-        let(:command) { GameStartCommand }
+        let(:command) { GameStartCommand.new }
 
         before do
-          command_handler.handle(command)
+          command_handler.handle(command, context)
         end
 
         it 'イベントが正しく発行されること' do
@@ -57,7 +58,7 @@ RSpec.describe 'ゲーム開始' do
           event = EventStoreHolder.new.latest_event
 
           event.initial_hand.cards.each do |card|
-            expect(deck.cards).not_to include(card)
+            expect(board.deck_cards).not_to include(card)
           end
         end
       end
@@ -67,26 +68,26 @@ RSpec.describe 'ゲーム開始' do
       context 'ゲームがすでに開始されている場合' do
         before do
           # 最初のゲーム開始
-          command_handler.handle(GameStartCommand)
+          command_handler.handle(GameStartCommand.new, context)
         end
 
         it 'InvalidCommandエラーが発生すること' do
           # 2回目のゲーム開始
           expect {
-            command_handler.handle(GameStartCommand)
+            command_handler.handle(GameStartCommand.new, context)
           }.to raise_error(InvalidCommand, "ゲームはすでに開始されています")
         end
 
         it 'GameStartedイベントが2回記録されないこと' do
           expect {
-            command_handler.handle(GameStartCommand) rescue nil
+            command_handler.handle(GameStartCommand.new, context) rescue nil
           }.not_to change(EventStore, :count)
         end
 
         it 'GameStateが変更されないこと' do
           original_game_state = GameState.last.attributes
 
-          command_handler.handle(GameStartCommand) rescue nil
+          command_handler.handle(GameStartCommand.new, context) rescue nil
 
           expect(GameState.last.attributes).to eq(original_game_state)
         end

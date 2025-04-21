@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 RSpec.describe HandSet do
@@ -105,7 +107,5 @@ RSpec.describe HandSet do
       ] }
       it { should eq('ハイカード') }
     end
-
-    # 他の役のテストも同様に...
   end
 end

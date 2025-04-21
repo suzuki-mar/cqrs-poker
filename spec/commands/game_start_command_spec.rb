@@ -1,21 +1,14 @@
 require 'rails_helper'
 
 RSpec.describe GameStartCommand do
-  let(:deck) { Deck.instance }
+  let(:board) { BoardAggregate.new }
+  let(:hand) { board.draw_initial_hand }
 
-  describe '.execute' do
-    subject { described_class.execute(deck) }
-
-    it 'ゲーム開始イベントが正しく生成されること' do
-      event = subject
-
-      aggregate_failures do
-        expect(event.event_type).to eq GameStartedEvent::EVENT_TYPE
-        expect(event.initial_hand.cards.size).to eq HandSet::CARDS_IN_HAND
-        expect(event.to_event_data).to include(
-          initial_hand: be_an(Array)
-        )
-      end
+  describe '#execute' do
+    it '初期手札（HandSet）が返ること' do
+      result = described_class.new.execute(board)
+      expect(result).to be_a(HandSet)
+      expect(result.cards.size).to eq(5)
     end
   end
 end
