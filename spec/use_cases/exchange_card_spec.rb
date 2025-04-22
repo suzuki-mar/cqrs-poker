@@ -13,7 +13,7 @@ RSpec.describe 'カード交換' do
     before do
       GameState.destroy_all
       # ゲームを開始した状態にする
-      command_handler.handle(GameStartCommand.new, CommandContext.build_for_game_start)
+      command_handler.handle(Command.new, CommandContext.build_for_game_start)
       @events = EventStoreHolder.new.load_all_events_in_order
       @board = BoardAggregate.load_from_events(@events)
     end
@@ -22,7 +22,7 @@ RSpec.describe 'カード交換' do
       describe '手札のカードを1枚交換できること' do
         before do
           @discarded_card = Card.new(GameState.last.hand_cards.first)
-          @command = ExchangeCardCommand.new
+          @command = Command.new
           @context = CommandContext.build_for_exchange(@discarded_card)
         end
 
@@ -43,7 +43,7 @@ RSpec.describe 'カード交換' do
           original_hand = read_model.current_state_for_display[:hand].split(' ')
           discarded_card1 = Card.new(original_hand.first)
           context1 = CommandContext.build_for_exchange(discarded_card1)
-          command_handler.handle(ExchangeCardCommand.new, context1)
+          command_handler.handle(Command.new, context1)
 
           hand_after_first = read_model.current_state_for_display[:hand].split(' ')
           expect(hand_after_first).not_to include(discarded_card1)
@@ -56,12 +56,12 @@ RSpec.describe 'カード交換' do
           original_hand = read_model.current_state_for_display[:hand].split(' ')
           discarded_card1 = Card.new(original_hand.first)
           context1 = CommandContext.build_for_exchange(discarded_card1)
-          command_handler.handle(ExchangeCardCommand.new, context1)
+          command_handler.handle(Command.new, context1)
 
           hand_after_first = read_model.current_state_for_display[:hand].split(' ')
           discarded_card2 = Card.new(hand_after_first.first)
           context2 = CommandContext.build_for_exchange(discarded_card2)
-          command_handler.handle(ExchangeCardCommand.new, context2)
+          command_handler.handle(Command.new, context2)
 
           read_model = GameStateReadModel.new
           hand_after_second = read_model.current_state_for_display[:hand].split(' ')

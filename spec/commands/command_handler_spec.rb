@@ -17,7 +17,7 @@ RSpec.describe CommandHandler do
     it "コマンドを実行し、イベントを発行できること" do
       allow(event_publisher).to receive(:broadcast)
 
-      event = command_handler.handle(GameStartCommand.new, CommandContext.build_for_game_start)
+      event = command_handler.handle(Command.new, CommandContext.build_for_game_start)
 
       expect(event).to be_a(GameStartedEvent)
       expect(event_publisher).to have_received(:broadcast)

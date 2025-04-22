@@ -28,16 +28,16 @@ class CommandHandler
   end
 
   def build_event_by_executing(command, board, context)
-    case command
-    when GameStartCommand
-      initial_hand = command.execute(board)
+    case context.type
+    when CommandContext::Types::GAME_START
+      initial_hand = command.execute_for_game_start(board)
       GameStartedEvent.new(initial_hand)
-    when ExchangeCardCommand
-      discarded_card = context.discarded_card if context.respond_to?(:discarded_card)
-      new_card = command.execute(board, discarded_card)
+    when CommandContext::Types::EXCHANGE_CARD
+      discarded_card = context.discarded_card
+      new_card = command.execute_for_exchange_card(board, discarded_card)
       CardExchangedEvent.new(discarded_card, new_card)
     else
-      raise InvalidCommand, "不明なコマンドです: #{command.class.name}"
+      raise InvalidCommand, "不明なコマンドタイプです: #{context.type}"
     end
   end
 
