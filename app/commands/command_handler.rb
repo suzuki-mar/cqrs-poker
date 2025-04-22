@@ -10,11 +10,13 @@ class CommandHandler
     events = event_store_holder.load_all_events_in_order
     board = BoardAggregate.load_from_events(events)
 
-    # TODO: 異常系のテストのときにコメントアウトを解除する
-    #    validate_command(command, context)
+    invalid_event = build_invalid_command_event_if_needed(command, context)
+    if invalid_event
+      event_bus.publish(invalid_event)
+      return invalid_event
+    end
 
     event = build_event_by_executing(command, board, context)
-
     event_bus.publish(event)
     event
   end
@@ -41,14 +43,13 @@ class CommandHandler
     end
   end
 
-  # TODO 後で実装をする
-  def validate_command(command, context)
-    # case command
-    # when ExchangeCardCommand
-    #   return DomainError.game_not_started unless game_started?
-    #   return DomainError.card_not_specified unless context.discarded_card
-    # end
-
-    # nil
+  def build_invalid_command_event_if_needed(command, context)
+    case context.type
+    when CommandContext::Types::GAME_START
+      if event_store_holder.game_already_started?
+        return InvalidCommandEvent.new(command: command, reason: "ゲームはすでに開始されています")
+      end
+    end
+    nil
   end
 end

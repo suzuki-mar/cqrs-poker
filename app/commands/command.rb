@@ -10,9 +10,6 @@
 
 class Command
   def execute_for_game_start(board)
-    if EventStoreHolder.new.game_already_started?
-      raise InvalidCommand, "ゲームはすでに開始されています"
-    end
     board.draw_initial_hand
   end
 

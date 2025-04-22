@@ -58,30 +58,40 @@ RSpec.describe 'ゲーム開始' do
 
     context '異常系' do
       context 'ゲームがすでに開始されている場合' do
+        subject { command_handler.handle(Command.new, context) }
+
         before do
           # 最初のゲーム開始
           command_handler.handle(Command.new, context)
         end
 
-        it 'InvalidCommandエラーが発生すること' do
+        it 'InvalidCommandEventが発行・保存されること' do
           # 2回目のゲーム開始
-          expect {
-            command_handler.handle(Command.new, context)
-          }.to raise_error(InvalidCommand, "ゲームはすでに開始されています")
+          subject
+          event_store_holder = EventStoreHolder.new
+          last_event = event_store_holder.latest_event
+          expect(last_event.event_type).to eq('invalid_command_event')
+          expect(last_event.to_event_data[:reason]).to include('ゲームはすでに開始されています')
         end
 
         it 'GameStartedイベントが2回記録されないこと' do
           expect {
-            command_handler.handle(Command.new, context) rescue nil
-          }.not_to change(EventStore, :count)
+            subject
+          }.not_to change { EventStore.where(event_type: 'game_started').count }
         end
 
         it 'GameStateが変更されないこと' do
           original_game_state = GameState.find_current_session.attributes
 
-          command_handler.handle(Command.new, context) rescue nil
+          subject rescue nil
 
           expect(GameState.find_current_session.attributes).to eq(original_game_state)
+        end
+
+        it 'warnログが出力されること' do
+          subject
+          expect(logger.messages_for_level(:warn).last).to match(/不正な選択肢の選択/)
+          expect(logger.messages_for_level(:warn).last).to include('ゲームはすでに開始されています')
         end
       end
     end

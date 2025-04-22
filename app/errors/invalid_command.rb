@@ -1,2 +1,0 @@
-class InvalidCommand < StandardError
-end

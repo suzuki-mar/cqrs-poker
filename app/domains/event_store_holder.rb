@@ -39,6 +39,8 @@ class EventStoreHolder
       discarded_card = Card.new(event_data[:discarded_card])
       new_card = Card.new(event_data[:new_card])
       CardExchangedEvent.new(discarded_card, new_card)
+    when "invalid_command_event"
+      InvalidCommandEvent.new(command: event_data[:command], reason: event_data[:reason])
     else
       raise "未知のイベントタイプです: #{store.event_type}"
     end

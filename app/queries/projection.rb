@@ -7,6 +7,8 @@ class Projection
       read_model.start_new_game!(event)
     when CardExchangedEvent
       read_model.exchange_card!(event)
+    when InvalidCommandEvent
+      return read_model
     else
       raise ArgumentError, "未対応のイベントです: #{event.class.name}"
     end

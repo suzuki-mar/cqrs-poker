@@ -85,3 +85,18 @@ let(:event_listener) { LogEventListener.new }
 ### 例外
 - 学習記録として実装パターンを残す場合
 - フレームワークやライブラリが提供するテストダブル（RSpecのdouble等）
+
+
+RSpecのsubject活用パターン
+学んだこと
+subjectはテスト内で「Act（実行）」の共通化や、テストの可読性向上に役立つ
+名前をつけずに無名のsubjectとして使うのが基本（subject { ... }）
+contextごとにsubjectを再定義することで、テストのArrange-Act-Assertが明確になる
+letやbeforeとの使い分けも意識し、テストの意図が伝わる構造にする
+例
+Apply to lessons.mdc
+end
+ポイント
+subjectは「テストごとの主役（Act）」として使う
+使い方を統一することで、テストの意図が明確になり、可読性・保守性が向上する
+名前付きsubjectも使えるが、無名のsubjectが推奨される

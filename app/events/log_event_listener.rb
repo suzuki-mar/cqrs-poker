@@ -9,6 +9,8 @@ class LogEventListener
     case event
     when GameStartedEvent
       logger.info format_event_message("ゲーム開始", format_cards(event.initial_hand.cards))
+    when InvalidCommandEvent
+      logger.warn format_event_message("不正な選択肢の選択", event.reason)
     else
       logger.info format_event_message(event.class.name)
     end

@@ -20,5 +20,12 @@ RSpec.describe LogEventListener do
       listener.handle_event(unknown_event)
       expect(logger.messages_for_level(:info)).to include(/イベント受信:/)
     end
+
+    it 'InvalidCommandEventのwarnログ出力' do
+      event = InvalidCommandEvent.new(command: 'Command', reason: '手札に存在しないカードです')
+      listener.handle_event(event)
+      expect(logger.messages_for_level(:warn).last).to match(/不正な選択肢の選択/)
+      expect(logger.messages_for_level(:warn).last).to include('手札に存在しないカードです')
+    end
   end
 end
