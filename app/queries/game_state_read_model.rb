@@ -1,6 +1,6 @@
 class GameStateReadModel
   def initialize
-    @game_state = GameState.last || GameState.new
+    @game_state = GameState.find_current_session || GameState.new
   end
 
   def start_new_game!(event)
@@ -14,7 +14,7 @@ class GameStateReadModel
 
   def exchange_card!(event)
     # 現在の手札をHandSetとして再構築
-    hand_set = HandSet.build(@game_state.hand_cards.map { |str| Card.new(str) })
+    hand_set = HandSet.build(@game_state.hand_set.map { |str| Card.new(str) })
     # 手札を交換
     new_hand_set = hand_set.rebuild_after_exchange(event.discarded_card, event.new_card)
     # GameStateを更新
@@ -34,11 +34,20 @@ class GameStateReadModel
     }
   end
 
+  def hand_set
+    HandSet.build(game_state.hand_set.map { |str| Card.new(str) })
+  end
+
+  def refreshed_hand_set
+    @game_state = GameState.find_current_session
+    hand_set
+  end
+
   private
 
   attr_reader :game_state
 
   def format_hand
-    game_state.hand_cards.join(" ")
+    game_state.hand_set.join(" ")
   end
 end

@@ -85,6 +85,15 @@ class HandSet
     self.class.valid_cards?(@cards)
   end
 
+  def find_by_number(number)
+    raise ArgumentError, "Invalid number" unless number.is_a?(Integer) && number.between?(1, CARDS_IN_HAND)
+    cards[number - 1]
+  end
+
+  def include?(card)
+    cards.include?(card)
+  end
+
   private
 
   def self.valid_cards?(cards)

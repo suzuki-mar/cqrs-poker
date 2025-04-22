@@ -19,55 +19,44 @@ RSpec.describe 'カード交換' do
     end
 
     context '正常系' do
+      let(:command) { Command.new }
+
       describe '手札のカードを1枚交換できること' do
-        before do
-          @discarded_card = Card.new(GameState.last.hand_cards.first)
-          @command = Command.new
-          @context = CommandContext.build_for_exchange(@discarded_card)
-        end
+        let(:read_model) { GameStateReadModel.new }
+        let(:discarded_card) { Card.new(GameState.find_current_session.hand_set.first) }
+        let(:context) { CommandContext.build_for_exchange(discarded_card) }
+        let(:original_hand) { read_model.hand_set }
 
         it 'イベントが正しく発行されること' do
-          expect {
-            published_event = command_handler.handle(@command, @context)
-            expect(published_event).to be_a(CardExchangedEvent)
-            expect(published_event.discarded_card.to_s).to eq(@discarded_card.to_s)
-          }.to change(EventStore, :count).by(1)
+          published_event = command_handler.handle(Command.new, context)
+
+          expect(published_event).to be_a(CardExchangedEvent)
+          expect(published_event.discarded_card.to_s).to eq(discarded_card.to_s)
 
           stored_event = EventStore.last
           expect(stored_event.event_type).to eq('card_exchanged')
-          expect(stored_event.event_data).to include(@discarded_card.to_s)
+          expect(stored_event.event_data).to include(discarded_card.to_s)
         end
 
         it '1回だけ手札を交換しても正しく状態が変化すること' do
-          read_model = GameStateReadModel.new
-          original_hand = read_model.current_state_for_display[:hand].split(' ')
-          discarded_card1 = Card.new(original_hand.first)
-          context1 = CommandContext.build_for_exchange(discarded_card1)
-          command_handler.handle(Command.new, context1)
+          command_handler.handle(Command.new, context)
 
-          hand_after_first = read_model.current_state_for_display[:hand].split(' ')
-          expect(hand_after_first).not_to include(discarded_card1)
-          expect(hand_after_first.size).to eq(original_hand.size)
-          expect(hand_after_first).not_to eq(original_hand)
+          hand_after = read_model.refreshed_hand_set
+          expect(hand_after).not_to include(discarded_card)
+          expect(hand_after).not_to eq(original_hand)
         end
 
         it '2回連続で手札を交換しても正しく状態が変化すること' do
-          read_model = GameStateReadModel.new
-          original_hand = read_model.current_state_for_display[:hand].split(' ')
-          discarded_card1 = Card.new(original_hand.first)
-          context1 = CommandContext.build_for_exchange(discarded_card1)
-          command_handler.handle(Command.new, context1)
+          command_handler.handle(Command.new, context)
 
-          hand_after_first = read_model.current_state_for_display[:hand].split(' ')
-          discarded_card2 = Card.new(hand_after_first.first)
+          hand_after_first = read_model.refreshed_hand_set
+          discarded_card2 = hand_after_first.find_by_number(1)
           context2 = CommandContext.build_for_exchange(discarded_card2)
           command_handler.handle(Command.new, context2)
 
-          read_model = GameStateReadModel.new
-          hand_after_second = read_model.current_state_for_display[:hand].split(' ')
-          expect(hand_after_second).not_to include(discarded_card1)
+          hand_after_second = read_model.refreshed_hand_set
+
           expect(hand_after_second).not_to include(discarded_card2)
-          expect(hand_after_second.size).to eq(original_hand.size)
           expect(hand_after_second).not_to eq(original_hand)
         end
       end

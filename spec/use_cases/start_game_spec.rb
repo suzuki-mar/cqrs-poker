@@ -35,10 +35,10 @@ RSpec.describe 'ゲーム開始' do
         end
 
         it 'ゲーム状態が正しく更新されること' do
-          game_state = GameState.last
+          game_state = GameState.find_current_session
           aggregate_failures do
             expect(game_state).to be_started
-            expect(game_state.hand_cards.size).to eq(HandSet::CARDS_IN_HAND)
+            expect(game_state.hand_set.size).to eq(HandSet::CARDS_IN_HAND)
             expect(game_state.current_turn).to eq(1)
           end
         end
@@ -77,11 +77,11 @@ RSpec.describe 'ゲーム開始' do
         end
 
         it 'GameStateが変更されないこと' do
-          original_game_state = GameState.last.attributes
+          original_game_state = GameState.find_current_session.attributes
 
           command_handler.handle(Command.new, context) rescue nil
 
-          expect(GameState.last.attributes).to eq(original_game_state)
+          expect(GameState.find_current_session.attributes).to eq(original_game_state)
         end
       end
     end

@@ -27,12 +27,16 @@ class GameState < ApplicationRecord
     self.hand_5 = hand_set.cards[4].to_s
   end
 
-  def hand_cards
+  def hand_set
     [ hand_1, hand_2, hand_3, hand_4, hand_5 ]
   end
 
   def started?
     status == "started"
+  end
+
+  def self.find_current_session
+    last
   end
 
   private
