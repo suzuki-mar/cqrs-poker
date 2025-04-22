@@ -27,6 +27,20 @@ class EventStoreHolder
     EventStore.where(event_type: GameStartedEvent::EVENT_TYPE).exists?
   end
 
+  def current_hand_set
+    events = load_all_events_in_order
+    hand_set = nil
+    events.each do |event|
+      case event
+      when GameStartedEvent
+        hand_set = event.initial_hand
+      when CardExchangedEvent
+        hand_set = hand_set.rebuild_after_exchange(event.discarded_card, event.new_card) if hand_set
+      end
+    end
+    hand_set
+  end
+
   private
 
   def build_event_from_store(store)

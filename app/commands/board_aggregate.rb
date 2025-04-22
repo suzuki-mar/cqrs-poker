@@ -35,6 +35,11 @@ class BoardAggregate
     trash.accept(card)
   end
 
+  # デッキにカードが引けるかどうかを返すpublicメソッド
+  def drawable?
+    deck.size > 0
+  end
+
   private
 
   attr_reader :deck, :trash

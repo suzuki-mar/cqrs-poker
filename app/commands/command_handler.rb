@@ -36,6 +36,14 @@ class CommandHandler
       GameStartedEvent.new(initial_hand)
     when CommandContext::Types::EXCHANGE_CARD
       discarded_card = context.discarded_card
+      current_game_state = GameState.find_current_session
+      hand_set = HandSet.build(current_game_state.hand_set.map { |str| Card.new(str) })
+      unless hand_set.include?(discarded_card)
+        return InvalidCommandEvent.new(command: command, reason: "交換対象のカードが手札に存在しません")
+      end
+      unless board.drawable?
+        return InvalidCommandEvent.new(command: command, reason: "デッキの残り枚数が不足しています")
+      end
       new_card = command.execute_for_exchange_card(board, discarded_card)
       CardExchangedEvent.new(discarded_card, new_card)
     else

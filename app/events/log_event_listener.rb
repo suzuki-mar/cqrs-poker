@@ -11,6 +11,11 @@ class LogEventListener
       logger.info format_event_message("ゲーム開始", format_cards(event.initial_hand.cards))
     when InvalidCommandEvent
       logger.warn format_event_message("不正な選択肢の選択", event.reason)
+    when CardExchangedEvent
+      logger.info format_event_message(
+        "カード交換",
+        "捨てたカード: #{event.discarded_card}, 引いたカード: #{event.new_card}"
+      )
     else
       logger.info format_event_message(event.class.name)
     end

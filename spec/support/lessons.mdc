@@ -100,3 +100,56 @@ end
 subjectは「テストごとの主役（Act）」として使う
 使い方を統一することで、テストの意図が明確になり、可読性・保守性が向上する
 名前付きsubjectも使えるが、無名のsubjectが推奨される
+
+## 🧪 RSpecでsubject/let/contextを活用したテスト設計のベストプラクティス
+
+- subjectを「コマンドの実行結果」など共通の振る舞いで統一することで、テストの重複を減らせる
+- let(:card)などの引数をcontextごとに切り替えることで、正常系・異常系を同じsubjectで柔軟にテストできる
+- context/let/subject/itの責務が明確になり、テストの可読性・保守性が大きく向上する
+- RSpecらしい自然な構造になり、テストの意図が伝わりやすい
+
+```ruby
+subject { command_handler.handle(Command.new, CommandContext.build_for_exchange(card)) }
+
+context '正常系' do
+  let(:card) { Card.new(current_hand.first) }
+  it 'CardExchangedEventが発行されること' do
+    expect(subject).to be_a(CardExchangedEvent)
+  end
+end
+
+context '異常系（手札に存在しないカード）' do
+  let(:card) { Card.new('♠A') }
+  it 'InvalidCommandEventが発行されること' do
+    expect(subject).to be_a(InvalidCommandEvent)
+  end
+end
+```
+```
+
+## 🧪 letの最小化と依存関係のまとめ方（RSpecベストプラクティス）
+
+- letは「本当に複数のexampleで使うもの」「テスト全体で何度も参照するもの」だけに限定する
+- 依存関係がある場合は、letの中でローカル変数としてまとめて定義する
+- 使い捨ての値や一時的なオブジェクトはletではなくローカル変数で十分
+- letの乱用を避けることで、テストの可読性・保守性が向上する
+
+### 例
+
+```ruby
+# ✅ Good: 依存関係をletの中でまとめる
+let(:log_event_listener) do
+  logger = TestLogger.new
+  LogEventListener.new(logger)
+end
+
+# ❌ Bad: 使い捨ての値までletで定義してしまう
+let(:logger) { TestLogger.new }
+let(:log_event_listener) { LogEventListener.new(logger) }
+```
+
+### ポイント
+
+- letの数は最小限に
+- 依存関係はletの中でローカル変数としてまとめる
+- テストの可読性・保守性が高まる
