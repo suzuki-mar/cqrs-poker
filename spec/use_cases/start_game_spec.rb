@@ -63,7 +63,7 @@ RSpec.describe 'ゲーム開始' do
       it 'InvalidCommandEventが発行・保存されること' do
         # 2回目のゲーム開始
         subject
-        event_store_holder = EventStoreHolder.new
+        event_store_holder = AggregateStore.new
         last_event = event_store_holder.latest_event
         expect(last_event.event_type).to eq('invalid_command_event')
         expect(last_event.to_event_data[:reason]).to include('ゲームはすでに開始されています')

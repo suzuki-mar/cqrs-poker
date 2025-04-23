@@ -65,6 +65,14 @@ module Faker
         create_hand(cards)
       end
 
+      def not_in_hand_card(hand_set)
+        unless hand_set.is_a?(::HandSet)
+          raise ArgumentError, "HandSetインスタンスを渡してください"
+        end
+        available = ::Card.generate_available(hand_set.cards)
+        available.sample
+      end
+
       private
 
       def create_hand(cards)

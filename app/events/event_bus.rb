@@ -3,7 +3,7 @@
 class EventBus
   def initialize(event_publisher)
     @event_publisher = event_publisher
-    @event_store_holder = EventStoreHolder.new
+    @event_store_holder = AggregateStore.new
   end
 
   def publish(event)

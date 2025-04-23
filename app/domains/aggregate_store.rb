@@ -1,4 +1,4 @@
-class EventStoreHolder
+class AggregateStore
   def append(event)
     EventStore.create!(
       event_type: event.event_type,

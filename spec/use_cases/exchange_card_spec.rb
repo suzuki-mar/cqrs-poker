@@ -4,10 +4,11 @@ require 'rails_helper'
 
 RSpec.describe 'カード交換をするユースケース' do
   let(:logger) { TestLogger.new }
-  let(:command_handler) { UseCaseHelper.build_command_handler(logger) }
+  let!(:command_handler) { UseCaseHelper.build_command_handler(logger) }
 
   before do
     GameState.destroy_all
+    EventStore.destroy_all
     command_handler.handle(Command.new, CommandContext.build_for_game_start)
   end
 
@@ -25,7 +26,10 @@ RSpec.describe 'カード交換をするユースケース' do
       let(:original_hand) { read_model.hand_set }
 
       it 'イベントが正しく発行されること' do
-        published_event = subject
+        current_hand = read_model.refreshed_hand_set
+        discarded_card = current_hand.find_by_number(1)
+        context = CommandContext.build_for_exchange(discarded_card)
+        published_event = command_handler.handle(Command.new, context)
         expect(published_event).to be_a(CardExchangedEvent)
         expect(published_event.discarded_card.to_s).to eq(discarded_card.to_s)
         stored_event = EventStore.last
@@ -54,7 +58,7 @@ RSpec.describe 'カード交換をするユースケース' do
       it 'カード交換時にinfoログが出力されること' do
         subject
         log = logger.messages_for_level(:info).last
-        event_store_holder = EventStoreHolder.new
+        event_store_holder = AggregateStore.new
         last_event = event_store_holder.latest_event
         expect(last_event).to be_a(CardExchangedEvent)
         expect(log).to match(/捨てたカード: #{discarded_card}/)
@@ -65,7 +69,7 @@ RSpec.describe 'カード交換をするユースケース' do
 
   context '異常系' do
     context '手札に存在しないカードを交換した場合' do
-      let(:card) { Card.new('♠A') }
+      let(:card) { Faker::Hand.not_in_hand_card(read_model.refreshed_hand_set) }
       it_behaves_like 'warnログが出力される'
     end
 

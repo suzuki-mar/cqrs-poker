@@ -3,11 +3,11 @@
 class CommandHandler
   def initialize(event_bus)
     @event_bus = event_bus
-    @event_store_holder = EventStoreHolder.new
+    @aggregate_store = AggregateStore.new
   end
 
   def handle(command, context)
-    events = event_store_holder.load_all_events_in_order
+    events = aggregate_store.load_all_events_in_order
     board = BoardAggregate.load_from_events(events)
 
     invalid_event = build_invalid_command_event_if_needed(command, context)
@@ -23,7 +23,7 @@ class CommandHandler
 
   private
 
-  attr_reader :event_bus, :event_store_holder
+  attr_reader :event_bus, :aggregate_store
 
   def game_started?
     EventStore.exists?(event_type: "game_started")
@@ -54,7 +54,7 @@ class CommandHandler
   def build_invalid_command_event_if_needed(command, context)
     case context.type
     when CommandContext::Types::GAME_START
-      if event_store_holder.game_already_started?
+      if aggregate_store.game_already_started?
         return InvalidCommandEvent.new(command: command, reason: "ゲームはすでに開始されています")
       end
     end
