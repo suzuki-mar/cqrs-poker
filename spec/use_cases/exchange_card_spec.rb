@@ -7,8 +7,6 @@ RSpec.describe 'カード交換をするユースケース' do
   let!(:command_handler) { UseCaseHelper.build_command_handler(logger) }
 
   before do
-    GameState.destroy_all
-    EventStore.destroy_all
     command_handler.handle(Command.new, CommandContext.build_for_game_start)
   end
 

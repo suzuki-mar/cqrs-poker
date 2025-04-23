@@ -7,9 +7,6 @@ RSpec.describe 'ゲーム開始' do
   let(:command_handler) { UseCaseHelper.build_command_handler(logger) }
   let(:context) { CommandContext.build_for_game_start }
 
-  before do
-    GameState.destroy_all
-  end
 
   context '正常系' do
     describe 'ゲームが正しく開始されること' do

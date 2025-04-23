@@ -71,6 +71,7 @@ RSpec.configure do |config|
 
   # FactoryBotの設定を追加
   config.include FactoryBot::Syntax::Methods
+  config.use_transactional_fixtures = true
 end
 
 Shoulda::Matchers.configure do |config|
