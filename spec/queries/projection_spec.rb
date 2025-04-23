@@ -4,7 +4,7 @@ RSpec.describe Projection do
   describe '#handle_event' do
     context 'GameStartedEventを受け取った場合' do
       let(:compare_card) { Card.new("♠7") }
-      let(:initial_hand) { HandSet.build([ compare_card ] + [ Card.new("♥A"), Card.new("♦2"), Card.new("♣3"), Card.new("♠4") ]) }
+      let(:initial_hand) { ReadModels::HandSet.build([ compare_card ] + [ Card.new("♥A"), Card.new("♦2"), Card.new("♣3"), Card.new("♠4") ]) }
       let(:event) { GameStartedEvent.new(initial_hand) }
       let(:projection) { described_class.new }
 

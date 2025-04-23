@@ -6,7 +6,7 @@ FactoryBot.define do
     hand_3 { Faker.valid_card.to_s }
     hand_4 { Faker.valid_card.to_s }
     hand_5 { Faker.valid_card.to_s }
-    current_rank { HandSet::Rank::HIGH_CARD }
+    current_rank { ReadModels::HandSet::Rank::HIGH_CARD }
     current_turn { 1 }
   end
 end

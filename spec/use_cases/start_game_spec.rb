@@ -30,18 +30,18 @@ RSpec.describe 'ゲーム開始' do
         game_state = GameState.find_current_session
         aggregate_failures do
           expect(game_state).to be_started
-          expect(game_state.hand_set.size).to eq(HandSet::CARDS_IN_HAND)
+          expect(game_state.hand_set.size).to eq(ReadModels::HandSet::CARDS_IN_HAND)
           expect(game_state.current_turn).to eq(1)
         end
       end
 
       it '表示用のデータが正しく整形されること' do
-        read_model = GameStateReadModel.new
+        read_model = ReadModels::GameStateReadModel.new
         display_data = read_model.current_state_for_display
 
         aggregate_failures do
           expect(display_data[:status]).to eq('started')
-          expect(display_data[:hand].split(' ').size).to eq(HandSet::CARDS_IN_HAND)
+          expect(display_data[:hand].split(' ').size).to eq(ReadModels::HandSet::CARDS_IN_HAND)
           expect(display_data[:turn]).to eq(1)
         end
       end

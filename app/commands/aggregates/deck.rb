@@ -13,8 +13,8 @@ module Aggregates
     end
 
     def draw_initial_hand
-      drawn_cards = HandSet::CARDS_IN_HAND.times.map { draw }
-      HandSet.build(drawn_cards)
+      drawn_cards = ReadModels::HandSet::CARDS_IN_HAND.times.map { draw }
+      ReadModels::HandSet.build(drawn_cards)
     end
 
     def exchange(discarded_card)

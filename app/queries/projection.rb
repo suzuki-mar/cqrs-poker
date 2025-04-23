@@ -1,6 +1,6 @@
 class Projection
   def handle_event(event)
-    read_model = GameStateReadModel.new
+    read_model = ReadModels::GameStateReadModel.new
 
     case event
     when GameStartedEvent

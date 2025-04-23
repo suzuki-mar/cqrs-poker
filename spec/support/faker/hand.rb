@@ -66,7 +66,7 @@ module Faker
       end
 
       def not_in_hand_card(hand_set)
-        unless hand_set.is_a?(::HandSet)
+        unless hand_set.is_a?(::ReadModels::HandSet)
           raise ArgumentError, "HandSetインスタンスを渡してください"
         end
         available = ::Card.generate_available(hand_set.cards)
@@ -77,7 +77,7 @@ module Faker
 
       def create_hand(cards)
         # Handは不正な形でインスタンスが生成されるのを避けるためnewを使えないようにしている
-        ::HandSet.send(:new, cards)
+        ::ReadModels::HandSet.send(:new, cards)
       end
     end
   end

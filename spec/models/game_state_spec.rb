@@ -31,7 +31,7 @@ RSpec.describe GameState, type: :model do
 
     describe 'current_rank' do
       it { should validate_presence_of(:current_rank) }
-      it { should validate_inclusion_of(:current_rank).in_array(HandSet::Rank::ALL) }
+      it { should validate_inclusion_of(:current_rank).in_array(ReadModels::HandSet::Rank::ALL) }
 
       describe '不正な値' do
         subject { build(:game_state, current_rank: invalid_value) }

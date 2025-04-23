@@ -8,7 +8,7 @@ class GameState < ApplicationRecord
             hand: { message: "カードの表示形式が不正です" }
 
   validates :current_rank, presence: true,
-            inclusion: { in: HandSet::Rank::ALL }
+            inclusion: { in: ReadModels::HandSet::Rank::ALL }
 
   validates :current_turn, presence: true,
             numericality: {
@@ -44,6 +44,6 @@ class GameState < ApplicationRecord
   def set_default_values
     self.status ||= :initial
     self.current_turn ||= 1
-    self.current_rank ||= HandSet::Rank::HIGH_CARD
+    self.current_rank ||= ReadModels::HandSet::Rank::HIGH_CARD
   end
 end

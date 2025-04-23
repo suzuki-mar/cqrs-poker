@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe GameStateReadModel do
+RSpec.describe ReadModels::GameStateReadModel do
   describe '#current_state_for_display' do
     it 'returns formatted display data' do
       game_state = create(:game_state, status: :started)
@@ -10,7 +10,7 @@ RSpec.describe GameStateReadModel do
 
       expect(display_data[:status]).to eq('started')
       expect(display_data[:hand]).to eq(game_state.hand_set.join(" "))
-      expect(display_data[:current_rank]).to eq(HandSet::Rank::HIGH_CARD)
+      expect(display_data[:current_rank]).to eq(ReadModels::HandSet::Rank::HIGH_CARD)
       expect(display_data[:rank_name]).to eq('ハイカード')
       expect(display_data[:turn]).to eq(1)
     end

@@ -37,7 +37,7 @@ class CommandHandler
     when CommandContext::Types::EXCHANGE_CARD
       discarded_card = context.discarded_card
       current_game_state = GameState.find_current_session
-      hand_set = HandSet.build(current_game_state.hand_set.map { |str| Card.new(str) })
+      hand_set = ReadModels::HandSet.build(current_game_state.hand_set.map { |str| Card.new(str) })
       unless hand_set.include?(discarded_card)
         return InvalidCommandEvent.new(command: command, reason: "交換対象のカードが手札に存在しません")
       end
