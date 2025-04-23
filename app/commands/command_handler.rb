@@ -8,7 +8,7 @@ class CommandHandler
 
   def handle(command, context)
     events = aggregate_store.load_all_events_in_order
-    board = BoardAggregate.load_from_events(events)
+    board = Aggregates::BoardAggregate.load_from_events(events)
 
     invalid_event = build_invalid_command_event_if_needed(command, context)
     if invalid_event

@@ -5,7 +5,7 @@ require 'rails_helper'
 RSpec.describe LogEventListener do
   let(:logger) { TestLogger.new }
   let(:listener) { described_class.new(logger) }
-  let(:board) { BoardAggregate.new }
+  let(:board) { Aggregates::BoardAggregate.new }
   let(:initial_hand) { board.draw_initial_hand }
 
   describe '#handle_event' do

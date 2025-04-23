@@ -21,7 +21,7 @@ RSpec.describe EventBus do
     let(:projection) { Projection.new }
     let(:event_publisher) { EventPublisher.new(projection: projection, event_listener: event_listener) }
     let(:event_bus) { EventBus.new(event_publisher) }
-    let(:board) { BoardAggregate.new }
+    let(:board) { Aggregates::BoardAggregate.new }
     let(:initial_hand) { board.draw_initial_hand }
     let(:event) { GameStartedEvent.new(initial_hand) }
 

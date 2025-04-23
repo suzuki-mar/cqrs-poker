@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe BoardAggregate do
+RSpec.describe Aggregates::BoardAggregate do
   describe '#draw_initial_hand' do
     let(:board) { described_class.new }
 
