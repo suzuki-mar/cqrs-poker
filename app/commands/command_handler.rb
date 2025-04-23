@@ -9,14 +9,15 @@ class CommandHandler
   def handle(command, context)
     events = aggregate_store.load_all_events_in_order
     board = Aggregates::BoardAggregate.load_from_events(events)
+    strategy = build_strategy(context.type, command, context, board)
 
-    invalid_event = build_invalid_command_event_if_needed(command, context)
+    invalid_event = strategy.build_invalid_command_event_if_needed
     if invalid_event
       event_bus.publish(invalid_event)
       return invalid_event
     end
 
-    event = build_event_by_executing(command, board, context)
+    event = strategy.build_event_by_executing
     event_bus.publish(event)
     event
   end
@@ -25,39 +26,14 @@ class CommandHandler
 
   attr_reader :event_bus, :aggregate_store
 
-  def game_started?
-    EventStore.exists?(event_type: "game_started")
-  end
-
-  def build_event_by_executing(command, board, context)
-    case context.type
+  def build_strategy(type, command, context, board)
+    case type
     when CommandContext::Types::GAME_START
-      initial_hand = command.execute_for_game_start(board)
-      GameStartedEvent.new(initial_hand)
+      HandlerStrategy::GameStart.new(command, context, board)
     when CommandContext::Types::EXCHANGE_CARD
-      discarded_card = context.discarded_card
-      current_game_state = GameState.find_current_session
-      hand_set = ReadModels::HandSet.build(current_game_state.hand_set.map { |str| Card.new(str) })
-      unless hand_set.include?(discarded_card)
-        return InvalidCommandEvent.new(command: command, reason: "交換対象のカードが手札に存在しません")
-      end
-      unless board.drawable?
-        return InvalidCommandEvent.new(command: command, reason: "デッキの残り枚数が不足しています")
-      end
-      new_card = command.execute_for_exchange_card(board, discarded_card)
-      CardExchangedEvent.new(discarded_card, new_card)
+      HandlerStrategy::ExchangeCard.new(command, context, board)
     else
-      raise InvalidCommand, "不明なコマンドタイプです: #{context.type}"
+      raise InvalidCommand, "不明なコマンドタイプです: #{type}"
     end
-  end
-
-  def build_invalid_command_event_if_needed(command, context)
-    case context.type
-    when CommandContext::Types::GAME_START
-      if aggregate_store.game_already_started?
-        return InvalidCommandEvent.new(command: command, reason: "ゲームはすでに開始されています")
-      end
-    end
-    nil
   end
 end

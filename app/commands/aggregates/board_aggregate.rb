@@ -5,6 +5,7 @@ module Aggregates
     def initialize
       @deck = Deck.build
       @trash = Trash.new
+      @game_started = false
     end
 
     def self.load_from_events(events)
@@ -16,6 +17,7 @@ module Aggregates
     def apply(event)
       case event
       when GameStartedEvent
+        @game_started = true
         event.initial_hand.cards.each do |card|
           deck.remove(card)
         end
@@ -41,6 +43,10 @@ module Aggregates
     # デッキにカードが引けるかどうかを返すpublicメソッド
     def drawable?
       deck.size > 0
+    end
+
+    def game_already_started?
+      @game_started
     end
 
     private
