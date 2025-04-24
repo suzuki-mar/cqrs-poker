@@ -3,21 +3,21 @@ require_relative 'faker/card'
 
 module Faker
   class << self
-    delegate :suit, to: :Card
+    delegate :suit, to: 'Faker::Card'
 
-    delegate :rank, to: :Card
+    delegate :rank, to: 'Faker::Card'
 
-    delegate :number_rank, to: :Card
+    delegate :number_rank, to: 'Faker::Card'
 
-    delegate :face_rank, to: :Card
+    delegate :face_rank, to: 'Faker::Card'
 
-    delegate :valid_card, to: :Card
+    delegate :valid_card, to: 'Faker::Card'
 
-    delegate :invalid_card, to: :Card
+    delegate :invalid_card, to: 'Faker::Card'
 
-    delegate :card_with_suit, to: :Card
+    delegate :card_with_suit, to: 'Faker::Card'
 
-    delegate :card_with_rank, to: :Card
+    delegate :card_with_rank, to: 'Faker::Card'
 
     def one_pair_hand
       Hand.one_pair

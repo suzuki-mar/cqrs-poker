@@ -32,4 +32,11 @@ class CardExchangedEvent
   end
 
   attr_reader :discarded_card, :new_card
+
+  def self.from_store(store)
+    event_data = JSON.parse(store.event_data, symbolize_names: true)
+    discarded = Card.new(event_data[:discarded_card])
+    new_c = Card.new(event_data[:new_card])
+    new(discarded, new_c)
+  end
 end

@@ -8,36 +8,15 @@ class AggregateStore
   end
 
   def append(event, expected_current_version)
-    stored_version = current_version
-    if expected_current_version < stored_version
-      return Failure[VersionConflictEvent::EVENT_TYPE,
-                     VersionConflictEvent.new(event.event_type, stored_version, expected_current_version)]
-    end
+    failer = build_failer_if_conflict(event, expected_current_version)
+    return failer if failer.present?
 
-    if event.is_a?(GameStartedEvent) && Event.exists?(version: 1)
-      return Failure[VersionConflictEvent::EVENT_TYPE,
-                     VersionConflictEvent.new(event.event_type, 1, expected_current_version)]
-    end
-
-    version = if event.is_a?(GameStartedEvent)
-                1
-              else
-                expected_current_version + 1
-              end
-    Event.create!(
-      event_type: event.event_type,
-      event_data: event.to_serialized_hash.to_json,
-      occurred_at: Time.current,
-      version: version
-    )
+    add_event_to_store!(event, expected_current_version)
     Success()
   rescue ActiveRecord::RecordInvalid => e
-    if e.record.errors.details[:version]&.any? { |err| err[:error] == :taken }
-      latest_version = Event.maximum(:version)
-      return Failure[VersionConflictEvent::EVENT_TYPE,
-                     VersionConflictEvent.new(event.event_type, latest_version + 1, expected_current_version)]
-    end
-    Failure[:validation_error, e.record.errors.full_messages]
+    return build_version_conflict_event(event, expected_current_version) if version_conflict_error?(e)
+
+    build_validation_error(e)
   end
 
   def load_all_events_in_order
@@ -60,29 +39,54 @@ class AggregateStore
   private
 
   def build_event_from_store(store)
-    event_data = JSON.parse(store.event_data, symbolize_names: true)
-    case store.event_type
-    when GameStartedEvent::EVENT_TYPE
-      hand_data = event_data[:initial_hand]
-      hand_cards = hand_data.map { |c| Card.new(c) }
-      hand_set = ReadModels::HandSet.build(hand_cards)
-      GameStartedEvent.new(hand_set)
-    when CardExchangedEvent::EVENT_TYPE
-      discarded_card = event_data[:discarded_card]
-      new_card = event_data[:new_card]
-      discarded = Card.new(discarded_card)
-      new_c = Card.new(new_card)
-      CardExchangedEvent.new(discarded, new_c)
-    when InvalidCommandEvent::EVENT_TYPE
-      InvalidCommandEvent.new(command: event_data[:command], reason: event_data[:reason])
-    when VersionConflictEvent::EVENT_TYPE
-      VersionConflictEvent.new(
-        event_data[:event_type],
-        event_data[:expected_version],
-        event_data[:actual_version]
-      )
-    else
-      raise "未知のイベントタイプです: #{store.event_type}"
+    maps = {
+      GameStartedEvent::EVENT_TYPE => GameStartedEvent,
+      CardExchangedEvent::EVENT_TYPE => CardExchangedEvent,
+      InvalidCommandEvent::EVENT_TYPE => InvalidCommandEvent,
+      VersionConflictEvent::EVENT_TYPE => VersionConflictEvent
+    }
+
+    event = maps[store.event_type].from_store(store)
+    raise "未知のイベントタイプです: #{store.event_type}" if event.nil?
+
+    event
+  end
+
+  def build_failer_if_conflict(event, expected_current_version)
+    stored_version = current_version
+    if expected_current_version < stored_version
+      return Failure[VersionConflictEvent::EVENT_TYPE,
+                     VersionConflictEvent.new(event.event_type, stored_version, expected_current_version)]
     end
+
+    return unless event.is_a?(GameStartedEvent) && Event.exists?(version: 1)
+
+    Failure[VersionConflictEvent::EVENT_TYPE,
+            VersionConflictEvent.new(event.event_type, 1, expected_current_version)]
+  end
+
+  def add_event_to_store!(event, expected_current_version)
+    version = event.is_a?(GameStartedEvent) ? 1 : expected_current_version + 1
+
+    Event.create!(
+      event_type: event.event_type,
+      event_data: event.to_serialized_hash.to_json,
+      occurred_at: Time.current,
+      version: version
+    )
+  end
+
+  def version_conflict_error?(e)
+    e.record.errors.details[:version]&.any? { |err| err[:error] == :taken }
+  end
+
+  def build_version_conflict_event(event, expected_current_version)
+    latest_version = Event.maximum(:version)
+    Failure[VersionConflictEvent::EVENT_TYPE,
+            VersionConflictEvent.new(event.event_type, latest_version + 1, expected_current_version)]
+  end
+
+  def build_validation_error(e)
+    Failure[:validation_error, e.record.errors.full_messages]
   end
 end

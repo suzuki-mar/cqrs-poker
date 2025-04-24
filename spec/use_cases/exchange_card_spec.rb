@@ -25,7 +25,7 @@ RSpec.describe 'カード交換をするユースケース' do
 
       it 'イベントが正しく発行されること' do
         current_hand = read_model.refreshed_hand_set
-        discarded_card = current_hand.find_by(number: 1)
+        discarded_card = current_hand.fetch_by_number(1)
         context = CommandContext.build_for_exchange(discarded_card)
         published_event = command_handler.handle(Command.new, context)
         expect(published_event).to be_a(CardExchangedEvent)
@@ -45,7 +45,7 @@ RSpec.describe 'カード交換をするユースケース' do
       it '2回連続で手札を交換しても正しく状態が変化すること' do
         subject
         hand_after_first = read_model.refreshed_hand_set
-        discarded_card2 = hand_after_first.find_by(number: 1)
+        discarded_card2 = hand_after_first.fetch_by_number(1)
         context2 = CommandContext.build_for_exchange(discarded_card2)
         command_handler.handle(Command.new, context2)
         hand_after_second = read_model.refreshed_hand_set

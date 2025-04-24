@@ -88,7 +88,7 @@ module ReadModels
       ReadModels::HandSet.valid_cards?(@cards)
     end
 
-    def find_by_number(number)
+    def fetch_by_number(number)
       raise ArgumentError, 'Invalid number' unless number.is_a?(Integer) && number.between?(1, CARDS_IN_HAND)
 
       @cards[number - 1]

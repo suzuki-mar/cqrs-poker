@@ -29,4 +29,12 @@ class GameStartedEvent
   end
 
   attr_reader :initial_hand
+
+  def self.from_store(store)
+    event_data = JSON.parse(store.event_data, symbolize_names: true)
+    hand_data = event_data[:initial_hand]
+    hand_cards = hand_data.map { |c| Card.new(c) }
+    hand_set = ReadModels::HandSet.build(hand_cards)
+    new(hand_set)
+  end
 end

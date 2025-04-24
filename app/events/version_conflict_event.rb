@@ -30,4 +30,13 @@ class VersionConflictEvent
   def to_serialized_hash
     to_event_data
   end
+
+  def self.from_store(store)
+    event_data = JSON.parse(store.event_data, symbolize_names: true)
+    new(
+      event_data[:event_type],
+      event_data[:expected_version],
+      event_data[:actual_version]
+    )
+  end
 end
