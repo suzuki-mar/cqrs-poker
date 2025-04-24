@@ -426,6 +426,9 @@ DEPENDENCIES
   rbs
   rbs-inline
   rspec-rails
+  rubocop
+  rubocop-performance
+  rubocop-rails
   rubocop-rails-omakase
   shoulda-matchers (~> 5.0)
   solid_cable
