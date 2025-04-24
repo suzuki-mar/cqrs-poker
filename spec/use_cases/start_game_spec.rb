@@ -7,7 +7,6 @@ RSpec.describe 'ゲーム開始' do
   let(:command_handler) { UseCaseHelper.build_command_handler(logger) }
   let(:context) { CommandContext.build_for_game_start }
 
-
   context '正常系' do
     describe 'ゲームが正しく開始されること' do
       let(:command) { Command.new }
@@ -41,7 +40,7 @@ RSpec.describe 'ゲーム開始' do
 
         aggregate_failures do
           expect(display_data[:status]).to eq('started')
-          expect(display_data[:hand].split(' ').size).to eq(ReadModels::HandSet::CARDS_IN_HAND)
+          expect(display_data[:hand].split.size).to eq(ReadModels::HandSet::CARDS_IN_HAND)
           expect(display_data[:turn]).to eq(1)
         end
       end
@@ -66,15 +65,19 @@ RSpec.describe 'ゲーム開始' do
       end
 
       it 'GameStartedイベントが2回記録されないこと' do
-        expect {
+        expect do
           subject
-        }.not_to change { Event.where(event_type: GameStartedEvent::EVENT_TYPE).count }
+        end.not_to(change { Event.where(event_type: GameStartedEvent::EVENT_TYPE).count })
       end
 
       it 'GameStateが変更されないこと' do
         original_game_state = GameState.find_current_session.attributes
 
-        subject rescue nil
+        begin
+          subject
+        rescue StandardError
+          nil
+        end
 
         expect(GameState.find_current_session.attributes).to eq(original_game_state)
       end
@@ -83,7 +86,7 @@ RSpec.describe 'ゲーム開始' do
     context 'バージョン競合が発生した場合' do
       let(:event) { GameStartedEvent.new(Faker.high_card_hand) }
       let(:error_version) { 1 }
-      it_behaves_like "version conflict event"
+      it_behaves_like 'version conflict event'
     end
   end
 end

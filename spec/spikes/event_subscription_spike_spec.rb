@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 # イベント購読のスパイクテスト
-RSpec.describe "EventSubscriptionSpike", type: :spike do
+RSpec.describe 'EventSubscriptionSpike', type: :spike do
   # シンプルなイベント
   class SampleCardExchangedEvent
     # @!sig attr_reader game_id: String
@@ -55,25 +55,25 @@ RSpec.describe "EventSubscriptionSpike", type: :spike do
     end
   end
 
-  it "イベントを発行して購読する" do
+  it 'イベントを発行して購読する' do
     # 購読者と仲介者を作成
     subscriber = EventSubscriber.new
     broker = EventBroker.new
 
     # イベント購読を設定
-    subscription = ActiveSupport::Notifications.subscribe("card_exchanged_event") do |_name, _start, _finish, _id, payload|
+    subscription = ActiveSupport::Notifications.subscribe('card_exchanged_event') do |_name, _start, _finish, _id, payload|
       broker.relay(payload)
       subscriber.handle(payload)
     end
 
-    event = SampleCardExchangedEvent.new(game_id: "game-123", player_id: "player-456")
+    event = SampleCardExchangedEvent.new(game_id: 'game-123', player_id: 'player-456')
     event.publish
-    ActiveSupport::Notifications.instrument("card_exchanged_event", event.to_h)
+    ActiveSupport::Notifications.instrument('card_exchanged_event', event.to_h)
 
     # 購読者がイベントを受信したことを確認
     expect(subscriber.received_events.size).to eq(1)
-    expect(subscriber.received_events.first[:game_id]).to eq("game-123")
-    expect(subscriber.received_events.first[:player_id]).to eq("player-456")
+    expect(subscriber.received_events.first[:game_id]).to eq('game-123')
+    expect(subscriber.received_events.first[:player_id]).to eq('player-456')
 
     # クリーンアップ
     ActiveSupport::Notifications.unsubscribe(subscription)

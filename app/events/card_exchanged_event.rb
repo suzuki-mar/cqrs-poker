@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CardExchangedEvent
-  EVENT_TYPE = "card_exchanged"
+  EVENT_TYPE = 'card_exchanged'
 
   def initialize(discarded_card, new_card)
     @discarded_card = discarded_card
@@ -32,6 +32,4 @@ class CardExchangedEvent
   end
 
   attr_reader :discarded_card, :new_card
-
-  private
 end

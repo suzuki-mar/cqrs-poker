@@ -14,11 +14,12 @@ class Event < ApplicationRecord
   private
 
   def validate_event_data_json
-    errors.add(:event_data, "must be valid JSON") unless valid_json?(event_data)
+    errors.add(:event_data, 'must be valid JSON') unless valid_json?(event_data)
   end
 
   def valid_json?(json)
     return false if json.nil?
+
     JSON.parse(json)
     true
   rescue JSON::ParserError
@@ -26,8 +27,8 @@ class Event < ApplicationRecord
   end
 
   def validate_occurred_at_not_future_date
-    if occurred_at.present? && occurred_at > Time.current
-      errors.add(:occurred_at, "can't be in the future")
-    end
+    return unless occurred_at.present? && occurred_at > Time.current
+
+    errors.add(:occurred_at, "can't be in the future")
   end
 end

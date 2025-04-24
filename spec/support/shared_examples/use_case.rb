@@ -7,17 +7,16 @@ RSpec.shared_examples 'warnログが出力される' do
   end
 end
 
-RSpec.shared_examples "version conflict event" do
-  it "バージョン競合エラー（version_conflict）が返ること" do
-    fail "eventがletで定義されていません" if event.nil?
-    fail "error_versionがletで定義されていません" if error_version.nil?
+RSpec.shared_examples 'version conflict event' do
+  it 'バージョン競合エラー（version_conflict）が返ること' do
+    raise 'eventがletで定義されていません' if event.nil?
+    raise 'error_versionがletで定義されていません' if error_version.nil?
 
     aggregate_store = AggregateStore.new
     aggregate_store.append(event, error_version) # 1回目（正常）
     result = aggregate_store.append(event, error_version) # 2回目（競合）
-    if result.success?
-      fail "shared_examplesの使い方エラー: 1回目のappend（正常登録）が実行されていません"
-    end
+    raise 'shared_examplesの使い方エラー: 1回目のappend（正常登録）が実行されていません' if result.success?
+
     expect(result.failure[0]).to eq(VersionConflictEvent::EVENT_TYPE)
     expect(result.failure[1]).to be_a(VersionConflictEvent)
   end

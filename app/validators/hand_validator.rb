@@ -6,9 +6,9 @@
 # - GameStateのコードをシンプルに保つ
 class HandValidator < ActiveModel::EachValidator
   def validate_each(record, attribute, value)
-    return if value.blank?  # presence: true で処理されるため
-    
+    return if value.blank? # presence: true で処理されるため
+
     card = Card.new(value)
     record.errors.add(attribute, 'カードの表示形式が不正です') unless card.valid?
   end
-end 
+end

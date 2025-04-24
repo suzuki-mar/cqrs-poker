@@ -7,7 +7,7 @@ RSpec.describe ReadModels::HandSet do
     subject { described_class.build(cards) }
 
     context '正常な手札の場合' do
-      let(:cards) { 5.times.map { Faker.valid_card } }
+      let(:cards) { Array.new(5) { Faker.valid_card } }
 
       it '有効なHandSetインスタンスを生成すること' do
         hand_set = subject
@@ -18,7 +18,7 @@ RSpec.describe ReadModels::HandSet do
 
     context '不正な手札の場合' do
       context 'カードが5枚ではない場合' do
-        let(:cards) { 4.times.map { Faker.valid_card } }
+        let(:cards) { Array.new(4) { Faker.valid_card } }
 
         it 'ArgumentErrorが発生すること' do
           expect { subject }.to raise_error(ArgumentError, 'Invalid hand')
@@ -27,8 +27,8 @@ RSpec.describe ReadModels::HandSet do
 
       context '不正なカードが含まれる場合' do
         let(:cards) do
-          valid_cards = 4.times.map { Faker.valid_card }
-          valid_cards + [ Card.new('@1') ]
+          valid_cards = Array.new(4) { Faker.valid_card }
+          valid_cards + [Card.new('@1')]
         end
 
         it 'ArgumentErrorが発生すること' do
@@ -43,7 +43,7 @@ RSpec.describe ReadModels::HandSet do
     let(:hand_set) { Faker.hand_from_cards(cards) }
 
     context '不正な手札の場合' do
-      let(:cards) { 4.times.map { Faker.valid_card } }
+      let(:cards) { Array.new(4) { Faker.valid_card } }
       it 'raises ArgumentError' do
         expect { subject }.to raise_error(ArgumentError, '手札が不正です')
       end
@@ -102,9 +102,11 @@ RSpec.describe ReadModels::HandSet do
     let(:hand_set) { ReadModels::HandSet.build(cards) }
 
     context 'ハイカードの場合' do
-      let(:cards) { [
-        Card.new('♠A'), Card.new('♥K'), Card.new('♦3'), Card.new('♣5'), Card.new('♠7')
-      ] }
+      let(:cards) do
+        [
+          Card.new('♠A'), Card.new('♥K'), Card.new('♦3'), Card.new('♣5'), Card.new('♠7')
+        ]
+      end
       it { should eq('ハイカード') }
     end
   end

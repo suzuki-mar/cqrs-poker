@@ -1,4 +1,4 @@
-require "dry/monads"
+require 'dry/monads'
 
 class AggregateStore
   include Dry::Monads[:result]
@@ -10,18 +10,20 @@ class AggregateStore
   def append(event, expected_current_version)
     stored_version = current_version
     if expected_current_version < stored_version
-      return Failure[VersionConflictEvent::EVENT_TYPE, VersionConflictEvent.new(event.event_type, stored_version, expected_current_version)]
+      return Failure[VersionConflictEvent::EVENT_TYPE,
+                     VersionConflictEvent.new(event.event_type, stored_version, expected_current_version)]
     end
 
     if event.is_a?(GameStartedEvent) && Event.exists?(version: 1)
-      return Failure[VersionConflictEvent::EVENT_TYPE, VersionConflictEvent.new(event.event_type, 1, expected_current_version)]
+      return Failure[VersionConflictEvent::EVENT_TYPE,
+                     VersionConflictEvent.new(event.event_type, 1, expected_current_version)]
     end
 
     version = if event.is_a?(GameStartedEvent)
-      1
-    else
-      expected_current_version + 1
-    end
+                1
+              else
+                expected_current_version + 1
+              end
     Event.create!(
       event_type: event.event_type,
       event_data: event.to_serialized_hash.to_json,
@@ -32,7 +34,8 @@ class AggregateStore
   rescue ActiveRecord::RecordInvalid => e
     if e.record.errors.details[:version]&.any? { |err| err[:error] == :taken }
       latest_version = Event.maximum(:version)
-      return Failure[VersionConflictEvent::EVENT_TYPE, VersionConflictEvent.new(event.event_type, latest_version + 1, expected_current_version)]
+      return Failure[VersionConflictEvent::EVENT_TYPE,
+                     VersionConflictEvent.new(event.event_type, latest_version + 1, expected_current_version)]
     end
     Failure[:validation_error, e.record.errors.full_messages]
   end
@@ -51,7 +54,7 @@ class AggregateStore
   end
 
   def game_already_started?
-    Event.where(event_type: GameStartedEvent::EVENT_TYPE).exists?
+    Event.exists?(event_type: GameStartedEvent::EVENT_TYPE)
   end
 
   private

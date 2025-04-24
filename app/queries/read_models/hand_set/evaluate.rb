@@ -10,9 +10,7 @@ module ReadModels
       def call(cards)
         @cards = cards
 
-        unless valid_hand?(@cards)
-          raise ArgumentError, "手札が不正です"
-        end
+        raise ArgumentError, '手札が不正です' unless valid_hand?(@cards)
 
         if straight_flush?
           Rank::STRAIGHT_FLUSH
@@ -63,7 +61,7 @@ module ReadModels
 
       def straight?
         sorted_ranks = ranks.map(&:to_i).sort
-        is_consecutive = ->(numbers) {
+        is_consecutive = lambda { |numbers|
           numbers.each_cons(2).all? { |current, next_number| next_number - current == 1 }
         }
         is_consecutive.call(sorted_ranks)
@@ -92,6 +90,7 @@ module ReadModels
       def valid_hand?(cards)
         return false unless cards.is_a?(Array)
         return false unless cards.size == 5
+
         cards.all?(&:valid?)
       end
 

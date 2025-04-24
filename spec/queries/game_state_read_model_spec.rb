@@ -9,7 +9,7 @@ RSpec.describe ReadModels::GameStateReadModel do
       display_data = read_model.current_state_for_display
 
       expect(display_data[:status]).to eq('started')
-      expect(display_data[:hand]).to eq(game_state.hand_set.join(" "))
+      expect(display_data[:hand]).to eq(game_state.hand_set.join(' '))
       expect(display_data[:current_rank]).to eq(ReadModels::HandSet::Rank::HIGH_CARD)
       expect(display_data[:rank_name]).to eq('ハイカード')
       expect(display_data[:turn]).to eq(1)

@@ -11,18 +11,15 @@ module HandlerStrategy
     def build_invalid_command_event_if_needed
       discarded_card = context.discarded_card
       current_game_state = GameState.find_current_session
-      if current_game_state.nil?
-        return InvalidCommandEvent.new(command: command, reason: "ゲーム状態が存在しません")
-      end
+      return InvalidCommandEvent.new(command: command, reason: 'ゲーム状態が存在しません') if current_game_state.nil?
+
       hand_set = ReadModels::HandSet.build(current_game_state.hand_set.map { |str| Card.new(str) })
 
       unless hand_set.include?(discarded_card)
-        return InvalidCommandEvent.new(command: command, reason: "交換対象のカードが手札に存在しません")
+        return InvalidCommandEvent.new(command: command, reason: '交換対象のカードが手札に存在しません')
       end
 
-      unless board.drawable?
-        return InvalidCommandEvent.new(command: command, reason: "デッキの残り枚数が不足しています")
-      end
+      return InvalidCommandEvent.new(command: command, reason: 'デッキの残り枚数が不足しています') unless board.drawable?
 
       nil
     end

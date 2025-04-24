@@ -3,4 +3,4 @@ namespace :game do
   task start: :environment do
     StartGameUseCase.new.execute
   end
-end 
+end

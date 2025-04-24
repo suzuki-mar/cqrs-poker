@@ -27,13 +27,9 @@ module Aggregates
       end
     end
 
-    def draw_initial_hand
-      deck.draw_initial_hand
-    end
+    delegate :draw_initial_hand, to: :deck
 
-    def draw
-      deck.draw
-    end
+    delegate :draw, to: :deck
 
     # カードを捨て札置き場に捨てる
     def discard_to_trash(card)
@@ -42,7 +38,7 @@ module Aggregates
 
     # デッキにカードが引けるかどうかを返すpublicメソッド
     def drawable?
-      deck.size > 0
+      deck.size.positive?
     end
 
     def game_already_started?

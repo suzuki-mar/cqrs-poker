@@ -12,7 +12,7 @@ RSpec.describe Event, type: :model do
       it '不正なJSONの場合はエラーがおきること' do
         event = build(:event, event_data: 'invalid_json')
         expect(event).not_to be_valid
-        expect(event.errors[:event_data]).to include("must be valid JSON")
+        expect(event.errors[:event_data]).to include('must be valid JSON')
       end
     end
 

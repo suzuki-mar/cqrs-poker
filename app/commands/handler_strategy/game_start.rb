@@ -10,7 +10,7 @@ module HandlerStrategy
 
     def build_invalid_command_event_if_needed
       if board.game_already_started?
-        reason = { message: "すでにゲームが開始されているためゲームを開始できませんでした" }
+        reason = { message: 'すでにゲームが開始されているためゲームを開始できませんでした' }
         return VersionConflictEvent.new(
           GameStartedEvent::EVENT_TYPE,
           1,

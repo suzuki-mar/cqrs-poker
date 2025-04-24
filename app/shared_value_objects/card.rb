@@ -1,6 +1,6 @@
 class Card
   VALID_SUITS = %w[♠ ♥ ♦ ♣].freeze
-  VALID_RANKS = [ "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" ].freeze
+  VALID_RANKS = %w[A 2 3 4 5 6 7 8 9 10 J Q K].freeze
 
   attr_reader :suit, :rank
 
@@ -16,7 +16,7 @@ class Card
 
   def initialize(card_str)
     @suit = card_str[0]
-    @rank = card_str[1..-1]
+    @rank = card_str[1..]
   end
 
   def valid?
@@ -36,6 +36,6 @@ class Card
   end
 
   def hash
-    [ suit, rank ].hash
+    [suit, rank].hash
   end
 end

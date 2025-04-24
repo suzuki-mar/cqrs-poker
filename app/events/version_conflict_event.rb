@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class VersionConflictEvent
-  EVENT_TYPE = "version_conflict"
+  EVENT_TYPE = 'version_conflict'
 
   attr_reader :event_type, :expected_version, :actual_version
 

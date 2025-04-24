@@ -38,7 +38,7 @@ RSpec.describe Card do
     end
 
     it '配列のinclude?で正しく判定できる' do
-      hand = [ Card.new('♠A'), Card.new('♥2') ]
+      hand = [Card.new('♠A'), Card.new('♥2')]
       expect(hand).to include(Card.new('♠A'))
       expect(hand).not_to include(Card.new('♣3'))
     end

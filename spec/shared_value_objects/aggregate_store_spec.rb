@@ -8,10 +8,10 @@ RSpec.describe AggregateStore do
 
     it '受け取ったイベントを保存できること' do
       current_version = aggregate_store.current_version
-      expect {
+      expect do
         result = aggregate_store.append(event, current_version)
         expect(result).to be_success
-      }.to change(Event, :count).by(1)
+      end.to change(Event, :count).by(1)
 
       saved_event = Event.last
       expect(saved_event.event_type).to eq(GameStartedEvent::EVENT_TYPE)
@@ -22,10 +22,10 @@ RSpec.describe AggregateStore do
       aggregate_store = AggregateStore.new
       event = GameStartedEvent.new(Faker.high_card_hand)
       v = aggregate_store.current_version
-      allow(Event).to receive(:create!).and_raise(StandardError, "DB接続断")
-      expect {
+      allow(Event).to receive(:create!).and_raise(StandardError, 'DB接続断')
+      expect do
         aggregate_store.append(event, v)
-      }.to raise_error(StandardError, "DB接続断")
+      end.to raise_error(StandardError, 'DB接続断')
     end
   end
 
@@ -41,7 +41,7 @@ RSpec.describe AggregateStore do
       v2 = aggregate_store.current_version
       aggregate_store.append(event2, v2)
       versions = Event.order(:version).pluck(:version)
-      expect(versions).to eq([ 1, 2 ])
+      expect(versions).to eq([1, 2])
     end
 
     it 'version重複時はFailureで返ること' do

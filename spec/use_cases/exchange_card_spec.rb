@@ -25,7 +25,7 @@ RSpec.describe 'カード交換をするユースケース' do
 
       it 'イベントが正しく発行されること' do
         current_hand = read_model.refreshed_hand_set
-        discarded_card = current_hand.find_by_number(1)
+        discarded_card = current_hand.find_by(number: 1)
         context = CommandContext.build_for_exchange(discarded_card)
         published_event = command_handler.handle(Command.new, context)
         expect(published_event).to be_a(CardExchangedEvent)
@@ -45,7 +45,7 @@ RSpec.describe 'カード交換をするユースケース' do
       it '2回連続で手札を交換しても正しく状態が変化すること' do
         subject
         hand_after_first = read_model.refreshed_hand_set
-        discarded_card2 = hand_after_first.find_by_number(1)
+        discarded_card2 = hand_after_first.find_by(number: 1)
         context2 = CommandContext.build_for_exchange(discarded_card2)
         command_handler.handle(Command.new, context2)
         hand_after_second = read_model.refreshed_hand_set
@@ -87,7 +87,8 @@ RSpec.describe 'カード交換をするユースケース' do
         hand_size = ReadModels::HandSet::CARDS_IN_HAND
         exchange_count = deck_size - hand_size
         exchange_count.times do
-          command_handler.handle(Command.new, CommandContext.build_for_exchange(read_model.refreshed_hand_set.cards.first))
+          command_handler.handle(Command.new,
+                                 CommandContext.build_for_exchange(read_model.refreshed_hand_set.cards.first))
         end
       end
       it_behaves_like 'warnログが出力される'
@@ -101,8 +102,8 @@ RSpec.describe 'カード交換をするユースケース' do
   end
 
   context 'バージョン競合が発生した場合' do
-    let(:event) { CardExchangedEvent.new(Card.new("♠A"), Card.new("♣K")) }
+    let(:event) { CardExchangedEvent.new(Card.new('♠A'), Card.new('♣K')) }
     let(:error_version) { 1 }
-    it_behaves_like "version conflict event"
+    it_behaves_like 'version conflict event'
   end
 end

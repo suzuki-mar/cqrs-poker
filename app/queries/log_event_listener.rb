@@ -8,14 +8,15 @@ class LogEventListener
   def handle_event(event)
     case event
     when GameStartedEvent
-      logger.info format_event_message("ゲーム開始", format_cards(event.to_event_data[:initial_hand].map(&:to_s)))
+      logger.info format_event_message('ゲーム開始', format_cards(event.to_event_data[:initial_hand].map(&:to_s)))
     when InvalidCommandEvent
-      logger.warn format_event_message("不正な選択肢の選択", event.to_event_data[:reason])
+      logger.warn format_event_message('不正な選択肢の選択', event.to_event_data[:reason])
     when VersionConflictEvent
-      logger.warn format_event_message("バージョン競合", "expected: #{event.to_event_data[:expected_version]}, actual: #{event.to_event_data[:actual_version]}")
+      logger.warn format_event_message('バージョン競合',
+                                       "expected: #{event.to_event_data[:expected_version]}, actual: #{event.to_event_data[:actual_version]}")
     when CardExchangedEvent
       logger.info format_event_message(
-        "カード交換",
+        'カード交換',
         "捨てたカード: #{event.discarded_card}, 引いたカード: #{event.new_card}"
       )
     else

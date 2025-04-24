@@ -13,12 +13,13 @@ class TestLogger
 
   def initialize
     clear
-    @level = LEVEL_MAP[:debug]  # デフォルトはdebugレベル
+    @level = LEVEL_MAP[:debug] # デフォルトはdebugレベル
   end
 
   LEVELS.each do |level_name|
     define_method(level_name) do |message|
       return unless LEVEL_MAP[level_name] >= @level
+
       @messages << { level: level_name, message: message }
     end
   end
@@ -38,6 +39,6 @@ class TestLogger
 
   # 特定のレベルのメッセージのみを取得
   def messages_for_level(level)
-    @messages.select { |msg| msg[:level] == level }.map { |msg| msg[:message] }
+    @messages.select { |msg| msg[:level] == level }.pluck(:message)
   end
 end

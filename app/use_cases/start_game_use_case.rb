@@ -6,4 +6,4 @@ class StartGameUseCase
     command.execute
     event.apply
   end
-end 
+end

@@ -1,5 +1,5 @@
 class GameStartedEvent
-  EVENT_TYPE = "game_started"
+  EVENT_TYPE = 'game_started'.freeze
 
   def initialize(initial_hand)
     @initial_hand = initial_hand
@@ -29,6 +29,4 @@ class GameStartedEvent
   end
 
   attr_reader :initial_hand
-
-  private
 end

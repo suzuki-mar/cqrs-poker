@@ -8,25 +8,25 @@ module Aggregates
       new
     end
 
-    def size
-      cards.size
-    end
+    delegate :size, to: :cards
 
     def draw_initial_hand
-      drawn_cards = ReadModels::HandSet::CARDS_IN_HAND.times.map { draw }
+      drawn_cards = Array.new(ReadModels::HandSet::CARDS_IN_HAND) { draw }
       ReadModels::HandSet.build(drawn_cards)
     end
 
     def draw
-      raise ArgumentError, "デッキの残り枚数が不足しています" if cards.empty?
+      raise ArgumentError, 'デッキの残り枚数が不足しています' if cards.empty?
+
       drawn_card = cards.sample
-      @cards = cards - [ drawn_card ]
+      @cards = cards - [drawn_card]
       drawn_card
     end
 
     def remove(card)
-      raise ArgumentError, "指定したカードはデッキに存在しません" unless cards.include?(card)
-      @cards = cards - [ card ]
+      raise ArgumentError, '指定したカードはデッキに存在しません' unless cards.include?(card)
+
+      @cards = cards - [card]
       card
     end
 

@@ -13,8 +13,8 @@ RSpec.describe CommandHandler do
   let(:event_bus) { EventBus.new(event_publisher) }
   let(:command_handler) { described_class.new(event_bus) }
 
-  describe "#handle" do
-    it "コマンドを実行し、イベントを発行できること" do
+  describe '#handle' do
+    it 'コマンドを実行し、イベントを発行できること' do
       allow(event_publisher).to receive(:broadcast)
 
       event = command_handler.handle(Command.new, CommandContext.build_for_game_start)

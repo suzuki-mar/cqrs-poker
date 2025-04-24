@@ -8,7 +8,7 @@ class SlowCommandHandler < CommandHandler
 
   def handle(command, context)
     sleep(@delay)
-    super(command, context)
+    super
   end
 
   private

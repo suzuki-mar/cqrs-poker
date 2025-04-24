@@ -2,7 +2,7 @@ require 'rails_helper'
 require 'rake'
 
 RSpec.describe 'game:start task' do
-  before(:all) do  
+  before(:all) do
     Rails.application.load_tasks
   end
 
@@ -12,4 +12,4 @@ RSpec.describe 'game:start task' do
     Rake::Task['game:start'].execute
     expect(StartGameUseCase).to have_received(:new)
   end
-end 
+end

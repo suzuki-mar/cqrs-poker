@@ -43,37 +43,21 @@ module Faker
 
   module Card
     class << self
-      def suit
-        CardGenerator.suit
-      end
+      delegate :suit, to: :CardGenerator
 
-      def rank
-        CardGenerator.rank
-      end
+      delegate :rank, to: :CardGenerator
 
-      def number_rank
-        CardGenerator.number_rank
-      end
+      delegate :number_rank, to: :CardGenerator
 
-      def face_rank
-        CardGenerator.face_rank
-      end
+      delegate :face_rank, to: :CardGenerator
 
-      def valid_card
-        CardGenerator.valid_card
-      end
+      delegate :valid_card, to: :CardGenerator
 
-      def invalid_card
-        CardGenerator.invalid_card
-      end
+      delegate :invalid_card, to: :CardGenerator
 
-      def card_with_suit(suit_value)
-        CardGenerator.card_with_suit(suit_value)
-      end
+      delegate :card_with_suit, to: :CardGenerator
 
-      def card_with_rank(rank_value)
-        CardGenerator.card_with_rank(rank_value)
-      end
+      delegate :card_with_rank, to: :CardGenerator
     end
   end
-end 
+end

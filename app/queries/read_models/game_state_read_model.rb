@@ -6,7 +6,7 @@ module ReadModels
 
     def start_new_game!(event)
       @game_state = GameState.new
-      @game_state.status = "started"
+      @game_state.status = 'started'
       @game_state.current_rank = event.to_event_data[:evaluate]
       @game_state.current_turn = 1
       @game_state.assign_hand_number_from_set(event.to_event_data[:initial_hand])
@@ -49,7 +49,7 @@ module ReadModels
     attr_reader :game_state
 
     def format_hand
-      game_state.hand_set.join(" ")
+      game_state.hand_set.join(' ')
     end
   end
 end
