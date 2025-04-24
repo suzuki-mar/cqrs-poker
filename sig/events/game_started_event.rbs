@@ -1,0 +1,13 @@
+interface _Event
+  def event_type: () -> String
+  def event_type_name: () -> String
+  def to_event_data: () -> untyped
+  def to_serialized_hash: () -> untyped
+end
+
+class GameStartedEvent
+  include _Event
+  EVENT_TYPE: String
+  def initialize: (ReadModels::HandSet) -> void
+  attr_reader initial_hand: ReadModels::HandSet
+end 

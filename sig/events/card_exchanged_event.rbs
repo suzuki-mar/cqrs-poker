@@ -1,0 +1,7 @@
+class CardExchangedEvent
+  include _Event
+  EVENT_TYPE: String
+  def initialize: (Card, Card) -> void
+  attr_reader discarded_card: Card
+  attr_reader new_card: Card
+end 

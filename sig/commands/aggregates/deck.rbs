@@ -1,0 +1,10 @@
+module Aggregates
+  class Deck
+    def self.build: () -> Deck
+    def draw_initial_hand: () -> untyped
+    def draw: () -> untyped
+    def remove: (untyped card) -> void
+    attr_reader cards: untyped
+    def generate_initial_cards: () -> untyped
+  end
+end 

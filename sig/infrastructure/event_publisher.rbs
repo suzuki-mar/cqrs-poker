@@ -1,0 +1,9 @@
+class EventPublisher
+  def initialize: (projection: Projection, event_listener: LogEventListener) -> void
+  def subscribe: (Projection | LogEventListener) -> void
+  def broadcast: (String, GameStartedEvent | CardExchangedEvent | InvalidCommandEvent | VersionConflictEvent) -> void
+  attr_reader published_events: Array[GameStartedEvent | CardExchangedEvent | InvalidCommandEvent | VersionConflictEvent]
+  private
+  attr_reader projection: Projection
+  attr_reader event_listener: LogEventListener
+end 

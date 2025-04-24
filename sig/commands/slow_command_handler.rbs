@@ -1,0 +1,2 @@
+class SlowCommandHandler < CommandHandler
+end 

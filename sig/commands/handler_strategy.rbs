@@ -1,0 +1,14 @@
+module HandlerStrategy
+  class GameStart
+    def initialize: (untyped command, untyped context, untyped board) -> void
+    def board: () -> untyped
+    def command: () -> untyped
+    def context: () -> untyped
+  end
+  class ExchangeCard
+    def initialize: (untyped command, untyped context, untyped board) -> void
+    def board: () -> untyped
+    def command: () -> untyped
+    def context: () -> untyped
+  end
+end 

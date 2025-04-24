@@ -1,0 +1,16 @@
+module Aggregates
+  class BoardAggregate
+    def self.load_from_events: (untyped events) -> BoardAggregate
+    def apply: (untyped event) -> void
+    def draw_initial_hand: () -> untyped
+    def draw: () -> untyped
+    def discard_to_trash: (untyped card) -> void
+    def drawable?: () -> bool
+    def game_already_started?: () -> bool
+    private
+    attr_reader deck: untyped
+    attr_reader trash: untyped
+    attr_reader game_started: bool
+    attr_writer game_started: bool
+  end
+end 

@@ -1,0 +1,55 @@
+module ReadModels
+  class HandSet
+    module Rank
+      HIGH_CARD: String
+      ONE_PAIR: String
+      TWO_PAIR: String
+      THREE_OF_A_KIND: String
+      STRAIGHT: String
+      FLUSH: String
+      FULL_HOUSE: String
+      FOUR_OF_A_KIND: String
+      STRAIGHT_FLUSH: String
+      ROYAL_FLUSH: String
+      ALL: Array[String]
+      NAMES: Hash[String, String]
+      def self.japanese_name: (String) -> String
+    end
+    class Evaluate
+      def self.call: (untyped cards) -> untyped
+      def call: (untyped cards) -> untyped
+      def valid_hand?: (untyped cards) -> untyped
+      def straight_flush?: () -> untyped
+      def four_of_a_kind?: () -> untyped
+      def full_house?: () -> untyped
+      def flush?: () -> untyped
+      def straight?: () -> untyped
+      def three_of_a_kind?: () -> untyped
+      def two_pair?: () -> untyped
+      def one_pair?: () -> untyped
+      def rank_combinations: () -> untyped
+      def suits: () -> untyped
+      def rank_counts: () -> untyped
+      def ranks: () -> untyped
+      class RankCombinations
+        def initialize: (untyped values) -> void
+        def pair_count: () -> untyped
+        def three_of_a_kind?: () -> bool
+        def four_of_a_kind?: () -> bool
+        def full_house?: () -> bool
+      end
+    end
+    CARDS_IN_HAND: Integer
+    attr_reader cards: Array[Card]
+    def self.build: (Array[Card]) -> ReadModels::HandSet
+    def self.valid_cards?: (Array[Card]) -> bool
+    def initialize: (Array[Card]) -> void
+    def rebuild_after_exchange: (Card, Card) -> ReadModels::HandSet
+    def evaluate: () -> String
+    def rank_name: () -> String
+    def valid?: () -> bool
+    def find_by_number: (Integer) -> Card
+    def include?: (Card) -> bool
+    # 他の必要なメソッドも追加可能
+  end
+end 

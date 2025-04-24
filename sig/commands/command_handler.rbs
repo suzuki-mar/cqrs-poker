@@ -1,0 +1,9 @@
+class CommandHandler
+  def initialize: (EventBus) -> void
+  def handle: (Command, CommandContext) -> untyped
+  private
+  def aggregate_store: () -> AggregateStore
+  def build_strategy: (Symbol, Command, CommandContext, Aggregates::BoardAggregate) -> untyped
+  def event_bus: () -> EventBus
+  InvalidCommand: untyped
+end 

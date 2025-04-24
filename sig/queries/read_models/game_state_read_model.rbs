@@ -1,0 +1,13 @@
+module ReadModels
+  class GameStateReadModel
+    def initialize: () -> void
+    def start_new_game!: (GameStartedEvent) -> void
+    def exchange_card!: (CardExchangedEvent) -> void
+    def current_state_for_display: () -> { status: String, hand: String, current_rank: String, rank_name: String, turn: Integer }
+    def hand_set: () -> ReadModels::HandSet
+    def refreshed_hand_set: () -> ReadModels::HandSet
+    private
+    attr_reader game_state: GameState
+    def format_hand: () -> String
+  end
+end 

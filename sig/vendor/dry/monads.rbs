@@ -1,0 +1,8 @@
+module Dry
+  module Monads
+    Failure: untyped
+    def self.[]: (untyped) -> untyped
+  end
+end
+
+Failure: untyped 

@@ -1,0 +1,7 @@
+class InvalidCommandEvent
+  include _Event
+  EVENT_TYPE: String
+  def initialize: (command: Command, reason: String) -> void
+  attr_reader command: Command
+  attr_reader reason: String
+end 

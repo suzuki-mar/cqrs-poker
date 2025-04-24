@@ -1,0 +1,12 @@
+interface _EventListener
+  def handle_event: (GameStartedEvent | CardExchangedEvent | InvalidCommandEvent | VersionConflictEvent) -> void
+end
+
+class LogEventListener
+  include _EventListener
+  def initialize: (?untyped logger) -> void
+  private
+  def logger: () -> untyped
+  def format_event_message: (String, ?String) -> String
+  def format_cards: (Array[String]) -> String
+end 

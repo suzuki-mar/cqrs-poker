@@ -1,0 +1,4 @@
+class EventBus
+  def initialize: (EventPublisher) -> void
+  def publish: (GameStartedEvent | CardExchangedEvent | InvalidCommandEvent | VersionConflictEvent) -> void
+end 
