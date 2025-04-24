@@ -4,9 +4,9 @@ RSpec.describe GameState, type: :model do
   shared_examples '手札のバリデーション' do |hand_number|
     describe "hand_#{hand_number}" do
       let(:card_value) { nil }
-      subject { build(:game_state, "hand_#{hand_number}": card_value) }
+      subject { build(:game_state, "hand#{hand_number}": card_value) }
 
-      it { should validate_presence_of(:"hand_#{hand_number}") }
+      it { should validate_presence_of(:"hand#{hand_number}") }
 
       context '正常な値の場合' do
         let(:card_value) { Faker::Card.valid_card.to_s }
