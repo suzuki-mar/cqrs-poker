@@ -1,11 +1,14 @@
 class AggregateStore
   def current_version: () -> Integer
-  def append: (untyped event, Integer) -> untyped
+  def append: (untyped, Integer) -> untyped
   def load_all_events_in_order: () -> Array[untyped]
   def latest_event: () -> untyped
   def game_already_started?: () -> bool
   private
-  def build_event_from_store: (untyped store) -> untyped
-  def Success: () -> untyped
-  def Failure: (untyped) -> untyped
+  def build_event_from_store: (untyped) -> untyped
+  def build_failer_if_conflict: (untyped, Integer) -> untyped
+  def add_event_to_store!: (untyped, Integer) -> untyped
+  def version_conflict_error?: (untyped) -> bool
+  def build_version_conflict_event: (untyped, Integer) -> untyped
+  def build_validation_error: (untyped) -> untyped
 end 

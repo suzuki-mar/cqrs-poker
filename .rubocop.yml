@@ -24,12 +24,23 @@ AllCops:
 
 Layout/LineLength:
   Max: 120
+  
 
 Metrics/MethodLength:
-  Max: 15
+  Max: 10 
+  CountAsOne:
+    - array
+    - hash
+    - heredoc
+    - method_call 
 
 Metrics/ClassLength:
-  Max: 150
+  Max: 100
+  CountAsOne:
+    - array
+    - hash
+    - heredoc
+    - method_call
 
 Metrics/BlockLength:
   Exclude:

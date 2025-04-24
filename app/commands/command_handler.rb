@@ -7,18 +7,12 @@ class CommandHandler
   end
 
   def handle(command, context)
-    events = aggregate_store.load_all_events_in_order
-    board = Aggregates::BoardAggregate.load_from_events(events)
-    strategy = build_strategy(context.type, command, context, board)
-
+    strategy = build_strategy(context.type, command, context)
     invalid_event = strategy.build_invalid_command_event_if_needed
     event = invalid_event || strategy.build_event_by_executing
     result = aggregate_store.append(event, aggregate_store.current_version)
-    if result.failure?
-      return result.failure[1] if result.failure[0] == VersionConflictEvent::EVENT_TYPE
+    return handle_failure(result) if result.failure?
 
-      return result.failure[1]
-    end
     event_bus.publish(event)
     event
   end
@@ -27,14 +21,24 @@ class CommandHandler
 
   attr_reader :event_bus, :aggregate_store
 
-  def build_strategy(type, command, context, board)
-    case type
-    when CommandContext::Types::GAME_START
-      HandlerStrategy::GameStart.new(command, context, board)
-    when CommandContext::Types::EXCHANGE_CARD
-      HandlerStrategy::ExchangeCard.new(command, context, board)
-    else
-      raise InvalidCommand, "不明なコマンドタイプです: #{type}"
-    end
+  def build_strategy(type, command, context)
+    events = aggregate_store.load_all_events_in_order
+    board = Aggregates::BoardAggregate.load_from_events(events)
+
+    strategy_map = {
+      CommandContext::Types::GAME_START => HandlerStrategy::GameStart,
+      CommandContext::Types::EXCHANGE_CARD => HandlerStrategy::ExchangeCard
+    }
+
+    klass = strategy_map[type]
+    raise InvalidCommand, "不明なコマンドタイプです: #{type}" unless klass
+
+    klass.new(command, context, board, aggregate_store)
+  end
+
+  def handle_failure(result)
+    return result.failure[1] if result.failure[0] == VersionConflictEvent::EVENT_TYPE
+
+    result.failure[1]
   end
 end

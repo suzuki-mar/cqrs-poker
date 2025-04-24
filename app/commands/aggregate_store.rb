@@ -12,7 +12,7 @@ class AggregateStore
     return failer if failer.present?
 
     add_event_to_store!(event, expected_current_version)
-    Success()
+    Dry::Monads::Result::Success.new(event)
   rescue ActiveRecord::RecordInvalid => e
     return build_version_conflict_event(event, expected_current_version) if version_conflict_error?(e)
 
@@ -76,8 +76,8 @@ class AggregateStore
     )
   end
 
-  def version_conflict_error?(e)
-    e.record.errors.details[:version]&.any? { |err| err[:error] == :taken }
+  def version_conflict_error?(err)
+    err.record.errors.details[:version]&.any? { |detail| detail[:error] == :taken }
   end
 
   def build_version_conflict_event(event, expected_current_version)
@@ -86,7 +86,7 @@ class AggregateStore
             VersionConflictEvent.new(event.event_type, latest_version + 1, expected_current_version)]
   end
 
-  def build_validation_error(e)
-    Failure[:validation_error, e.record.errors.full_messages]
+  def build_validation_error(err)
+    Failure[:validation_error, err.record.errors.full_messages]
   end
 end

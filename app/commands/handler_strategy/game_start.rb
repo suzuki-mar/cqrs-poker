@@ -2,14 +2,15 @@
 
 module HandlerStrategy
   class GameStart
-    def initialize(command, context, board)
+    def initialize(command, context, board, aggregate_store)
       @command = command
       @context = context
       @board = board
+      @aggregate_store = aggregate_store
     end
 
     def build_invalid_command_event_if_needed
-      if board.game_already_started?
+      if aggregate_store.game_already_started?
         reason = { message: 'すでにゲームが開始されているためゲームを開始できませんでした' }
         return VersionConflictEvent.new(
           GameStartedEvent::EVENT_TYPE,
@@ -27,6 +28,6 @@ module HandlerStrategy
 
     private
 
-    attr_reader :command, :context, :board
+    attr_reader :command, :context, :board, :aggregate_store
   end
 end

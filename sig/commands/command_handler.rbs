@@ -3,7 +3,12 @@ class CommandHandler
   def handle: (Command, CommandContext) -> untyped
   private
   def aggregate_store: () -> AggregateStore
-  def build_strategy: (Symbol, Command, CommandContext, Aggregates::BoardAggregate) -> untyped
+  def build_strategy: (Symbol, Command, CommandContext) -> untyped
   def event_bus: () -> EventBus
+  def load_events: () -> untyped
+  def build_board: (untyped) -> Aggregates::BoardAggregate
+  def append_event: (untyped) -> untyped
+  def handle_failure: (untyped) -> untyped
+  def publish_event: (untyped) -> void
   InvalidCommand: untyped
 end 

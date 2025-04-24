@@ -1,14 +1,28 @@
 module HandlerStrategy
+  interface _HandlerStrategy
+    def build_invalid_command_event_if_needed: () -> InvalidCommandEvent?
+    def build_event_by_executing: () -> untyped
+  end
+
   class GameStart
-    def initialize: (untyped command, untyped context, untyped board) -> void
+    def initialize: (untyped command, untyped context, untyped board, untyped aggregate_store) -> void
     def board: () -> untyped
     def command: () -> untyped
     def context: () -> untyped
+    def aggregate_store: () -> untyped
+    def build_invalid_command_event_if_needed: () -> InvalidCommandEvent?
+    def build_event_by_executing: () -> untyped
   end
   class ExchangeCard
-    def initialize: (untyped command, untyped context, untyped board) -> void
+    def initialize: (untyped command, untyped context, untyped board, untyped aggregate_store) -> void
     def board: () -> untyped
     def command: () -> untyped
     def context: () -> untyped
+    def aggregate_store: () -> untyped
+    def build_invalid_command_event_if_needed: () -> InvalidCommandEvent?
+    def build_event_by_executing: () -> untyped
+    private
+    def apply_event_to_replay_hand: (Array[Card], untyped event) -> Array[Card]
+    def build_invalid_command_event_if_unexchangeable: (Array[Card]) -> InvalidCommandEvent?
   end
 end 

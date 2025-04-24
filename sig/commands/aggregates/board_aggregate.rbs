@@ -6,7 +6,8 @@ module Aggregates
     def draw: () -> untyped
     def discard_to_trash: (untyped card) -> void
     def drawable?: () -> bool
-    def game_already_started?: () -> bool
+    def apply_game_started_event: (untyped event) -> void
+    def apply_card_exchanged_event: (untyped event) -> void
     private
     attr_reader deck: untyped
     attr_reader trash: untyped

@@ -2,26 +2,23 @@
 
 module HandlerStrategy
   class ExchangeCard
-    def initialize(command, context, board)
+    def initialize(command, context, board, aggregate_store)
       @command = command
       @context = context
       @board = board
+      @aggregate_store = aggregate_store
     end
 
     def build_invalid_command_event_if_needed
-      discarded_card = context.discarded_card
-      current_game_state = GameState.find_current_session
-      return InvalidCommandEvent.new(command: command, reason: 'ゲーム状態が存在しません') if current_game_state.nil?
+      events = aggregate_store.load_all_events_in_order
 
-      hand_set = ReadModels::HandSet.build(current_game_state.hand_set.map { |str| Card.new(str) })
-
-      unless hand_set.include?(discarded_card)
-        return InvalidCommandEvent.new(command: command, reason: '交換対象のカードが手札に存在しません')
+      replay_hand = []
+      # @type var replay_hand: Array[Card]
+      events.each do |event|
+        replay_hand = apply_event_to_replay_hand(replay_hand, event)
       end
 
-      return InvalidCommandEvent.new(command: command, reason: 'デッキの残り枚数が不足しています') unless board.drawable?
-
-      nil
+      build_invalid_command_event_if_unexchangeable(replay_hand)
     end
 
     def build_event_by_executing
@@ -32,6 +29,29 @@ module HandlerStrategy
 
     private
 
-    attr_reader :command, :context, :board
+    def build_invalid_command_event_if_unexchangeable(hand)
+      unless hand.include?(context.discarded_card)
+        return InvalidCommandEvent.new(command: command,
+                                       reason: '交換対象のカードが手札に存在しません')
+      end
+      InvalidCommandEvent.new(command: command, reason: 'デッキの残り枚数が不足しています') unless board.drawable?
+    end
+
+    def apply_event_to_replay_hand(hand, event)
+      case event
+      when GameStartedEvent
+        event.to_event_data[:initial_hand].map { |c| c.is_a?(Card) ? c : Card.new(c) }
+
+      when CardExchangedEvent
+        idx = hand.find_index { |c| c == event.discarded_card }
+        hand[idx] = event.new_card if idx
+        hand
+
+      else
+        hand
+      end
+    end
+
+    attr_reader :command, :context, :board, :aggregate_store
   end
 end

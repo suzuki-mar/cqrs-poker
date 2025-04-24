@@ -17,14 +17,22 @@ module Aggregates
     def apply(event)
       case event
       when GameStartedEvent
-        @game_started = true
-        cards = event.to_event_data[:initial_hand].map { |c| c.is_a?(Card) ? c : Card.new(c) }
-        cards.each do |card|
-          deck.remove(card) if deck.cards.include?(card)
-        end
+        apply_game_started_event(event)
       when CardExchangedEvent
-        deck.remove(event.new_card) if deck.cards.include?(event.new_card)
+        apply_card_exchanged_event(event)
       end
+    end
+
+    private
+
+    def apply_game_started_event(event)
+      @game_started = true
+      cards = event.to_event_data[:initial_hand].map { |c| c.is_a?(Card) ? c : Card.new(c) }
+      cards.each { |card| deck.remove(card) if deck.cards.include?(card) }
+    end
+
+    def apply_card_exchanged_event(event)
+      deck.remove(event.new_card) if deck.cards.include?(event.new_card)
     end
 
     delegate :draw_initial_hand, to: :deck
@@ -41,12 +49,7 @@ module Aggregates
       deck.size.positive?
     end
 
-    def game_already_started?
-      @game_started
-    end
-
-    private
-
     attr_reader :deck, :trash
+    public :drawable?
   end
 end
