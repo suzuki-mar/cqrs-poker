@@ -5,5 +5,5 @@
 # - 重複したバリデーションコードを避ける
 # - GameStateのコードをシンプルに保つ
 class HandValidator < ActiveModel::EachValidator
-  def validate_each: (untyped record, untyped attribute, untyped value) -> (nil | untyped)
+  def validate_each: (ActiveModel::Model, Symbol, String) -> untyped
 end

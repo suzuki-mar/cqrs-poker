@@ -11,6 +11,9 @@ module HandlerStrategy
     def build_invalid_command_event_if_needed
       discarded_card = context.discarded_card
       current_game_state = GameState.find_current_session
+      if current_game_state.nil?
+        return InvalidCommandEvent.new(command: command, reason: "ゲーム状態が存在しません")
+      end
       hand_set = ReadModels::HandSet.build(current_game_state.hand_set.map { |str| Card.new(str) })
 
       unless hand_set.include?(discarded_card)
