@@ -10,31 +10,29 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_23_091303) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_24_054225) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "events", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
     t.string "event_type", null: false
     t.jsonb "event_data", null: false
     t.datetime "occurred_at", null: false
-    t.integer "version"
-    t.index ["version"], name: "index_events_on_version", unique: true
+    t.integer "version", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "game_states", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "hand_1", null: false
-    t.string "hand_2", null: false
-    t.string "hand_3", null: false
-    t.string "hand_4", null: false
-    t.string "hand_5", null: false
+    t.string "hand1", null: false
+    t.string "hand2", null: false
+    t.string "hand3", null: false
+    t.string "hand4", null: false
+    t.string "hand5", null: false
     t.string "current_rank", null: false
     t.integer "current_turn", null: false
     t.integer "status", null: false
-    t.index ["status"], name: "index_game_states_on_status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 end
