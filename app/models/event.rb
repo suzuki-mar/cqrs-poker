@@ -1,12 +1,15 @@
 # このクラスはRDBのテーブルを表すActiveRecordモデルです。
 # イベントオブジェクトの生成・復元はAggregateStoreで行います。
 
-class EventStore < ApplicationRecord
+class Event < ApplicationRecord
+  EVENT_TYPES = %w[game_started card_exchanged invalid_command_event].freeze
+
   validates :event_type, presence: true
   validates :event_data, presence: true
   validate :validate_event_data_json
   validates :occurred_at, presence: true
   validate :validate_occurred_at_not_future_date
+  validates :version, presence: true, uniqueness: true
 
   private
 

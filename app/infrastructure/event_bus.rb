@@ -8,7 +8,8 @@ class EventBus
 
   def publish(event)
     Rails.logger.info "Event published: #{event.class.name}"
-    @event_store_holder.append(event)
+    current_version = @event_store_holder.current_version
+    @event_store_holder.append(event, current_version)
     @event_publisher.broadcast(:handle_event, event)
   end
 

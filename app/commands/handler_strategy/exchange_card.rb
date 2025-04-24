@@ -26,7 +26,7 @@ module HandlerStrategy
 
     def build_event_by_executing
       discarded_card = context.discarded_card
-      new_card = command.execute_for_exchange_card(board, discarded_card)
+      new_card = command.execute_for_exchange_card(board)
       CardExchangedEvent.new(discarded_card, new_card)
     end
 

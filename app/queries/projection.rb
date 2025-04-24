@@ -9,6 +9,8 @@ class Projection
       read_model.exchange_card!(event)
     when InvalidCommandEvent
       return read_model
+    when VersionConflictEvent
+      return read_model
     else
       raise ArgumentError, "未対応のイベントです: #{event.class.name}"
     end

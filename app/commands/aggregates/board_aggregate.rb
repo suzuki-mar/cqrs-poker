@@ -18,11 +18,12 @@ module Aggregates
       case event
       when GameStartedEvent
         @game_started = true
-        event.initial_hand.cards.each do |card|
-          deck.remove(card)
+        cards = event.to_event_data[:initial_hand].map { |c| c.is_a?(Card) ? c : Card.new(c) }
+        cards.each do |card|
+          deck.remove(card) if deck.cards.include?(card)
         end
       when CardExchangedEvent
-        deck.remove(event.new_card)
+        deck.remove(event.new_card) if deck.cards.include?(event.new_card)
       end
     end
 
@@ -30,9 +31,8 @@ module Aggregates
       deck.draw_initial_hand
     end
 
-    def exchange(discarded_card)
-      discard_to_trash(discarded_card)
-      deck.exchange(discarded_card)
+    def draw
+      deck.draw
     end
 
     # カードを捨て札置き場に捨てる

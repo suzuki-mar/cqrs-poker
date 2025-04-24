@@ -98,7 +98,6 @@ Rails.application.configure do
 
   # ログを標準出力にリダイレクトする場合は以下の行のコメントを解除
   # config.logger = ActiveSupport::TaggedLogging.new(Logger.new(STDOUT))
-
   # テスト環境でもリロードを有効にする（Spring用）
   config.cache_classes = false
   config.eager_load = false

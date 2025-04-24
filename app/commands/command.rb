@@ -13,7 +13,7 @@ class Command
     board.draw_initial_hand
   end
 
-  def execute_for_exchange_card(board, discarded_card)
-    board.exchange(discarded_card)
+  def execute_for_exchange_card(board)
+    board.draw
   end
 end

@@ -17,10 +17,11 @@ module Aggregates
       ReadModels::HandSet.build(drawn_cards)
     end
 
-    def exchange(discarded_card)
+    def draw
       raise ArgumentError, "デッキの残り枚数が不足しています" if cards.empty?
-
-      draw
+      drawn_card = cards.sample
+      @cards = cards - [ drawn_card ]
+      drawn_card
     end
 
     def remove(card)
@@ -33,14 +34,6 @@ module Aggregates
 
     def initialize
       @cards = generate_initial_cards
-    end
-
-    def draw
-      raise ArgumentError, "デッキの残り枚数が不足しています" if cards.empty?
-
-      drawn_card = cards.sample
-      @cards = cards - [ drawn_card ]
-      drawn_card
     end
 
     def generate_initial_cards

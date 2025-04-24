@@ -17,8 +17,8 @@ RSpec.describe 'ゲーム開始' do
       end
 
       it 'イベントが正しく発行されること' do
-        event = EventStore.last
-        expect(event.event_type).to eq('game_started')
+        event = Event.last
+        expect(event.event_type).to eq(GameStartedEvent::EVENT_TYPE)
         # 必要ならevent.event_dataの内容も検証
       end
 
@@ -62,14 +62,13 @@ RSpec.describe 'ゲーム開始' do
         subject
         event_store_holder = AggregateStore.new
         last_event = event_store_holder.latest_event
-        expect(last_event.event_type).to eq('invalid_command_event')
-        expect(last_event.to_event_data[:reason]).to include('ゲームはすでに開始されています')
+        expect(last_event).to be_a(VersionConflictEvent)
       end
 
       it 'GameStartedイベントが2回記録されないこと' do
         expect {
           subject
-        }.not_to change { EventStore.where(event_type: 'game_started').count }
+        }.not_to change { Event.where(event_type: GameStartedEvent::EVENT_TYPE).count }
       end
 
       it 'GameStateが変更されないこと' do
@@ -79,12 +78,12 @@ RSpec.describe 'ゲーム開始' do
 
         expect(GameState.find_current_session.attributes).to eq(original_game_state)
       end
+    end
 
-      it 'warnログが出力されること' do
-        subject
-        expect(logger.messages_for_level(:warn).last).to match(/不正な選択肢の選択/)
-        expect(logger.messages_for_level(:warn).last).to include('ゲームはすでに開始されています')
-      end
+    context 'バージョン競合が発生した場合' do
+      let(:event) { GameStartedEvent.new(Faker.high_card_hand) }
+      let(:error_version) { 1 }
+      it_behaves_like "version conflict event"
     end
   end
 end

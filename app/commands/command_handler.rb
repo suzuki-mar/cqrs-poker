@@ -13,11 +13,17 @@ class CommandHandler
 
     invalid_event = strategy.build_invalid_command_event_if_needed
     if invalid_event
-      event_bus.publish(invalid_event)
-      return invalid_event
+      event = invalid_event
+    else
+      event = strategy.build_event_by_executing
     end
-
-    event = strategy.build_event_by_executing
+    result = aggregate_store.append(event, aggregate_store.current_version)
+    if result.failure?
+      if result.failure[0] == VersionConflictEvent::EVENT_TYPE
+        return result.failure[1]
+      end
+      return result.failure[1]
+    end
     event_bus.publish(event)
     event
   end

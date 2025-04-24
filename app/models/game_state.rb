@@ -20,11 +20,12 @@ class GameState < ApplicationRecord
   after_initialize :set_default_values
 
   def assign_hand_number_from_set(hand_set)
-    self.hand_1 = hand_set.cards[0].to_s
-    self.hand_2 = hand_set.cards[1].to_s
-    self.hand_3 = hand_set.cards[2].to_s
-    self.hand_4 = hand_set.cards[3].to_s
-    self.hand_5 = hand_set.cards[4].to_s
+    cards = hand_set.respond_to?(:cards) ? hand_set.cards : hand_set
+    self.hand_1 = cards[0].to_s
+    self.hand_2 = cards[1].to_s
+    self.hand_3 = cards[2].to_s
+    self.hand_4 = cards[3].to_s
+    self.hand_5 = cards[4].to_s
   end
 
   def hand_set

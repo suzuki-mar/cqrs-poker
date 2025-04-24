@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class InvalidCommandEvent
-  attr_reader :command, :reason
+  EVENT_TYPE = "invalid_command_event"
 
   def initialize(command:, reason:)
     @command = command
@@ -9,13 +9,29 @@ class InvalidCommandEvent
   end
 
   def event_type
-    "invalid_command_event"
+    EVENT_TYPE
+  end
+
+  def event_type_name
+    EVENT_TYPE
   end
 
   def to_event_data
     {
-      command: command.class.name,
+      command: command,
       reason: reason
     }
   end
+
+  # DB保存用
+  def to_serialized_hash
+    {
+      command: command,
+      reason: reason
+    }
+  end
+
+  attr_reader :command, :reason
+
+  private
 end

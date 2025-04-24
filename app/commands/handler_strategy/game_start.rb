@@ -9,8 +9,13 @@ module HandlerStrategy
     end
 
     def build_invalid_command_event_if_needed
-      if board.respond_to?(:game_already_started?) && board.game_already_started?
-        return InvalidCommandEvent.new(command: command, reason: "ゲームはすでに開始されています")
+      if board.game_already_started?
+        reason = { message: "すでにゲームが開始されているためゲームを開始できませんでした" }
+        return VersionConflictEvent.new(
+          GameStartedEvent::EVENT_TYPE,
+          1,
+          reason
+        )
       end
       nil
     end

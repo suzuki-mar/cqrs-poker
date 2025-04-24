@@ -30,8 +30,8 @@ RSpec.describe 'カード交換をするユースケース' do
         published_event = command_handler.handle(Command.new, context)
         expect(published_event).to be_a(CardExchangedEvent)
         expect(published_event.discarded_card.to_s).to eq(discarded_card.to_s)
-        stored_event = EventStore.last
-        expect(stored_event.event_type).to eq('card_exchanged')
+        stored_event = Event.last
+        expect(stored_event.event_type).to eq(CardExchangedEvent::EVENT_TYPE)
         expect(stored_event.event_data).to include(discarded_card.to_s)
       end
 
@@ -98,5 +98,11 @@ RSpec.describe 'カード交換をするユースケース' do
       # 交換を試みる
       # InvalidCommandEventになることを検証
     end
+  end
+
+  context 'バージョン競合が発生した場合' do
+    let(:event) { CardExchangedEvent.new(Card.new("♠A"), Card.new("♣K")) }
+    let(:error_version) { 1 }
+    it_behaves_like "version conflict event"
   end
 end

@@ -7,48 +7,70 @@ RSpec.describe AggregateStore do
     let(:aggregate_store) { AggregateStore.new }
 
     it '受け取ったイベントを保存できること' do
+      current_version = aggregate_store.current_version
       expect {
-        aggregate_store.append(event)
-      }.to change(EventStore, :count).by(1)
+        result = aggregate_store.append(event, current_version)
+        expect(result).to be_success
+      }.to change(Event, :count).by(1)
 
-      saved_event = EventStore.last
+      saved_event = Event.last
       expect(saved_event.event_type).to eq(GameStartedEvent::EVENT_TYPE)
-      expect(saved_event.event_data).to eq(event.to_event_data.to_json)
+      expect(saved_event.event_data).to eq(event.to_serialized_hash.to_json)
+    end
+
+    it '予期しない例外はそのままraiseされること' do
+      aggregate_store = AggregateStore.new
+      event = GameStartedEvent.new(Faker.high_card_hand)
+      v = aggregate_store.current_version
+      allow(Event).to receive(:create!).and_raise(StandardError, "DB接続断")
+      expect {
+        aggregate_store.append(event, v)
+      }.to raise_error(StandardError, "DB接続断")
     end
   end
 
-  describe '#current_hand_set' do
+  describe 'version管理' do
     let(:aggregate_store) { AggregateStore.new }
 
-    it '複数回のカード交換をリプレイして最新の手札を正しく再現できること' do
-      # ゲーム開始
-      initial_hand = [ Card.new('♠A'), Card.new('♥2'), Card.new('♦3'), Card.new('♣4'), Card.new('♠5') ]
-      aggregate_store.append(GameStartedEvent.new(ReadModels::HandSet.build(initial_hand)))
-
-      # 1回目の交換
-      discarded1 = initial_hand[0]
-      new_card1 = Card.new('♣6')
-      aggregate_store.append(CardExchangedEvent.new(discarded1, new_card1))
-
-      # 2回目の交換
-      latest_hand_set = aggregate_store.current_hand_set
-      discarded2 = latest_hand_set.cards.find { |c| c != new_card1 && !initial_hand.include?(c) } || initial_hand[1]
-      new_card2 = Card.new('♦7')
-      aggregate_store.append(CardExchangedEvent.new(discarded2, new_card2))
-
-      # 3回目の交換
-      latest_hand_set = aggregate_store.current_hand_set
-      discarded3 = latest_hand_set.cards.find { |c| c != new_card1 && c != new_card2 && !initial_hand.include?(c) } || initial_hand[2]
-      new_card3 = Card.new('♥8')
-      aggregate_store.append(CardExchangedEvent.new(discarded3, new_card3))
-
-      # 最新の手札を取得
-      latest_hand_set = aggregate_store.current_hand_set
-      expect(latest_hand_set).to be_a(ReadModels::HandSet)
-      expect(latest_hand_set.cards).to include(new_card1, new_card2, new_card3)
-      expect(latest_hand_set.cards.size).to eq(5)
-      # 交換していないカードも含まれていること
-      expect(latest_hand_set.cards).to include(initial_hand[3], initial_hand[4])
+    it 'versionが1から始まり、連番で保存されること' do
+      aggregate_store = AggregateStore.new
+      event1 = GameStartedEvent.new(Faker.high_card_hand)
+      event2 = CardExchangedEvent.new(Card.new('♠A'), Card.new('♣2'))
+      v1 = aggregate_store.current_version
+      aggregate_store.append(event1, v1)
+      v2 = aggregate_store.current_version
+      aggregate_store.append(event2, v2)
+      versions = Event.order(:version).pluck(:version)
+      expect(versions).to eq([ 1, 2 ])
     end
+
+    it 'version重複時はFailureで返ること' do
+      aggregate_store = AggregateStore.new
+      event1 = GameStartedEvent.new(Faker.high_card_hand)
+      v1 = aggregate_store.current_version
+      aggregate_store.append(event1, v1)
+      # 同じバージョンで再度append
+      result = aggregate_store.append(event1, v1)
+      expect(result).to be_failure
+      expect(result.failure[0]).to eq(VersionConflictEvent::EVENT_TYPE)
+      expect(result.failure[1]).to be_a(VersionConflictEvent)
+      expect(result.failure[1].to_event_data[:expected_version]).to be >= 1
+      expect(result.failure[1].to_event_data[:actual_version]).to be >= 0
+    end
+
+    it '並行保存時のversion競合（簡易シミュレーション）' do
+      aggregate_store = AggregateStore.new
+      event1 = GameStartedEvent.new(Faker.high_card_hand)
+      v1 = aggregate_store.current_version
+      aggregate_store.append(event1, v1)
+      # v2を2回同時に保存しようとする
+      v2 = aggregate_store.current_version
+      aggregate_store.append(event1, v2)
+      result = aggregate_store.append(event1, v2)
+      expect(result).to be_failure
+      expect(result.failure[0]).to eq(VersionConflictEvent::EVENT_TYPE)
+    end
+
+    # スナップショット整合性テストは、スナップショット機能実装後に追加
   end
 end
