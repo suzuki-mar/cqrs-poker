@@ -1,0 +1,7 @@
+pre-push:
+  parallel: true
+  commands:
+    rspec:
+      run: bundle exec rspec
+    steep:
+      run: bundle exec steep check
