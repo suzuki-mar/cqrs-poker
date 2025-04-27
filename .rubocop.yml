@@ -58,6 +58,11 @@ Rails:
 Performance:
   Enabled: true
 
+# 多言語対応は考慮しない方針
+# モデルと定義ファイルを分けるとコードの一覧性・可読性が下がるため
+Rails/I18nLocaleTexts:
+  Enabled: false
+
 # RSpec用（必要ならrubocop-rspecも追加可能）
 # require:
 #   - rubocop-rspec
