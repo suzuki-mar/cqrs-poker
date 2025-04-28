@@ -4,19 +4,6 @@ require 'rails_helper'
 
 RSpec.describe EventBus do
   describe '#publish' do
-    # テスト用のEventListenerクラス
-    class TestEventListener
-      attr_reader :received_events
-
-      def initialize
-        @received_events = []
-      end
-
-      def handle_event(event)
-        @received_events << event
-      end
-    end
-
     let(:event_listener) { TestEventListener.new }
     let(:projection) { Projection.new }
     let(:event_publisher) { EventPublisher.new(projection: projection, event_listener: event_listener) }

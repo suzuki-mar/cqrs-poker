@@ -1,0 +1,8 @@
+interface _Event
+  def event_type: () -> String
+  def event_type_name: () -> String
+  def to_event_data: () -> untyped
+  def to_serialized_hash: () -> untyped
+  def class: () -> Class
+  def is_a?: (Class) -> bool
+end 
