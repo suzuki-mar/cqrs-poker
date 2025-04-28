@@ -5,3 +5,5 @@ pre-push:
       run: bundle exec rspec
     steep:
       run: bundle exec steep check
+    rubocop:
+      run: bundle exec rubocop
