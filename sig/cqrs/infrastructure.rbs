@@ -6,4 +6,10 @@ class EventPublisher
   private
   attr_reader projection: Projection
   attr_reader event_listener: LogEventListener
+end
+
+
+class EventBus
+  def initialize: (EventPublisher) -> void
+  def publish: (GameStartedEvent | CardExchangedEvent | InvalidCommandEvent | VersionConflictEvent) -> void
 end 

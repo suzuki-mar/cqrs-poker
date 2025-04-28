@@ -1,0 +1,45 @@
+# このファイルで untyped が多用されている主な理由：
+#
+# ActiveRecordやRailsの動的性質
+#   - ActiveRecordは動的にメソッドや属性が追加されるため、厳密な型付けが困難な箇所が多い。
+#   - 代表的なメソッド（where, order, find など）は返り値が多様で、型を特定しづらい。
+# 柔軟性・拡張性の担保
+#   - Railsの柔軟なメタプログラミングや拡張性を損なわないため
+
+interface _ApplicationRecord
+  def save!: () -> void
+end
+
+interface _ApplicationRecordClass
+  def where: (*untyped) -> untyped
+  def last: () -> untyped
+  def new: (*untyped, **untyped) -> untyped
+end
+
+class ApplicationRecord < ActiveRecord::Base
+  include _ApplicationRecord
+  extend _ApplicationRecordClass
+end
+
+
+class PlayerHandState < ApplicationRecord
+  include _ApplicationRecord
+  extend _ApplicationRecordClass
+  MAX_HAND_SIZE: Integer
+  attr_accessor status: String
+  attr_accessor current_rank: String
+  attr_accessor current_turn: Integer
+  attr_accessor hand_set: Array[String]
+  def assign_hand_number_from_set: (untyped) -> void
+  def self.find_current_session: () -> PlayerHandState?
+end
+
+
+class Event < ApplicationRecord
+  include _ApplicationRecord
+  extend _ApplicationRecordClass
+  def self.maximum: (*untyped) -> untyped
+  def self.exists?: (*untyped) -> untyped
+  def self.create!: (*untyped) -> untyped
+  def self.order: (*untyped) -> untyped
+end 

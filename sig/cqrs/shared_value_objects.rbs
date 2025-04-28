@@ -1,3 +1,20 @@
+class Card
+  VALID_SUITS: ::Array[String]
+  VALID_RANKS: ::Array[String]
+
+  attr_reader suit: String
+  attr_reader rank: String
+
+  def self.generate_available: (?Array[Card]) -> Array[Card]
+  def initialize: (String) -> void
+  def valid?: () -> bool
+  def to_s: () -> String
+  def ==: (untyped) -> bool
+  def eql?: (untyped) -> bool
+  def hash: () -> Integer
+end
+
+
 class HandSet
   module Rank
     HIGH_CARD: String
@@ -14,6 +31,7 @@ class HandSet
     NAMES: Hash[String, String]
     def self.japanese_name: (String) -> String
   end
+
 
   class Evaluate
     def self.call: (Array[Card] cards) -> String
@@ -32,6 +50,7 @@ class HandSet
     def suits: () -> Array[String]
     def rank_counts: () -> untyped
     def ranks: () -> Array[String]
+
     class RankCombinations
       def initialize: (untyped values) -> void
       def pair_count: () -> Integer
@@ -40,6 +59,7 @@ class HandSet
       def full_house?: () -> bool
     end
   end
+
 
   CARDS_IN_HAND: Integer
   attr_reader cards: Array[Card]

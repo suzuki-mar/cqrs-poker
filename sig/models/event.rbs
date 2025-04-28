@@ -1,8 +1,0 @@
-class Event
-  def self.maximum: (*untyped) -> untyped
-  def self.exists?: (*untyped) -> untyped
-  def self.create!: (*untyped) -> untyped
-  def self.order: (*untyped) -> untyped
-  def self.last: () -> untyped
-  def self.where: (*untyped) -> untyped
-end 

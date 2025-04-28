@@ -1,0 +1,5 @@
+# =============================
+# spec用型定義（SlowCommandHandler など）
+# =============================
+class SlowCommandHandler < CommandHandler
+end 

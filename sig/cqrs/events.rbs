@@ -1,0 +1,50 @@
+interface _Event
+  def event_type: () -> String
+  def to_event_data: () -> untyped
+  def to_serialized_hash: () -> untyped
+  def class: () -> Class
+  def is_a?: (Class) -> bool
+  def nil?: () -> bool
+end
+
+interface _EventClass
+  def from_store: (untyped) -> _Event
+  def event_type: () -> String
+end
+
+class GameStartedEvent
+  include _Event
+  extend _EventClass
+  def initialize: (HandSet) -> void
+  attr_reader initial_hand: HandSet
+end
+
+class GameEndedEvent
+  include _Event
+  extend _EventClass
+  def initialize: () -> void
+end
+
+class CardExchangedEvent
+  include _Event
+  extend _EventClass
+  def initialize: (Card, Card) -> void
+  attr_reader discarded_card: Card
+  attr_reader new_card: Card
+end
+
+class VersionConflictEvent
+  include _Event
+  extend _EventClass
+  def initialize: (Integer, Integer) -> void
+  attr_reader expected_version: Integer
+  attr_reader actual_version: Integer
+end
+
+class InvalidCommandEvent
+  include _Event
+  extend _EventClass
+  def initialize: (command: Command, reason: String) -> void
+  attr_reader command: Command
+  attr_reader reason: String
+end 

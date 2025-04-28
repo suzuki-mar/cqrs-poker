@@ -1,0 +1,42 @@
+interface _EventSubscriber
+  def handle_event: (_Event event) -> untyped
+end
+
+
+class Projection
+  include _EventSubscriber
+
+  private
+    def apply_to_read_model: (untyped read_model, untyped event) -> void
+end
+
+
+class PlayerHandStateReadModel
+  def initialize: () -> void
+  def start_new_game!: (GameStartedEvent) -> void
+  def exchange_card!: (CardExchangedEvent) -> void
+  def current_state_for_display: () -> { status: String, hand: String, current_rank: String, rank_name: String, turn: Integer }
+  def hand_set: () -> HandSet
+  def refreshed_hand_set: () -> HandSet
+  private
+  attr_reader player_hand_state: PlayerHandState
+  def format_hand: () -> String
+end
+
+
+class PlayerHandStateProjection
+  def handle_event: (untyped) -> void
+  def handle_game_started: (untyped) -> void
+end
+
+
+class LogEventListener
+  include _EventSubscriber
+  def initialize: (?untyped logger) -> void
+  private
+  def logger: () -> untyped
+  def format_event_message: (String, ?String) -> String
+  def format_cards: (Array[String]) -> String
+  def build_info_message: (untyped event) -> String
+  def build_warning_message_if_needed: (untyped event) -> String?
+end 

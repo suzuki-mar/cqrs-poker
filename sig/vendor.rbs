@@ -1,0 +1,30 @@
+# =============================
+# Wisper (gem: wisper) 型定義
+# =============================
+module Wisper  
+  module Publisher    
+    def broadcast: (*untyped) -> untyped
+    def subscribe: (*untyped) -> untyped
+  end
+end
+
+
+# =============================
+# dry-monads (gem: dry-monads) 型定義
+# =============================
+module Dry
+  module Monads
+    module Result
+      class Success
+        def self.new: (?untyped value) -> untyped
+      end
+      class Failure
+        def self.new: (?untyped value) -> untyped
+      end
+    end
+    Failure: untyped
+    def self.[]: (untyped) -> untyped
+  end
+end
+
+Failure: untyped 

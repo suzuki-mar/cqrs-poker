@@ -1,6 +1,0 @@
-module Wisper  
-  module Publisher    
-    def broadcast: (*untyped) -> untyped
-    def subscribe: (*untyped) -> untyped
-  end
-end

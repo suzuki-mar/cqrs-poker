@@ -1,6 +1,0 @@
-class Projection
-  include _EventSubscriber
-
-  private
-    def apply_to_read_model: (untyped read_model, untyped event) -> void
-end 

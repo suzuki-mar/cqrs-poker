@@ -1,5 +1,0 @@
-module Events
-  class GameStartedEvent
-    def apply: () -> nil
-  end
-end

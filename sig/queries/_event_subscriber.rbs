@@ -1,3 +1,0 @@
-interface _EventSubscriber
-  def handle_event: (_Event event) -> untyped
-end 

@@ -1,0 +1,114 @@
+module HandlerStrategy
+  interface _HandlerStrategy
+    def initialize: (Command command, CommandContext context, Aggregates::BoardAggregate board, AggregateStore aggregate_store) -> void
+    def board: () -> Aggregates::BoardAggregate
+    def command: () -> Command
+    def context: () -> CommandContext
+    def aggregate_store: () -> AggregateStore
+    def build_event_by_executing: () -> _Event
+  end
+
+  class GameStart
+    include HandlerStrategy::_HandlerStrategy
+    def build_invalid_command_event_if_needed: () -> (VersionConflictEvent | InvalidCommandEvent | nil)
+  end
+
+  class ExchangeCard
+    include HandlerStrategy::_HandlerStrategy
+    def build_invalid_command_event_if_needed: () -> (VersionConflictEvent | InvalidCommandEvent | nil)
+    private
+    def apply_event_to_replay_hand: (Array[Card], _Event event) -> Array[Card]
+    def build_invalid_command_event_if_unexchangeable: (Array[Card]) -> InvalidCommandEvent?
+  end
+
+  class EndGame
+    include HandlerStrategy::_HandlerStrategy
+  end
+end
+
+
+class Command
+  def execute_for_game_start: (Aggregates::BoardAggregate) -> HandSet
+  def execute_for_exchange_card: (Aggregates::BoardAggregate) -> Card
+  def execute_for_end_game: (Aggregates::BoardAggregate) -> void
+end
+
+
+class CommandHandler
+  def initialize: (EventBus) -> void
+  def handle: (Command, CommandContext) -> untyped
+  private
+  def aggregate_store: () -> AggregateStore
+  def build_strategy: (Symbol, Command, CommandContext) -> untyped
+  def event_bus: () -> EventBus
+  def load_events: () -> untyped
+  def build_board: (untyped) -> Aggregates::BoardAggregate
+  def append_event: (untyped) -> untyped
+  def handle_failure: (untyped) -> untyped
+  def publish_event: (untyped) -> void
+  InvalidCommand: untyped
+end
+
+
+class AggregateStore
+  def current_version: () -> Integer
+  def append: (untyped, Integer) -> untyped
+  def load_all_events_in_order: () -> Array[untyped]
+  def latest_event: () -> untyped
+  def game_already_started?: () -> bool
+  private
+  def build_event_from_store: (untyped) -> untyped
+  def build_failer_if_conflict: (untyped, Integer) -> untyped
+  def add_event_to_store!: (untyped, Integer) -> untyped
+  def version_conflict_error?: (untyped) -> bool
+  def build_version_conflict_event: (untyped, Integer) -> untyped
+  def build_validation_error: (untyped) -> untyped
+end
+
+
+class CommandContext
+  module Types
+    GAME_START: Symbol
+    EXCHANGE_CARD: Symbol
+  end
+  def initialize: (Symbol, ?Card) -> void
+  attr_reader type: Symbol
+  attr_reader discarded_card: Card?
+  def self.build_for_game_start: () -> CommandContext
+  def self.build_for_exchange: (Card) -> CommandContext
+end
+
+
+module Aggregates
+  class BoardAggregate
+    def self.load_from_events: (untyped events) -> BoardAggregate
+    def apply: (untyped event) -> void
+    def draw_initial_hand: () -> untyped
+    def draw: () -> untyped
+    def discard_to_trash: (untyped card) -> void
+    def drawable?: () -> bool
+    def apply_game_started_event: (untyped event) -> void
+    def apply_card_exchanged_event: (untyped event) -> void
+    private
+    attr_reader deck: untyped
+    attr_reader trash: untyped
+    attr_reader game_started: bool
+    attr_writer game_started: bool
+  end
+
+
+  class Deck
+    def self.build: () -> Deck
+    def draw_initial_hand: () -> untyped
+    def draw: () -> untyped
+    def remove: (untyped card) -> void
+    attr_reader cards: untyped
+    def generate_initial_cards: () -> untyped
+  end
+
+
+  class Trash
+    def accept: (untyped card) -> void
+    attr_reader cards: untyped
+  end
+end 
