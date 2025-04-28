@@ -32,7 +32,9 @@ Metrics/MethodLength:
     - array
     - hash
     - heredoc
-    - method_call 
+    - method_call     
+  Exclude:
+    - 'db/migrate/*.rb'
 
 Metrics/ClassLength:
   Max: 100
@@ -45,6 +47,8 @@ Metrics/ClassLength:
 Metrics/BlockLength:
   Exclude:
     - 'spec/**/*'
+    - 'config/**/*.rb'
+
 
 Style/FrozenStringLiteralComment:
   Enabled: false
