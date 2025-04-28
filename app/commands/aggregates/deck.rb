@@ -1,5 +1,3 @@
-require 'app/models/game_state'
-
 # frozen_string_literal: true
 
 module Aggregates

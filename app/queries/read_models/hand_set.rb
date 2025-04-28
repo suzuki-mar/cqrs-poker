@@ -1,20 +1,18 @@
-require 'app/models/game_state'
-
 # frozen_string_literal: true
 
 module ReadModels
   class HandSet
     module Rank
-      HIGH_CARD = 'HIGH_CARD'.freeze
-      ONE_PAIR = 'ONE_PAIR'.freeze
-      TWO_PAIR = 'TWO_PAIR'.freeze
-      THREE_OF_A_KIND = 'THREE_OF_A_KIND'.freeze
-      STRAIGHT = 'STRAIGHT'.freeze
-      FLUSH = 'FLUSH'.freeze
-      FULL_HOUSE = 'FULL_HOUSE'.freeze
-      FOUR_OF_A_KIND = 'FOUR_OF_A_KIND'.freeze
-      STRAIGHT_FLUSH = 'STRAIGHT_FLUSH'.freeze
-      ROYAL_FLUSH = 'ROYAL_FLUSH'.freeze
+      HIGH_CARD = 'HIGH_CARD'
+      ONE_PAIR = 'ONE_PAIR'
+      TWO_PAIR = 'TWO_PAIR'
+      THREE_OF_A_KIND = 'THREE_OF_A_KIND'
+      STRAIGHT = 'STRAIGHT'
+      FLUSH = 'FLUSH'
+      FULL_HOUSE = 'FULL_HOUSE'
+      FOUR_OF_A_KIND = 'FOUR_OF_A_KIND'
+      STRAIGHT_FLUSH = 'STRAIGHT_FLUSH'
+      ROYAL_FLUSH = 'ROYAL_FLUSH'
 
       ALL = [
         HIGH_CARD,
