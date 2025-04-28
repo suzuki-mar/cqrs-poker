@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class VersionConflictEvent
-  EVENT_TYPE = 'version_conflict'
-
   attr_reader :expected_version, :actual_version
 
   def initialize(expected_version, actual_version)
@@ -10,13 +8,11 @@ class VersionConflictEvent
     @actual_version = actual_version
   end
 
-  def event_type
-    EVENT_TYPE
+  def self.event_type
+    'version_conflict'
   end
 
-  def event_type_name
-    EVENT_TYPE
-  end
+  delegate :event_type, to: :class
 
   def to_event_data
     {

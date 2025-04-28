@@ -23,6 +23,8 @@ module HandlerStrategy
 
     def build_event_by_executing
       discarded_card = context.discarded_card
+      raise ArgumentError, 'discarded_cardがnilです' if discarded_card.nil?
+
       new_card = command.execute_for_exchange_card(board)
       CardExchangedEvent.new(discarded_card, new_card)
     end
@@ -30,7 +32,10 @@ module HandlerStrategy
     private
 
     def build_invalid_command_event_if_unexchangeable(hand)
-      unless hand.include?(context.discarded_card)
+      discarded_card = context.discarded_card
+      raise ArgumentError, 'discarded_cardがnilです' if discarded_card.nil?
+
+      unless hand.include?(discarded_card)
         return InvalidCommandEvent.new(command: command,
                                        reason: '交換対象のカードが手札に存在しません')
       end

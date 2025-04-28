@@ -33,17 +33,17 @@ class AggregateStore
   end
 
   def game_already_started?
-    Event.exists?(event_type: GameStartedEvent::EVENT_TYPE)
+    Event.exists?(event_type: GameStartedEvent.event_type)
   end
 
   private
 
   def build_event_from_store(store)
     maps = {
-      GameStartedEvent::EVENT_TYPE => GameStartedEvent,
-      CardExchangedEvent::EVENT_TYPE => CardExchangedEvent,
-      InvalidCommandEvent::EVENT_TYPE => InvalidCommandEvent,
-      VersionConflictEvent::EVENT_TYPE => VersionConflictEvent
+      GameStartedEvent.event_type => GameStartedEvent,
+      CardExchangedEvent.event_type => CardExchangedEvent,
+      InvalidCommandEvent.event_type => InvalidCommandEvent,
+      VersionConflictEvent.event_type => VersionConflictEvent
     }
 
     event = maps[store.event_type].from_store(store)
@@ -55,14 +55,12 @@ class AggregateStore
   def build_failer_if_conflict(event, expected_current_version)
     stored_version = current_version
     if expected_current_version < stored_version
-      return Failure[VersionConflictEvent::EVENT_TYPE,
+      return Failure[VersionConflictEvent.event_type,
                      VersionConflictEvent.new(stored_version, expected_current_version)]
     end
 
-    return unless event.is_a?(GameStartedEvent) && Event.exists?(version: 1)
-
-    Failure[VersionConflictEvent::EVENT_TYPE,
-            VersionConflictEvent.new(1, expected_current_version)]
+    # すでに開始済みの場合は何も返さない（上位層で判定・エラー生成）
+    nil
   end
 
   def add_event_to_store!(event, expected_current_version)
@@ -82,7 +80,7 @@ class AggregateStore
 
   def build_version_conflict_event(_event, expected_current_version)
     latest_version = Event.maximum(:version)
-    Failure[VersionConflictEvent::EVENT_TYPE,
+    Failure[VersionConflictEvent.event_type,
             VersionConflictEvent.new(latest_version + 1, expected_current_version)]
   end
 

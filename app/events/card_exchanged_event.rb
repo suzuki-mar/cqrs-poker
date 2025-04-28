@@ -1,20 +1,16 @@
 # frozen_string_literal: true
 
 class CardExchangedEvent
-  EVENT_TYPE = 'card_exchanged'
-
   def initialize(discarded_card, new_card)
     @discarded_card = discarded_card
     @new_card = new_card
   end
 
-  def event_type
-    EVENT_TYPE
+  def self.event_type
+    'card_exchanged'
   end
 
-  def event_type_name
-    EVENT_TYPE
-  end
+  delegate :event_type, to: :class
 
   def to_event_data
     {

@@ -1,17 +1,13 @@
 class GameStartedEvent
-  EVENT_TYPE = 'game_started'.freeze
-
   def initialize(initial_hand)
     @initial_hand = initial_hand
   end
 
-  def event_type
-    EVENT_TYPE
+  def self.event_type
+    'game_started'
   end
 
-  def event_type_name
-    EVENT_TYPE
-  end
+  delegate :event_type, to: :class
 
   def to_event_data
     {

@@ -11,12 +11,9 @@ module HandlerStrategy
 
     def build_invalid_command_event_if_needed
       if aggregate_store.game_already_started?
-        reason = { message: 'すでにゲームが開始されているためゲームを開始できませんでした' }
-        return VersionConflictEvent.new(
-          1,
-          reason
-        )
+        return InvalidCommandEvent.new(command: command, reason: 'already_started')
       end
+
       nil
     end
 

@@ -1,8 +1,0 @@
-class VersionConflictEvent
-  include _Event
-  EVENT_TYPE: String
-  def initialize: (event_type: String, expected_version: Integer, actual_version: Integer) -> void
-  attr_reader event_type: String
-  attr_reader expected_version: Integer
-  attr_reader actual_version: Integer
-end 

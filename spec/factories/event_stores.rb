@@ -6,7 +6,7 @@ FactoryBot.define do
   end
 
   factory :event_store do
-    event_type { GameStartedEvent::EVENT_TYPE }
+    event_type { GameStartedEvent.event_type }
     # 他の属性も必要に応じて追加
   end
 end

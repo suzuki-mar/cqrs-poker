@@ -18,7 +18,7 @@ RSpec.describe 'ゲーム開始' do
 
       it 'イベントが正しく発行されること' do
         event = Event.last
-        expect(event.event_type).to eq(GameStartedEvent::EVENT_TYPE)
+        expect(event.event_type).to eq(GameStartedEvent.event_type)
         # 必要ならevent.event_dataの内容も検証
       end
 
@@ -61,13 +61,13 @@ RSpec.describe 'ゲーム開始' do
         subject
         event_store_holder = AggregateStore.new
         last_event = event_store_holder.latest_event
-        expect(last_event).to be_a(VersionConflictEvent)
+        expect(last_event).to be_a(InvalidCommandEvent)
       end
 
       it 'GameStartedイベントが2回記録されないこと' do
         expect do
           subject
-        end.not_to(change { Event.where(event_type: GameStartedEvent::EVENT_TYPE).count })
+        end.not_to(change { Event.where(event_type: GameStartedEvent.event_type).count })
       end
 
       it 'PlayerHandStateが変更されないこと' do

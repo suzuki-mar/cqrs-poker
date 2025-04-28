@@ -14,7 +14,7 @@ RSpec.describe AggregateStore do
       end.to change(Event, :count).by(1)
 
       saved_event = Event.last
-      expect(saved_event.event_type).to eq(GameStartedEvent::EVENT_TYPE)
+      expect(saved_event.event_type).to eq(GameStartedEvent.event_type)
       expect(saved_event.event_data).to eq(event.to_serialized_hash.to_json)
     end
 
@@ -52,7 +52,7 @@ RSpec.describe AggregateStore do
       # 同じバージョンで再度append
       result = aggregate_store.append(event1, v1)
       expect(result).to be_failure
-      expect(result.failure[0]).to eq(VersionConflictEvent::EVENT_TYPE)
+      expect(result.failure[0]).to eq(VersionConflictEvent.event_type)
       expect(result.failure[1]).to be_a(VersionConflictEvent)
       expect(result.failure[1].to_event_data[:expected_version]).to be >= 1
       expect(result.failure[1].to_event_data[:actual_version]).to be >= 0
@@ -68,7 +68,7 @@ RSpec.describe AggregateStore do
       aggregate_store.append(event1, v2)
       result = aggregate_store.append(event1, v2)
       expect(result).to be_failure
-      expect(result.failure[0]).to eq(VersionConflictEvent::EVENT_TYPE)
+      expect(result.failure[0]).to eq(VersionConflictEvent.event_type)
     end
 
     # スナップショット整合性テストは、スナップショット機能実装後に追加

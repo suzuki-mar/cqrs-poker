@@ -1,6 +1,0 @@
-class GameStartedEvent
-  include _Event
-  EVENT_TYPE: String
-  def initialize: (HandSet) -> void
-  attr_reader initial_hand: HandSet
-end 

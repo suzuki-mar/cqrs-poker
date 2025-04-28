@@ -1,20 +1,16 @@
 # frozen_string_literal: true
 
 class InvalidCommandEvent
-  EVENT_TYPE = 'invalid_command_event'
-
   def initialize(command:, reason:)
     @command = command
     @reason = reason
   end
 
-  def event_type
-    EVENT_TYPE
+  def self.event_type
+    'invalid_command_event'
   end
 
-  def event_type_name
-    EVENT_TYPE
-  end
+  delegate :event_type, to: :class
 
   def to_event_data
     {

@@ -31,7 +31,7 @@ RSpec.describe 'カード交換をするユースケース' do
         expect(published_event).to be_a(CardExchangedEvent)
         expect(published_event.discarded_card.to_s).to eq(discarded_card.to_s)
         stored_event = Event.last
-        expect(stored_event.event_type).to eq(CardExchangedEvent::EVENT_TYPE)
+        expect(stored_event.event_type).to eq(CardExchangedEvent.event_type)
         expect(stored_event.event_data).to include(discarded_card.to_s)
       end
 

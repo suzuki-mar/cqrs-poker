@@ -44,7 +44,7 @@ RSpec.describe CommandHandler do
       result1 = thread.value
 
       # ここでresult1がバージョン競合エラーであることを検証（仮の例）
-      expect(result1).to be_a(VersionConflictEvent)
+      expect(result1).to be_a(InvalidCommandEvent)
       # 実際の競合判定は実装に合わせて修正してください
     end
   end

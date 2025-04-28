@@ -1,4 +1,5 @@
 class Command
   def execute_for_game_start: (Aggregates::BoardAggregate) -> HandSet
   def execute_for_exchange_card: (Aggregates::BoardAggregate) -> Card
+  def execute_for_end_game: (Aggregates::BoardAggregate) -> void
 end 

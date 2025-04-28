@@ -37,7 +37,7 @@ class CommandHandler
   end
 
   def handle_failure(result)
-    return result.failure[1] if result.failure[0] == VersionConflictEvent::EVENT_TYPE
+    return result.failure[1] if result.failure[0] == VersionConflictEvent.event_type
 
     result.failure[1]
   end
