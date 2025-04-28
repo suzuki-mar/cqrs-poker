@@ -8,4 +8,5 @@ pre-push:
     rubocop:
       run: bundle exec rubocop
     brakeman:
-      run: bundle exec brakeman
+      # ファイルに書き込まないとチェックが終了しない
+      run: bundle exec brakeman -o brakeman.html

@@ -10,7 +10,7 @@ RSpec.describe Event, type: :model do
       it { should validate_presence_of(:event_data) }
 
       it '不正なJSONの場合はエラーがおきること' do
-        event = build(:event, event_data: 'invalid_json')
+        event = build_stubbed(:event, event_data: 'invalid_json')
         expect(event).not_to be_valid
         expect(event.errors[:event_data]).to include('must be valid JSON')
       end
@@ -20,7 +20,7 @@ RSpec.describe Event, type: :model do
       it { should validate_presence_of(:occurred_at) }
 
       it '未来の日付の場合はエラーがおきること' do
-        event = build(:event, occurred_at: 1.second.from_now)
+        event = build_stubbed(:event, occurred_at: 1.second.from_now)
         expect(event).not_to be_valid
       end
     end

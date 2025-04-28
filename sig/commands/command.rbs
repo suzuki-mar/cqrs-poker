@@ -1,4 +1,4 @@
 class Command
-  def execute_for_game_start: (Aggregates::BoardAggregate) -> ReadModels::HandSet
+  def execute_for_game_start: (Aggregates::BoardAggregate) -> HandSet
   def execute_for_exchange_card: (Aggregates::BoardAggregate) -> Card
 end 

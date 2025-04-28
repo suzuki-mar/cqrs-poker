@@ -67,3 +67,6 @@ yarn-debug.log*
 # daily_logsは個人の作業ログを含むため、Gitで管理しない
 .cursor/daily_logs/*
 !.cursor/daily_logs/.keep
+
+# brakemanの出力ファイル
+brakeman.html

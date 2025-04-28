@@ -8,7 +8,7 @@ class PlayerHandState < ApplicationRecord
   validate :validate_hand_set_format
 
   validates :current_rank, presence: true,
-                           inclusion: { in: ReadModels::HandSet::Rank::ALL }
+                           inclusion: { in: HandSet::Rank::ALL }
 
   validates :current_turn, presence: true,
                            numericality: {

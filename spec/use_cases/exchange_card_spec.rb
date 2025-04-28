@@ -10,7 +10,7 @@ RSpec.describe 'カード交換をするユースケース' do
     command_handler.handle(Command.new, CommandContext.build_for_game_start)
   end
 
-  let(:read_model) { ReadModels::PlayerHandStateReadModel.new }
+  let(:read_model) { PlayerHandStateReadModel.new }
   let(:current_hand) { PlayerHandState.find_current_session.hand_set }
   let(:discarded_card) { Card.new(current_hand.first) }
   let(:context) { CommandContext.build_for_exchange(discarded_card) }

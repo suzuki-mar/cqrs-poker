@@ -39,12 +39,10 @@ module Aggregates
 
     delegate :draw, to: :deck
 
-    # カードを捨て札置き場に捨てる
     def discard_to_trash(card)
       trash.accept(card)
     end
 
-    # デッキにカードが引けるかどうかを返すpublicメソッド
     def drawable?
       deck.size.positive?
     end

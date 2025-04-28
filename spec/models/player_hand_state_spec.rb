@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe PlayerHandState, type: :model do
   describe 'バリデーション' do
     describe '手札 hand_set' do
-      subject { build(:player_hand_state, hand_set: hand_set_value) }
+      subject { build_stubbed(:player_hand_state, hand_set: hand_set_value) }
 
       context '正常な値の場合' do
         let(:hand_set_value) { Array.new(5) { Faker::Card.valid_card.to_s } }
@@ -38,10 +38,10 @@ RSpec.describe PlayerHandState, type: :model do
 
     describe 'current_rank' do
       it { should validate_presence_of(:current_rank) }
-      it { should validate_inclusion_of(:current_rank).in_array(ReadModels::HandSet::Rank::ALL) }
+      it { should validate_inclusion_of(:current_rank).in_array(HandSet::Rank::ALL) }
 
       describe '不正な値' do
-        subject { build(:player_hand_state, current_rank: invalid_value) }
+        subject { build_stubbed(:player_hand_state, current_rank: invalid_value) }
 
         context '存在しない役の場合' do
           let(:invalid_value) { 'INVALID_HAND' }

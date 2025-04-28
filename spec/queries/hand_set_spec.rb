@@ -2,16 +2,16 @@
 
 require 'rails_helper'
 
-RSpec.describe ReadModels::HandSet do
+RSpec.describe HandSet do
   describe '.build' do
-    subject { described_class.build(cards) }
+    subject { HandSet.build(cards) }
 
     context '正常な手札の場合' do
       let(:cards) { Array.new(5) { Faker.valid_card } }
 
       it '有効なHandSetインスタンスを生成すること' do
         hand_set = subject
-        expect(hand_set).to be_a(ReadModels::HandSet)
+        expect(hand_set).to be_a(HandSet)
         expect(hand_set).to be_valid
       end
     end
@@ -21,7 +21,7 @@ RSpec.describe ReadModels::HandSet do
         let(:cards) { Array.new(4) { Faker.valid_card } }
 
         it 'ArgumentErrorが発生すること' do
-          expect { subject }.to raise_error(ArgumentError, 'Invalid hand')
+          expect { subject }.to raise_error(ArgumentError, '手札が不正です')
         end
       end
 
@@ -32,7 +32,7 @@ RSpec.describe ReadModels::HandSet do
         end
 
         it 'ArgumentErrorが発生すること' do
-          expect { subject }.to raise_error(ArgumentError, 'Invalid hand')
+          expect { subject }.to raise_error(ArgumentError, '手札が不正です')
         end
       end
     end
@@ -40,7 +40,7 @@ RSpec.describe ReadModels::HandSet do
 
   describe '#evaluate' do
     subject { hand_set.evaluate }
-    let(:hand_set) { Faker.hand_from_cards(cards) }
+    let(:hand_set) { HandSet.build(cards) }
 
     context '不正な手札の場合' do
       let(:cards) { Array.new(4) { Faker.valid_card } }
@@ -52,54 +52,54 @@ RSpec.describe ReadModels::HandSet do
     describe '役の評価' do
       context 'ストレートフラッシュの場合' do
         let(:hand_set) { Faker.straight_flush_hand }
-        it { should eq ReadModels::HandSet::Rank::STRAIGHT_FLUSH }
+        it { should eq HandSet::Rank::STRAIGHT_FLUSH }
       end
 
       context 'フォーカードの場合' do
         let(:hand_set) { Faker.four_of_a_kind_hand }
-        it { should eq ReadModels::HandSet::Rank::FOUR_OF_A_KIND }
+        it { should eq HandSet::Rank::FOUR_OF_A_KIND }
       end
 
       context 'フルハウスの場合' do
         let(:hand_set) { Faker.full_house_hand }
-        it { should eq ReadModels::HandSet::Rank::FULL_HOUSE }
+        it { should eq HandSet::Rank::FULL_HOUSE }
       end
 
       context 'フラッシュの場合' do
         let(:hand_set) { Faker.flush_hand }
-        it { should eq ReadModels::HandSet::Rank::FLUSH }
+        it { should eq HandSet::Rank::FLUSH }
       end
 
       context 'ストレートの場合' do
         let(:hand_set) { Faker.straight_hand }
-        it { should eq ReadModels::HandSet::Rank::STRAIGHT }
+        it { should eq HandSet::Rank::STRAIGHT }
       end
 
       context 'スリーカードの場合' do
         let(:hand_set) { Faker.three_of_a_kind_hand }
-        it { should eq ReadModels::HandSet::Rank::THREE_OF_A_KIND }
+        it { should eq HandSet::Rank::THREE_OF_A_KIND }
       end
 
       context 'ツーペアの場合' do
         let(:hand_set) { Faker.two_pair_hand }
-        it { should eq ReadModels::HandSet::Rank::TWO_PAIR }
+        it { should eq HandSet::Rank::TWO_PAIR }
       end
 
       context 'ワンペアの場合' do
         let(:hand_set) { Faker.one_pair_hand }
-        it { should eq ReadModels::HandSet::Rank::ONE_PAIR }
+        it { should eq HandSet::Rank::ONE_PAIR }
       end
 
       context 'ハイカードの場合' do
         let(:hand_set) { Faker.high_card_hand }
-        it { should eq ReadModels::HandSet::Rank::HIGH_CARD }
+        it { should eq HandSet::Rank::HIGH_CARD }
       end
     end
   end
 
   describe '#rank_name' do
     subject { hand_set.rank_name }
-    let(:hand_set) { ReadModels::HandSet.build(cards) }
+    let(:hand_set) { HandSet.build(cards) }
 
     context 'ハイカードの場合' do
       let(:cards) do

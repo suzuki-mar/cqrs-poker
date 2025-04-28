@@ -12,7 +12,7 @@ module Aggregates
 
     def draw_initial_hand
       drawn_cards = Array.new(::PlayerHandState::MAX_HAND_SIZE) { draw }
-      ReadModels::HandSet.build(drawn_cards)
+      HandSet.build(drawn_cards)
     end
 
     def draw

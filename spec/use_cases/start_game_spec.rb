@@ -6,6 +6,7 @@ RSpec.describe 'ゲーム開始' do
   let(:logger) { TestLogger.new }
   let(:command_handler) { UseCaseHelper.build_command_handler(logger) }
   let(:context) { CommandContext.build_for_game_start }
+  let(:read_model) { PlayerHandStateReadModel.new }
 
   context '正常系' do
     describe 'ゲームが正しく開始されること' do
@@ -35,7 +36,6 @@ RSpec.describe 'ゲーム開始' do
       end
 
       it '表示用のデータが正しく整形されること' do
-        read_model = ReadModels::PlayerHandStateReadModel.new
         display_data = read_model.current_state_for_display
 
         aggregate_failures do

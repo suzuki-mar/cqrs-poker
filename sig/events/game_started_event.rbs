@@ -1,6 +1,6 @@
 class GameStartedEvent
   include _Event
   EVENT_TYPE: String
-  def initialize: (ReadModels::HandSet) -> void
-  attr_reader initial_hand: ReadModels::HandSet
+  def initialize: (HandSet) -> void
+  attr_reader initial_hand: HandSet
 end 
