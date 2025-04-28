@@ -1,5 +1,5 @@
 class GameStateProjection
-  include _EventListener
+  include _EventSubscriber
   def initialize: (status: untyped, current_turn: untyped, current_rank: untyped, **untyped) -> void
   private
   def handle_game_started: (GameStartedEvent) -> void

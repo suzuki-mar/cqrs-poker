@@ -16,24 +16,25 @@ module ReadModels
       def self.japanese_name: (String) -> String
     end
     class Evaluate
-      def self.call: (untyped cards) -> untyped
-      def call: (untyped cards) -> untyped
-      def valid_hand?: (untyped cards) -> untyped
-      def straight_flush?: () -> untyped
-      def four_of_a_kind?: () -> untyped
-      def full_house?: () -> untyped
-      def flush?: () -> untyped
-      def straight?: () -> untyped
-      def three_of_a_kind?: () -> untyped
-      def two_pair?: () -> untyped
-      def one_pair?: () -> untyped
+      def self.call: (Array[Card] cards) -> String
+      def call: (Array[Card] cards) -> String
+      def build_rank_checks_map: () -> Hash[String, ::Proc]
+      def valid_hand?: (Array[Card] cards) -> bool
+      def straight_flush?: () -> bool
+      def four_of_a_kind?: () -> bool
+      def full_house?: () -> bool
+      def flush?: () -> bool
+      def straight?: () -> bool
+      def three_of_a_kind?: () -> bool
+      def two_pair?: () -> bool
+      def one_pair?: () -> bool
       def rank_combinations: () -> untyped
-      def suits: () -> untyped
+      def suits: () -> Array[String]
       def rank_counts: () -> untyped
-      def ranks: () -> untyped
+      def ranks: () -> Array[String]
       class RankCombinations
         def initialize: (untyped values) -> void
-        def pair_count: () -> untyped
+        def pair_count: () -> Integer
         def three_of_a_kind?: () -> bool
         def four_of_a_kind?: () -> bool
         def full_house?: () -> bool

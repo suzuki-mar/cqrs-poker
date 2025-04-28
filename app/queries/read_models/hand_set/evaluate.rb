@@ -12,28 +12,25 @@ module ReadModels
 
         raise ArgumentError, '手札が不正です' unless valid_hand?(@cards)
 
-        if straight_flush?
-          Rank::STRAIGHT_FLUSH
-        elsif four_of_a_kind?
-          Rank::FOUR_OF_A_KIND
-        elsif full_house?
-          Rank::FULL_HOUSE
-        elsif flush?
-          Rank::FLUSH
-        elsif straight?
-          Rank::STRAIGHT
-        elsif three_of_a_kind?
-          Rank::THREE_OF_A_KIND
-        elsif two_pair?
-          Rank::TWO_PAIR
-        elsif one_pair?
-          Rank::ONE_PAIR
-        else
-          Rank::HIGH_CARD
-        end
+        rank_checks = build_rank_checks_map
+        found = rank_checks.find { |_, check| check.call }
+        found ? found[0] : Rank::HIGH_CARD
       end
 
       private
+
+      def build_rank_checks_map
+        {
+          Rank::STRAIGHT_FLUSH => proc { straight_flush? },
+          Rank::FOUR_OF_A_KIND => proc { four_of_a_kind? },
+          Rank::FULL_HOUSE => proc { full_house? },
+          Rank::FLUSH => proc { flush? },
+          Rank::STRAIGHT => proc { straight? },
+          Rank::THREE_OF_A_KIND => proc { three_of_a_kind? },
+          Rank::TWO_PAIR => proc { two_pair? },
+          Rank::ONE_PAIR => proc { one_pair? }
+        }
+      end
 
       def one_pair?
         rank_combinations.pair_count == 1

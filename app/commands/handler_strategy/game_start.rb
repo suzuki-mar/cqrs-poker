@@ -13,7 +13,6 @@ module HandlerStrategy
       if aggregate_store.game_already_started?
         reason = { message: 'すでにゲームが開始されているためゲームを開始できませんでした' }
         return VersionConflictEvent.new(
-          GameStartedEvent::EVENT_TYPE,
           1,
           reason
         )

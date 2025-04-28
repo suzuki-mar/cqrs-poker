@@ -1,4 +1,5 @@
 class GameState < ApplicationRecord
+  MAX_HAND_SIZE: Integer
   attr_accessor status: String
   attr_accessor current_rank: String
   attr_accessor current_turn: Integer

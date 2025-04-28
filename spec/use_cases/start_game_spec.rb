@@ -29,7 +29,7 @@ RSpec.describe 'ゲーム開始' do
         game_state = GameState.find_current_session
         aggregate_failures do
           expect(game_state).to be_started
-          expect(game_state.hand_set.size).to eq(ReadModels::HandSet::CARDS_IN_HAND)
+          expect(game_state.hand_set.size).to eq(GameState::MAX_HAND_SIZE)
           expect(game_state.current_turn).to eq(1)
         end
       end
@@ -40,7 +40,7 @@ RSpec.describe 'ゲーム開始' do
 
         aggregate_failures do
           expect(display_data[:status]).to eq('started')
-          expect(display_data[:hand].split.size).to eq(ReadModels::HandSet::CARDS_IN_HAND)
+          expect(display_data[:hand].split.size).to eq(GameState::MAX_HAND_SIZE)
           expect(display_data[:turn]).to eq(1)
         end
       end

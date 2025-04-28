@@ -84,7 +84,7 @@ RSpec.describe 'カード交換をするユースケース' do
       let(:card) { read_model.refreshed_hand_set.cards.first }
       before do
         deck_size = Card::VALID_SUITS.size * Card::VALID_RANKS.size
-        hand_size = ReadModels::HandSet::CARDS_IN_HAND
+        hand_size = GameState::MAX_HAND_SIZE
         exchange_count = deck_size - hand_size
         exchange_count.times do
           command_handler.handle(Command.new,

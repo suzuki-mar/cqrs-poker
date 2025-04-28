@@ -3,10 +3,9 @@
 class VersionConflictEvent
   EVENT_TYPE = 'version_conflict'
 
-  attr_reader :event_type, :expected_version, :actual_version
+  attr_reader :expected_version, :actual_version
 
-  def initialize(event_type, expected_version = {}, actual_version = {})
-    @event_type = event_type
+  def initialize(expected_version, actual_version)
     @expected_version = expected_version
     @actual_version = actual_version
   end
@@ -34,7 +33,6 @@ class VersionConflictEvent
   def self.from_store(store)
     event_data = JSON.parse(store.event_data, symbolize_names: true)
     new(
-      event_data[:event_type],
       event_data[:expected_version],
       event_data[:actual_version]
     )

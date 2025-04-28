@@ -1,4 +1,5 @@
 class GameState < ApplicationRecord
+  MAX_HAND_SIZE = 5
   enum :status, { initial: 0, started: 1 }
 
   scope :started, -> { where(status: :started) }
@@ -21,11 +22,9 @@ class GameState < ApplicationRecord
 
   def assign_hand_number_from_set(hand_set)
     cards = hand_set.respond_to?(:cards) ? hand_set.cards : hand_set
-    self.hand1 = cards[0].to_s
-    self.hand2 = cards[1].to_s
-    self.hand3 = cards[2].to_s
-    self.hand4 = cards[3].to_s
-    self.hand5 = cards[4].to_s
+    (1..MAX_HAND_SIZE).each do |i|
+      self["hand#{i}"] = cards[i - 1].to_s
+    end
   end
 
   def hand_set

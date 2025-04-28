@@ -56,13 +56,13 @@ class AggregateStore
     stored_version = current_version
     if expected_current_version < stored_version
       return Failure[VersionConflictEvent::EVENT_TYPE,
-                     VersionConflictEvent.new(event.event_type, stored_version, expected_current_version)]
+                     VersionConflictEvent.new(stored_version, expected_current_version)]
     end
 
     return unless event.is_a?(GameStartedEvent) && Event.exists?(version: 1)
 
     Failure[VersionConflictEvent::EVENT_TYPE,
-            VersionConflictEvent.new(event.event_type, 1, expected_current_version)]
+            VersionConflictEvent.new(1, expected_current_version)]
   end
 
   def add_event_to_store!(event, expected_current_version)
@@ -80,10 +80,10 @@ class AggregateStore
     err.record.errors.details[:version]&.any? { |detail| detail[:error] == :taken }
   end
 
-  def build_version_conflict_event(event, expected_current_version)
+  def build_version_conflict_event(_event, expected_current_version)
     latest_version = Event.maximum(:version)
     Failure[VersionConflictEvent::EVENT_TYPE,
-            VersionConflictEvent.new(event.event_type, latest_version + 1, expected_current_version)]
+            VersionConflictEvent.new(latest_version + 1, expected_current_version)]
   end
 
   def build_validation_error(err)

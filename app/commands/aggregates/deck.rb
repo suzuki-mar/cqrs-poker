@@ -1,3 +1,5 @@
+require 'app/models/game_state'
+
 # frozen_string_literal: true
 
 module Aggregates
@@ -11,7 +13,7 @@ module Aggregates
     delegate :size, to: :cards
 
     def draw_initial_hand
-      drawn_cards = Array.new(ReadModels::HandSet::CARDS_IN_HAND) { draw }
+      drawn_cards = Array.new(::GameState::MAX_HAND_SIZE) { draw }
       ReadModels::HandSet.build(drawn_cards)
     end
 
