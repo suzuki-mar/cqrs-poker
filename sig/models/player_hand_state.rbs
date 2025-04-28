@@ -1,0 +1,13 @@
+class PlayerHandState < ApplicationRecord
+  MAX_HAND_SIZE: Integer
+  attr_accessor status: String
+  attr_accessor current_rank: String
+  attr_accessor current_turn: Integer
+  attr_accessor hand_set: Array[String]
+  def save!: () -> void
+  def assign_hand_number_from_set: (untyped) -> void
+  def self.find_current_session: () -> PlayerHandState?
+  def self.where: (*untyped) -> untyped
+  def self.last: () -> untyped
+  def self.new: (*untyped, **untyped) -> PlayerHandState
+end 

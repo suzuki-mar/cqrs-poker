@@ -11,7 +11,7 @@ module Aggregates
     delegate :size, to: :cards
 
     def draw_initial_hand
-      drawn_cards = Array.new(::GameState::MAX_HAND_SIZE) { draw }
+      drawn_cards = Array.new(::PlayerHandState::MAX_HAND_SIZE) { draw }
       ReadModels::HandSet.build(drawn_cards)
     end
 

@@ -88,7 +88,7 @@ module ReadModels
 
     def fetch_by_number(number)
       raise ArgumentError, 'Invalid number' unless number.is_a?(Integer) && number.between?(1,
-                                                                                            ::GameState::MAX_HAND_SIZE)
+                                                                                            ::PlayerHandState::MAX_HAND_SIZE)
 
       @cards[number - 1]
     end
@@ -97,7 +97,7 @@ module ReadModels
 
     def self.valid_cards?(cards)
       return false unless cards.is_a?(Array)
-      return false unless cards.size == ::GameState::MAX_HAND_SIZE
+      return false unless cards.size == ::PlayerHandState::MAX_HAND_SIZE
 
       cards.all?(&:valid?)
     end

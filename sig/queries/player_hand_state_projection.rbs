@@ -1,0 +1,4 @@
+class PlayerHandStateProjection
+  def handle_event: (untyped) -> void
+  def handle_game_started: (untyped) -> void
+end 

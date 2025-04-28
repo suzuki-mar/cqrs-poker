@@ -10,8 +10,8 @@ RSpec.describe 'カード交換をするユースケース' do
     command_handler.handle(Command.new, CommandContext.build_for_game_start)
   end
 
-  let(:read_model) { ReadModels::GameStateReadModel.new }
-  let(:current_hand) { GameState.find_current_session.hand_set }
+  let(:read_model) { ReadModels::PlayerHandStateReadModel.new }
+  let(:current_hand) { PlayerHandState.find_current_session.hand_set }
   let(:discarded_card) { Card.new(current_hand.first) }
   let(:context) { CommandContext.build_for_exchange(discarded_card) }
 
@@ -84,7 +84,7 @@ RSpec.describe 'カード交換をするユースケース' do
       let(:card) { read_model.refreshed_hand_set.cards.first }
       before do
         deck_size = Card::VALID_SUITS.size * Card::VALID_RANKS.size
-        hand_size = GameState::MAX_HAND_SIZE
+        hand_size = PlayerHandState::MAX_HAND_SIZE
         exchange_count = deck_size - hand_size
         exchange_count.times do
           command_handler.handle(Command.new,

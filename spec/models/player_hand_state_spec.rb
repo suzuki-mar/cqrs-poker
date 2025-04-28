@@ -1,32 +1,39 @@
 require 'rails_helper'
 
-RSpec.describe GameState, type: :model do
-  shared_examples '手札のバリデーション' do |hand_number|
-    describe "hand_#{hand_number}" do
-      let(:card_value) { nil }
-      subject { build(:game_state, "hand#{hand_number}": card_value) }
-
-      it { should validate_presence_of(:"hand#{hand_number}") }
+RSpec.describe PlayerHandState, type: :model do
+  describe 'バリデーション' do
+    describe '手札 hand_set' do
+      subject { build(:player_hand_state, hand_set: hand_set_value) }
 
       context '正常な値の場合' do
-        let(:card_value) { Faker::Card.valid_card.to_s }
+        let(:hand_set_value) { Array.new(5) { Faker::Card.valid_card.to_s } }
         it { should be_valid }
       end
 
-      context '不正な値の場合' do
-        let(:card_value) { '@1' }
+      context '5枚未満の場合' do
+        let(:hand_set_value) { Array.new(4) { Faker::Card.valid_card.to_s } }
         it { should be_invalid }
       end
-    end
-  end
 
-  describe 'バリデーション' do
-    describe '手札' do
-      it_behaves_like '手札のバリデーション', 1
-      it_behaves_like '手札のバリデーション', 2
-      it_behaves_like '手札のバリデーション', 3
-      it_behaves_like '手札のバリデーション', 4
-      it_behaves_like '手札のバリデーション', 5
+      context '5枚より多い場合' do
+        let(:hand_set_value) { Array.new(6) { Faker::Card.valid_card.to_s } }
+        it { should be_invalid }
+      end
+
+      context '空配列の場合' do
+        let(:hand_set_value) { [] }
+        it { should be_invalid }
+      end
+
+      context 'nilを含む場合' do
+        let(:hand_set_value) { [nil, *Array.new(4) { Faker::Card.valid_card.to_s }] }
+        it { should be_invalid }
+      end
+
+      context '文字列以外を含む場合' do
+        let(:hand_set_value) { [1, 2, 3, 4, 5] }
+        it { should be_invalid }
+      end
     end
 
     describe 'current_rank' do
@@ -34,7 +41,7 @@ RSpec.describe GameState, type: :model do
       it { should validate_inclusion_of(:current_rank).in_array(ReadModels::HandSet::Rank::ALL) }
 
       describe '不正な値' do
-        subject { build(:game_state, current_rank: invalid_value) }
+        subject { build(:player_hand_state, current_rank: invalid_value) }
 
         context '存在しない役の場合' do
           let(:invalid_value) { 'INVALID_HAND' }
@@ -53,7 +60,7 @@ RSpec.describe GameState, type: :model do
       }
 
       describe '不正な値' do
-        subject { build(:game_state, current_turn: invalid_value) }
+        subject { build(:player_hand_state, current_turn: invalid_value) }
 
         context '0以下の値の場合' do
           let(:invalid_value) { 0 }

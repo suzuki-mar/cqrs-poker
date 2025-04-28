@@ -26,21 +26,21 @@ RSpec.describe 'ゲーム開始' do
       end
 
       it 'ゲーム状態が正しく更新されること' do
-        game_state = GameState.find_current_session
+        player_game_state = PlayerHandState.find_current_session
         aggregate_failures do
-          expect(game_state).to be_started
-          expect(game_state.hand_set.size).to eq(GameState::MAX_HAND_SIZE)
-          expect(game_state.current_turn).to eq(1)
+          expect(player_game_state).to be_started
+          expect(player_game_state.hand_set.size).to eq(PlayerHandState::MAX_HAND_SIZE)
+          expect(player_game_state.current_turn).to eq(1)
         end
       end
 
       it '表示用のデータが正しく整形されること' do
-        read_model = ReadModels::GameStateReadModel.new
+        read_model = ReadModels::PlayerHandStateReadModel.new
         display_data = read_model.current_state_for_display
 
         aggregate_failures do
           expect(display_data[:status]).to eq('started')
-          expect(display_data[:hand].split.size).to eq(GameState::MAX_HAND_SIZE)
+          expect(display_data[:hand].split.size).to eq(PlayerHandState::MAX_HAND_SIZE)
           expect(display_data[:turn]).to eq(1)
         end
       end
@@ -70,8 +70,8 @@ RSpec.describe 'ゲーム開始' do
         end.not_to(change { Event.where(event_type: GameStartedEvent::EVENT_TYPE).count })
       end
 
-      it 'GameStateが変更されないこと' do
-        original_game_state = GameState.find_current_session.attributes
+      it 'PlayerHandStateが変更されないこと' do
+        original_player_game_state = PlayerHandState.find_current_session.attributes
 
         begin
           subject
@@ -79,7 +79,7 @@ RSpec.describe 'ゲーム開始' do
           nil
         end
 
-        expect(GameState.find_current_session.attributes).to eq(original_game_state)
+        expect(PlayerHandState.find_current_session.attributes).to eq(original_player_game_state)
       end
     end
 

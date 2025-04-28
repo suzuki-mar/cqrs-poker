@@ -1,6 +1,6 @@
 class Projection
   def handle_event(event)
-    read_model = ReadModels::GameStateReadModel.new
+    read_model = ReadModels::PlayerHandStateReadModel.new
 
     return read_model if event.is_a?(InvalidCommandEvent) || event.is_a?(VersionConflictEvent)
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_27_235217) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_28_013143) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,12 +24,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_27_235217) do
     t.index ["version"], name: "index_events_on_version", unique: true
   end
 
-  create_table "game_states", force: :cascade do |t|
-    t.string "hand1", null: false
-    t.string "hand2", null: false
-    t.string "hand3", null: false
-    t.string "hand4", null: false
-    t.string "hand5", null: false
+  create_table "player_hand_states", force: :cascade do |t|
+    t.jsonb "hand_set", null: false
     t.string "current_rank", null: false
     t.integer "current_turn", null: false
     t.integer "status", null: false
