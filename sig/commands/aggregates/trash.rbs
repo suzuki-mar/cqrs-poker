@@ -1,6 +1,0 @@
-module Aggregates
-  class Trash
-    def accept: (untyped card) -> void
-    attr_reader cards: untyped
-  end
-end 
