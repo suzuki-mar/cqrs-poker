@@ -68,7 +68,7 @@ end
 
 group :test do
   gem 'rspec-parameterized', group: :test
-  gem 'shoulda-matchers', '~> 5.0'
+  gem 'shoulda-matchers', '~> 6.5'
 end
 
 group :development do
