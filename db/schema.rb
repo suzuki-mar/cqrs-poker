@@ -38,11 +38,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_28_090105) do
     t.string "current_rank", null: false
     t.integer "current_turn", null: false
     t.integer "status", null: false
-    t.string "hand1", null: false
-    t.string "hand2", null: false
-    t.string "hand3", null: false
-    t.string "hand4", null: false
-    t.string "hand5", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
