@@ -9,16 +9,26 @@ module HandlerStrategy
       @aggregate_store = aggregate_store
     end
 
+    # rubocop:disable Metrics/MethodLength
+    # 状態遷移の全体像を一目で把握できるよう、あえてメソッド分割せずインラインで記述しています。
+    # （現状の規模・責務ならこの方が可読性・保守性が高いため）
     def build_invalid_command_event_if_needed
       events = aggregate_store.load_all_events_in_order
 
-      replay_hand = [] # @type var replay_hand: Array[_CardForCommand]
+      cards = [] # @type var cards: Array[_CardForCommand]
       events.each do |event|
-        replay_hand = apply_event_to_replay_hand(replay_hand, event) # @type var replay_hand: Array[_CardForCommand]
+        if event.is_a?(GameStartedEvent)
+          cards = event.to_event_data[:initial_hand].map do |c|
+            HandSet.build_card_for_command(c.is_a?(HandSet::Card) ? c.to_s : c)
+          end
+        elsif event.is_a?(CardExchangedEvent)
+          cards = build_cards_from_exchanged_event(cards, event)
+        end
       end
 
-      build_invalid_command_event_if_unexchangeable(replay_hand)
+      build_invalid_command_event_if_unexchangeable(cards)
     end
+    # rubocop:enable Metrics/MethodLength
 
     def build_event_by_executing
       discarded_card = context.discarded_card
@@ -30,35 +40,24 @@ module HandlerStrategy
 
     private
 
-    def build_invalid_command_event_if_unexchangeable(hand)
+    def build_invalid_command_event_if_unexchangeable(cards)
       discarded_card = context.discarded_card
       raise ArgumentError, 'discarded_cardがnilです' if discarded_card.nil?
 
-      unless hand.include?(discarded_card)
+      unless cards.include?(discarded_card)
         return InvalidCommandEvent.new(command: command,
                                        reason: '交換対象のカードが手札に存在しません')
       end
       InvalidCommandEvent.new(command: command, reason: 'デッキの残り枚数が不足しています') unless board.drawable?
     end
 
-    def apply_event_to_replay_hand(hand, event) # hand: Array[_CardForCommand]として扱う
-      case event
-      when GameStartedEvent
-        event.to_event_data[:initial_hand].map do |c|
-          HandSet.build_card_for_command(c.is_a?(HandSet::Card) ? c.to_s : c)
-        end
-      when CardExchangedEvent
-        idx = hand.find_index { |c| c == event.discarded_card }
-        if idx
-          new_hand = hand.dup # @type var new_hand: Array[_CardForCommand]
-          new_hand[idx] = event.new_card
-          new_hand
-        else
-          hand
-        end
-      else
-        hand
-      end
+    def build_cards_from_exchanged_event(cards, event)
+      idx = cards.find_index { |c| c == event.discarded_card }
+      return cards unless idx
+
+      new_cards = cards.dup # @type var new_cards: Array[_CardForCommand]
+      new_cards[idx] = event.new_card
+      new_cards
     end
 
     attr_reader :command, :context, :board, :aggregate_store

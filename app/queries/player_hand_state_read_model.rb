@@ -43,7 +43,7 @@ class PlayerHandStateReadModel
     hand_set
   end
 
-  def end_game!(event)
+  def end_game!(_event)
     @player_hand_state.status = 'ended'
     @player_hand_state.save!
   end

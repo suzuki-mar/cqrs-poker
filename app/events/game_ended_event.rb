@@ -1,7 +1,4 @@
 class GameEndedEvent
-  def initialize
-  end
-
   def self.event_type
     'game_ended'
   end
@@ -16,7 +13,7 @@ class GameEndedEvent
     {}
   end
 
-  def self.from_store(store)
+  def self.from_store(_store)
     new
   end
 end

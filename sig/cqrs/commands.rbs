@@ -18,6 +18,7 @@ module HandlerStrategy
     private
     def apply_event_to_replay_hand: (Array[_CardForCommand], _Event event) -> Array[_CardForCommand]
     def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand]) -> InvalidCommandEvent?
+    def rebuild_cards_by_event: (Array[_CardForCommand], _Event event) -> Array[_CardForCommand]
   end
 
   class EndGame
