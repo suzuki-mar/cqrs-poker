@@ -1,8 +1,10 @@
 require 'rails_helper'
+require 'rspec-parameterized'
 
 RSpec.describe HandSet do
   let(:cards) { Array.new(5) { instance_double(HandSet::Card, valid?: true) } }
   let(:hand_set) { described_class.build(cards) }
+  let(:excluded_rank_consts) { %i[ALL NAMES] }
 
   describe '.build' do
     it '有効なカード配列からHandSetを生成できる' do
@@ -15,18 +17,29 @@ RSpec.describe HandSet do
   end
 
   describe '#evaluate' do
-    it 'HandSet::RankEvaluater.callが呼ばれる' do
-      allow(HandSet::RankEvaluater).to receive(:call).and_return(:high_card)
-      expect(hand_set.evaluate).to eq(:high_card)
+    where(:faker, :expected_rank, :skip) do
+      [
+        [-> { Faker.high_card_hand.cards },      HandSet::Rank::HIGH_CARD,      false],
+        [-> { Faker.one_pair_hand.cards },       HandSet::Rank::ONE_PAIR,       false],
+        [-> { Faker.two_pair_hand.cards },       HandSet::Rank::TWO_PAIR,       false],
+        [-> { Faker.three_of_a_kind_hand.cards }, HandSet::Rank::THREE_OF_A_KIND, false],
+        [-> { Faker.straight_hand.cards },       HandSet::Rank::STRAIGHT,       false],
+        [-> { Faker.flush_hand.cards },          HandSet::Rank::FLUSH,          false],
+        [-> { Faker.full_house_hand.cards },     HandSet::Rank::FULL_HOUSE,     false],
+        [-> { Faker.four_of_a_kind_hand.cards }, HandSet::Rank::FOUR_OF_A_KIND, false],
+        [-> { Faker.straight_flush_hand.cards }, HandSet::Rank::STRAIGHT_FLUSH, false],
+        [-> { Faker::Hand.royal_flush.cards },   HandSet::Rank::ROYAL_FLUSH,    true]
+      ]
     end
 
-    HandSet::Rank.constants.each do |rank_const|
-      next if %i[ALL NAMES].include?(rank_const) # 補助定数は除外
-
-      it "#{rank_const} が返る場合のテスト" do
-        rank_value = HandSet::Rank.const_get(rank_const)
-        allow(HandSet::RankEvaluater).to receive(:call).and_return(rank_value)
-        expect(hand_set.evaluate).to eq(rank_value)
+    with_them do
+      it '正しい役が返ること' do
+        if RSpec.configuration.formatters.any? { |f| f.class.name.include?('DocumentationFormatter') }
+          puts "テスト対象: expected_rank=#{expected_rank}"
+        end
+        pending 'HandSet::Rank::ROYAL_FLUSHの場合（未実装: 現状はFLUSH判定となる）' if expected_rank == HandSet::Rank::ROYAL_FLUSH
+        hand_set = HandSet.build(faker.call)
+        expect(hand_set.evaluate).to eq(expected_rank)
       end
     end
   end
