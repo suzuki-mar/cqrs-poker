@@ -1,6 +1,6 @@
 class PlayerHandState < ApplicationRecord
   MAX_HAND_SIZE = 5
-  enum :status, { initial: 0, started: 1 }
+  enum :status, { initial: 0, started: 1, ended: 2 }
 
   scope :started, -> { where(status: :started) }
 
@@ -28,10 +28,8 @@ class PlayerHandState < ApplicationRecord
   private
 
   def validate_hand_set_format
-    unless hand_set.is_a?(Array) && hand_set.size == MAX_HAND_SIZE && hand_set.all? do |c|
-      c.present? && c.is_a?(String)
-    end
-      errors.add(:hand_set, 'は5枚のカード文字列配列でなければなりません')
-    end
+    return if HandSet.valid_hand_set_format?(hand_set)
+
+    errors.add(:hand_set, "は#{GameSetting::MAX_HAND_SIZE}枚のカード文字列配列でなければなりません")
   end
 end

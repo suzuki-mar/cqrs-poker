@@ -27,7 +27,8 @@ class CommandHandler
 
     strategy_map = {
       CommandContext::Types::GAME_START => HandlerStrategy::GameStart,
-      CommandContext::Types::EXCHANGE_CARD => HandlerStrategy::ExchangeCard
+      CommandContext::Types::EXCHANGE_CARD => HandlerStrategy::ExchangeCard,
+      CommandContext::Types::END_GAME => HandlerStrategy::EndGame
     }
 
     klass = strategy_map[type]

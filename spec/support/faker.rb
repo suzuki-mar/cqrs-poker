@@ -3,21 +3,21 @@ require_relative 'faker/card'
 
 module Faker
   class << self
-    delegate :suit, to: 'Faker::Card'
+    delegate :suit, to: 'HandSet::Card'
 
-    delegate :rank, to: 'Faker::Card'
+    delegate :rank, to: 'HandSet::Card'
 
-    delegate :number_rank, to: 'Faker::Card'
+    delegate :number_rank, to: 'HandSet::Card'
 
-    delegate :face_rank, to: 'Faker::Card'
+    delegate :face_rank, to: 'HandSet::Card'
 
-    delegate :valid_card, to: 'Faker::Card'
+    delegate :valid_card, to: 'HandSet::Card'
 
-    delegate :invalid_card, to: 'Faker::Card'
+    delegate :invalid_card, to: 'HandSet::Card'
 
-    delegate :card_with_suit, to: 'Faker::Card'
+    delegate :card_with_suit, to: 'HandSet::Card'
 
-    delegate :card_with_rank, to: 'Faker::Card'
+    delegate :card_with_rank, to: 'HandSet::Card'
 
     def one_pair_hand
       Hand.one_pair
@@ -62,7 +62,7 @@ module Faker
     private
 
     def double(attrs)
-      instance_double(Card, attrs)
+      instance_double(HandSet::Card, attrs)
     end
   end
 end

@@ -17,6 +17,7 @@ RSpec.describe 'ゲーム開始' do
       end
 
       it 'イベントが正しく発行されること' do
+        # TODO: EventStoreを使用するようにする
         event = Event.last
         expect(event.event_type).to eq(GameStartedEvent.event_type)
         # 必要ならevent.event_dataの内容も検証
@@ -27,10 +28,11 @@ RSpec.describe 'ゲーム開始' do
       end
 
       it 'ゲーム状態が正しく更新されること' do
+        # TODO: AgreegateStorteとかを使うようにして　ARのクラスを使用しないようにする
         player_game_state = PlayerHandState.find_current_session
         aggregate_failures do
           expect(player_game_state).to be_started
-          expect(player_game_state.hand_set.size).to eq(PlayerHandState::MAX_HAND_SIZE)
+          expect(player_game_state.hand_set.size).to eq(GameSetting::MAX_HAND_SIZE)
           expect(player_game_state.current_turn).to eq(1)
         end
       end
@@ -40,7 +42,7 @@ RSpec.describe 'ゲーム開始' do
 
         aggregate_failures do
           expect(display_data[:status]).to eq('started')
-          expect(display_data[:hand].split.size).to eq(PlayerHandState::MAX_HAND_SIZE)
+          expect(display_data[:hand].split.size).to eq(GameSetting::MAX_HAND_SIZE)
           expect(display_data[:turn]).to eq(1)
         end
       end
@@ -65,12 +67,14 @@ RSpec.describe 'ゲーム開始' do
       end
 
       it 'GameStartedイベントが2回記録されないこと' do
+        # TODO: EventStoreを使用するようにする
         expect do
           subject
         end.not_to(change { Event.where(event_type: GameStartedEvent.event_type).count })
       end
 
       it 'PlayerHandStateが変更されないこと' do
+        # TODO: ARのクラスを使用しないようにする
         original_player_game_state = PlayerHandState.find_current_session.attributes
 
         begin

@@ -43,7 +43,8 @@ class AggregateStore
       GameStartedEvent.event_type => GameStartedEvent,
       CardExchangedEvent.event_type => CardExchangedEvent,
       InvalidCommandEvent.event_type => InvalidCommandEvent,
-      VersionConflictEvent.event_type => VersionConflictEvent
+      VersionConflictEvent.event_type => VersionConflictEvent,
+      GameEndedEvent.event_type => GameEndedEvent
     }
 
     event = maps[store.event_type].from_store(store)
@@ -52,7 +53,7 @@ class AggregateStore
     event
   end
 
-  def build_failer_if_conflict(event, expected_current_version)
+  def build_failer_if_conflict(_event, expected_current_version)
     stored_version = current_version
     if expected_current_version < stored_version
       return Failure[VersionConflictEvent.event_type,

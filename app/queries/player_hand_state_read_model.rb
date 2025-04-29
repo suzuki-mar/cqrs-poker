@@ -14,7 +14,7 @@ class PlayerHandStateReadModel
 
   def exchange_card!(event)
     # 現在の手札をHandSetとして再構築
-    hand_set = HandSet.build(@player_hand_state.hand_set.map { |str| Card.new(str) })
+    hand_set = HandSet.build(HandSet.card_array_from_strings(@player_hand_state.hand_set))
     # 手札を交換
     new_hand_set = hand_set.rebuild_after_exchange(event.discarded_card, event.new_card)
     # PlayerHandStateを更新
@@ -29,18 +29,23 @@ class PlayerHandStateReadModel
       status: player_hand_state.status,
       hand: format_hand,
       current_rank: player_hand_state.current_rank,
-      rank_name: HandSet::Rank.japanese_name(player_hand_state.current_rank),
+      rank_name: HandSet.rank_japanese_name(player_hand_state.current_rank),
       turn: player_hand_state.current_turn
     }
   end
 
   def hand_set
-    HandSet.build(@player_hand_state.hand_set.map { |str| Card.new(str) })
+    HandSet.build(HandSet.card_array_from_strings(@player_hand_state.hand_set))
   end
 
   def refreshed_hand_set
     @player_hand_state = PlayerHandState.find_current_session
     hand_set
+  end
+
+  def end_game!(event)
+    @player_hand_state.status = 'ended'
+    @player_hand_state.save!
   end
 
   private

@@ -35,7 +35,7 @@ RSpec.describe AggregateStore do
     it 'versionが1から始まり、連番で保存されること' do
       aggregate_store = AggregateStore.new
       event1 = GameStartedEvent.new(Faker.high_card_hand)
-      event2 = CardExchangedEvent.new(Card.new('♠A'), Card.new('♣2'))
+      event2 = CardExchangedEvent.new(HandSet::Card.new('♠A'), HandSet::Card.new('♣2'))
       v1 = aggregate_store.current_version
       aggregate_store.append(event1, v1)
       v2 = aggregate_store.current_version

@@ -3,35 +3,35 @@ module Faker
     module_function
 
     def suit
-      ::Card::VALID_SUITS.sample
+      ::HandSet::Card::VALID_SUITS.sample
     end
 
     def rank
-      ::Card::VALID_RANKS.sample
+      ::HandSet::Card::VALID_RANKS.sample
     end
 
     def number_rank
-      ::Card::VALID_RANKS.grep(/\d+/).sample
+      ::HandSet::Card::VALID_RANKS.grep(/\d+/).sample
     end
 
     def face_rank
-      %w[A J Q K].sample
+      (::HandSet::Card::VALID_RANKS - ::HandSet::Card::VALID_RANKS.grep(/\d+/)).sample
     end
 
     def valid_card
-      ::Card.new(card_str)
+      HandSet.card_from_string(card_str)
     end
 
     def invalid_card
-      ::Card.new('@1')
+      HandSet.card_from_string('@1')
     end
 
     def card_with_suit(suit_value)
-      ::Card.new("#{suit_value}#{rank}")
+      HandSet.card_from_string("#{suit_value}#{rank}")
     end
 
     def card_with_rank(rank_value)
-      ::Card.new("#{suit}#{rank_value}")
+      HandSet.card_from_string("#{suit}#{rank_value}")
     end
 
     def card_str

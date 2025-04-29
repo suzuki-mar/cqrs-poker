@@ -15,6 +15,7 @@ class PlayerHandStateReadModel
   def initialize: () -> void
   def start_new_game!: (GameStartedEvent) -> void
   def exchange_card!: (CardExchangedEvent) -> void
+  def end_game!: (GameEndedEvent) -> void
   def current_state_for_display: () -> { status: String, hand: String, current_rank: String, rank_name: String, turn: Integer }
   def hand_set: () -> HandSet
   def refreshed_hand_set: () -> HandSet
@@ -39,4 +40,9 @@ class LogEventListener
   def format_cards: (Array[String]) -> String
   def build_info_message: (untyped event) -> String
   def build_warning_message_if_needed: (untyped event) -> String?
+end
+
+
+class HistoriesReadModel
+  def self.load: (?limit: Integer) -> Array[History]
 end 

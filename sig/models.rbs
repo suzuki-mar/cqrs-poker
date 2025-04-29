@@ -14,6 +14,8 @@ interface _ApplicationRecordClass
   def where: (*untyped) -> untyped
   def last: () -> untyped
   def new: (*untyped, **untyped) -> untyped
+  def order: (*untyped) -> untyped
+  def limit: (*untyped) -> untyped
 end
 
 class ApplicationRecord < ActiveRecord::Base
@@ -41,5 +43,89 @@ class Event < ApplicationRecord
   def self.maximum: (*untyped) -> untyped
   def self.exists?: (*untyped) -> untyped
   def self.create!: (*untyped) -> untyped
-  def self.order: (*untyped) -> untyped
+end
+
+class GameSetting
+  MAX_HAND_SIZE: Integer
+end
+
+class History < ApplicationRecord
+  extend _ApplicationRecordClass
+  attr_accessor hand_set: Array[String]
+  attr_accessor rank: Integer
+  attr_accessor ended_at: Time
+end
+
+class Card
+  VALID_SUITS: ::Array[String]
+  VALID_RANKS: ::Array[String]
+
+  attr_reader suit: String
+  attr_reader rank: String
+
+  def self.generate_available: (?Array[Card]) -> Array[Card]
+  def initialize: (String) -> void
+  def valid?: () -> bool
+  def to_s: () -> String
+  def ==: (untyped) -> bool
+  def eql?: (untyped) -> bool
+  def hash: () -> Integer
+end
+
+class HandSet
+  MAX_HAND_SIZE: Integer
+  attr_reader cards: Array[Card]
+  def self.build: (Array[Card]) -> HandSet
+  def self.valid_cards?: (Array[Card]) -> bool
+  def initialize: (Array[Card]) -> void
+  def rebuild_after_exchange: (Card, Card) -> HandSet
+  def evaluate: () -> String
+  def rank_name: () -> String
+  def valid?: () -> bool
+  def fetch_by_number: (Integer) -> Card
+  def include?: (Card) -> bool
+  # 他の必要なメソッドも追加可能
+
+  module Rank
+    HIGH_CARD: String
+    ONE_PAIR: String
+    TWO_PAIR: String
+    THREE_OF_A_KIND: String
+    STRAIGHT: String
+    FLUSH: String
+    FULL_HOUSE: String
+    FOUR_OF_A_KIND: String
+    STRAIGHT_FLUSH: String
+    ROYAL_FLUSH: String
+    ALL: Array[String]
+    NAMES: Hash[String, String]
+    def self.japanese_name: (String) -> String
+  end
+
+  class Evaluate
+    def self.call: (Array[Card] cards) -> String
+    def call: (Array[Card] cards) -> String
+    def build_rank_checks_map: () -> Hash[String, ::Proc]
+    def valid_hand?: (Array[Card] cards) -> bool
+    def straight_flush?: () -> bool
+    def four_of_a_kind?: () -> bool
+    def full_house?: () -> bool
+    def flush?: () -> bool
+    def straight?: () -> bool
+    def three_of_a_kind?: () -> bool
+    def two_pair?: () -> bool
+    def one_pair?: () -> bool
+    def rank_combinations: () -> untyped
+    def suits: () -> Array[String]
+    def rank_counts: () -> untyped
+    def ranks: () -> Array[String]
+
+    class RankCombinations
+      def initialize: (untyped values) -> void
+      def pair_count: () -> Integer
+      def three_of_a_kind?: () -> bool
+      def four_of_a_kind?: () -> bool
+      def full_house?: () -> bool
+    end
+  end
 end 

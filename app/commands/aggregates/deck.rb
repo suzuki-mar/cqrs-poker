@@ -11,7 +11,7 @@ module Aggregates
     delegate :size, to: :cards
 
     def draw_initial_hand
-      drawn_cards = Array.new(::PlayerHandState::MAX_HAND_SIZE) { draw }
+      drawn_cards = Array.new(GameSetting::MAX_HAND_SIZE) { draw }
       HandSet.build(drawn_cards)
     end
 
@@ -37,11 +37,9 @@ module Aggregates
     end
 
     def generate_initial_cards
-      Card::VALID_SUITS.flat_map do |suit|
-        Card::VALID_RANKS.map do |rank|
-          Card.new("#{suit}#{rank}")
-        end
-      end
+      HandSet.card_array_from_strings(
+        HandSet::Card::VALID_SUITS.product(HandSet::Card::VALID_RANKS).map { |suit, rank| "#{suit}#{rank}" }
+      )
     end
   end
 end

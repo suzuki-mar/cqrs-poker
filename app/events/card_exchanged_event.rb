@@ -31,8 +31,8 @@ class CardExchangedEvent
 
   def self.from_store(store)
     event_data = JSON.parse(store.event_data, symbolize_names: true)
-    discarded = Card.new(event_data[:discarded_card])
-    new_c = Card.new(event_data[:new_card])
+    discarded = HandSet.card_from_string(event_data[:discarded_card])
+    new_c = HandSet.card_from_string(event_data[:new_card])
     new(discarded, new_c)
   end
 end

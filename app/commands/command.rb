@@ -16,4 +16,8 @@ class Command
   def execute_for_exchange_card(board)
     board.draw
   end
+
+  def execute_for_end_game(board)
+    # ゲーム終了時には何もしない
+  end
 end

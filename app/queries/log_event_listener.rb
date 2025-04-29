@@ -39,6 +39,8 @@ class LogEventListener
         'カード交換',
         "捨てたカード: #{event.discarded_card}, 引いたカード: #{event.new_card}"
       )
+    when GameEndedEvent
+      format_event_message('ゲーム終了')
     else
       format_event_message(event.class.name)
     end

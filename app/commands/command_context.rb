@@ -2,6 +2,7 @@ class CommandContext
   module Types
     GAME_START = :game_start
     EXCHANGE_CARD = :exchange_card
+    END_GAME = :end_game
   end
 
   attr_reader :discarded_card, :type
@@ -12,6 +13,10 @@ class CommandContext
 
   def self.build_for_exchange(discarded_card)
     new(Types::EXCHANGE_CARD, discarded_card)
+  end
+
+  def self.build_for_end_game
+    new(Types::END_GAME)
   end
 
   private

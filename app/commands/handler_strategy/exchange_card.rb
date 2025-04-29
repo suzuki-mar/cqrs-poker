@@ -45,7 +45,7 @@ module HandlerStrategy
     def apply_event_to_replay_hand(hand, event)
       case event
       when GameStartedEvent
-        event.to_event_data[:initial_hand].map { |c| c.is_a?(Card) ? c : Card.new(c) }
+        event.to_event_data[:initial_hand].map { |c| HandSet.card?(c) ? c : HandSet.card_from_string(c) }
 
       when CardExchangedEvent
         idx = hand.find_index { |c| c == event.discarded_card }
