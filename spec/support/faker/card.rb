@@ -19,19 +19,19 @@ module Faker
     end
 
     def valid_card
-      HandSet.card_from_string(card_str)
+      HandSet.build_card_for_command(card_str)
     end
 
     def invalid_card
-      HandSet.card_from_string('@1')
+      HandSet.build_card_for_command('@1')
     end
 
     def card_with_suit(suit_value)
-      HandSet.card_from_string("#{suit_value}#{rank}")
+      HandSet.build_card_for_command("#{suit_value}#{rank}")
     end
 
     def card_with_rank(rank_value)
-      HandSet.card_from_string("#{suit}#{rank_value}")
+      HandSet.build_card_for_command("#{suit}#{rank_value}")
     end
 
     def card_str

@@ -12,10 +12,9 @@ module HandlerStrategy
     def build_invalid_command_event_if_needed
       events = aggregate_store.load_all_events_in_order
 
-      replay_hand = []
-      # @type var replay_hand: Array[Card]
+      replay_hand = [] # @type var replay_hand: Array[_CardForCommand]
       events.each do |event|
-        replay_hand = apply_event_to_replay_hand(replay_hand, event)
+        replay_hand = apply_event_to_replay_hand(replay_hand, event) # @type var replay_hand: Array[_CardForCommand]
       end
 
       build_invalid_command_event_if_unexchangeable(replay_hand)
@@ -42,16 +41,21 @@ module HandlerStrategy
       InvalidCommandEvent.new(command: command, reason: 'デッキの残り枚数が不足しています') unless board.drawable?
     end
 
-    def apply_event_to_replay_hand(hand, event)
+    def apply_event_to_replay_hand(hand, event) # hand: Array[_CardForCommand]として扱う
       case event
       when GameStartedEvent
-        event.to_event_data[:initial_hand].map { |c| HandSet.card?(c) ? c : HandSet.card_from_string(c) }
-
+        event.to_event_data[:initial_hand].map do |c|
+          HandSet.build_card_for_command(c.is_a?(HandSet::Card) ? c.to_s : c)
+        end
       when CardExchangedEvent
         idx = hand.find_index { |c| c == event.discarded_card }
-        hand[idx] = event.new_card if idx
-        hand
-
+        if idx
+          new_hand = hand.dup # @type var new_hand: Array[_CardForCommand]
+          new_hand[idx] = event.new_card
+          new_hand
+        else
+          hand
+        end
       else
         hand
       end

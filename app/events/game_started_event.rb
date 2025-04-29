@@ -29,7 +29,7 @@ class GameStartedEvent
   def self.from_store(store)
     event_data = JSON.parse(store.event_data, symbolize_names: true)
     hand_data = event_data[:initial_hand]
-    hand_cards = hand_data.map { |c| HandSet.card_from_string(c) }
+    hand_cards = hand_data.map { |c| HandSet.build_card_for_query(c) }
     hand_set = HandSet.build(hand_cards)
     new(hand_set)
   end

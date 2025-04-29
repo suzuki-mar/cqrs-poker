@@ -46,3 +46,7 @@ end
 class HistoriesReadModel
   def self.load: (?limit: Integer) -> Array[History]
 end 
+
+interface _CardForQuery
+  include _Card
+end 

@@ -28,9 +28,9 @@ end
 class CardExchangedEvent
   include _Event
   extend _EventClass
-  def initialize: (Card, Card) -> void
-  attr_reader discarded_card: Card
-  attr_reader new_card: Card
+  def initialize: (_CardForCommand, _CardForCommand) -> void
+  attr_reader discarded_card: _CardForCommand
+  attr_reader new_card: _CardForCommand
 end
 
 class VersionConflictEvent

@@ -14,7 +14,7 @@ class PlayerHandStateReadModel
 
   def exchange_card!(event)
     # 現在の手札をHandSetとして再構築
-    hand_set = HandSet.build(HandSet.card_array_from_strings(@player_hand_state.hand_set))
+    hand_set = HandSet.build(@player_hand_state.hand_set.map { |c| HandSet.build_card_for_query(c) })
     # 手札を交換
     new_hand_set = hand_set.rebuild_after_exchange(event.discarded_card, event.new_card)
     # PlayerHandStateを更新
@@ -35,7 +35,7 @@ class PlayerHandStateReadModel
   end
 
   def hand_set
-    HandSet.build(HandSet.card_array_from_strings(@player_hand_state.hand_set))
+    HandSet.build(@player_hand_state.hand_set.map { |c| HandSet.build_card_for_query(c) })
   end
 
   def refreshed_hand_set

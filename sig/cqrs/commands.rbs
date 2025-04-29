@@ -1,35 +1,39 @@
 module HandlerStrategy
-  interface _HandlerStrategy
-    def initialize: (Command command, CommandContext context, Aggregates::BoardAggregate board, AggregateStore aggregate_store) -> void
-    def board: () -> Aggregates::BoardAggregate
-    def command: () -> Command
-    def context: () -> CommandContext
-    def aggregate_store: () -> AggregateStore
-    def build_event_by_executing: () -> _Event
-  end
-
   class GameStart
-    include HandlerStrategy::_HandlerStrategy
+    def initialize: (Command, CommandContext, Aggregates::BoardAggregate, AggregateStore) -> void
+    attr_reader command: Command
+    attr_reader context: CommandContext
+    attr_reader board: Aggregates::BoardAggregate
+    attr_reader aggregate_store: AggregateStore
     def build_invalid_command_event_if_needed: () -> (VersionConflictEvent | InvalidCommandEvent | nil)
   end
 
   class ExchangeCard
-    include HandlerStrategy::_HandlerStrategy
+    def initialize: (Command, CommandContext, Aggregates::BoardAggregate, AggregateStore) -> void
+    attr_reader command: Command
+    attr_reader context: CommandContext
+    attr_reader board: Aggregates::BoardAggregate
+    attr_reader aggregate_store: AggregateStore
     def build_invalid_command_event_if_needed: () -> (VersionConflictEvent | InvalidCommandEvent | nil)
     private
-    def apply_event_to_replay_hand: (Array[Card], _Event event) -> Array[Card]
-    def build_invalid_command_event_if_unexchangeable: (Array[Card]) -> InvalidCommandEvent?
+    def apply_event_to_replay_hand: (Array[_CardForCommand], _Event event) -> Array[_CardForCommand]
+    def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand]) -> InvalidCommandEvent?
   end
 
   class EndGame
-    include HandlerStrategy::_HandlerStrategy
+    def initialize: (Command, CommandContext, Aggregates::BoardAggregate, AggregateStore) -> void
+    attr_reader command: Command
+    attr_reader context: CommandContext
+    attr_reader board: Aggregates::BoardAggregate
+    attr_reader aggregate_store: AggregateStore
+    def build_invalid_command_event_if_needed: () -> (VersionConflictEvent | InvalidCommandEvent | nil)
   end
 end
 
 
 class Command
   def execute_for_game_start: (Aggregates::BoardAggregate) -> HandSet
-  def execute_for_exchange_card: (Aggregates::BoardAggregate) -> Card
+  def execute_for_exchange_card: (Aggregates::BoardAggregate) -> HandSet::Card
   def execute_for_end_game: (Aggregates::BoardAggregate) -> void
 end
 
@@ -72,11 +76,11 @@ class CommandContext
     EXCHANGE_CARD: Symbol
     END_GAME: Symbol
   end
-  def initialize: (Symbol, ?Card) -> void
+  def initialize: (Symbol, ?HandSet::Card) -> void
   attr_reader type: Symbol
-  attr_reader discarded_card: Card?
+  attr_reader discarded_card: HandSet::Card?
   def self.build_for_game_start: () -> CommandContext
-  def self.build_for_exchange: (Card) -> CommandContext
+  def self.build_for_exchange: (HandSet::Card) -> CommandContext
   def self.build_for_end_game: () -> CommandContext
 end
 
@@ -113,4 +117,14 @@ module Aggregates
     def accept: (untyped card) -> void
     attr_reader cards: untyped
   end
+end
+
+interface _CardForCommand
+  include _Card
+  def suit: () -> String
+  def rank: () -> String
+  def valid?: () -> bool
+  def ==: (untyped) -> bool
+  def eql?: (untyped) -> bool
+  def hash: () -> Integer
 end

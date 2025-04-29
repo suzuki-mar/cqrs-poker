@@ -37,9 +37,9 @@ module Aggregates
     end
 
     def generate_initial_cards
-      HandSet.card_array_from_strings(
-        HandSet::Card::VALID_SUITS.product(HandSet::Card::VALID_RANKS).map { |suit, rank| "#{suit}#{rank}" }
-      )
+      HandSet::Card::VALID_SUITS.product(HandSet::Card::VALID_RANKS).map do |suit, rank|
+        HandSet.build_card_for_command("#{suit}#{rank}")
+      end
     end
   end
 end

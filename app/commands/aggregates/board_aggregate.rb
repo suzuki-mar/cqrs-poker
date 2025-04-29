@@ -27,7 +27,7 @@ module Aggregates
 
     def apply_game_started_event(event)
       @game_started = true
-      cards = event.to_event_data[:initial_hand].map { |c| HandSet.card?(c) ? c : HandSet.card_from_string(c) }
+      cards = event.to_event_data[:initial_hand].map { |c| HandSet.card?(c) ? c : HandSet.build_card_for_command(c) }
       cards.each { |card| deck.remove(card) if deck.cards.include?(card) }
     end
 

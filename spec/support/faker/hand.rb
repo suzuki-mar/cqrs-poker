@@ -3,61 +3,61 @@ module Faker
     class << self
       def high_card
         create_hand([
-                      HandSet.card_from_string('♠A'), HandSet.card_from_string('♥K'), HandSet.card_from_string('♦3'), HandSet.card_from_string('♣5'), HandSet.card_from_string('♠7')
+                      HandSet.build_card_for_command('♠A'), HandSet.build_card_for_command('♥K'), HandSet.build_card_for_command('♦3'), HandSet.build_card_for_command('♣5'), HandSet.build_card_for_command('♠7')
                     ])
       end
 
       def one_pair
         create_hand([
-                      HandSet.card_from_string('♠A'), HandSet.card_from_string('♥A'), HandSet.card_from_string('♦3'), HandSet.card_from_string('♣5'), HandSet.card_from_string('♠7')
+                      HandSet.build_card_for_command('♠A'), HandSet.build_card_for_command('♥A'), HandSet.build_card_for_command('♦3'), HandSet.build_card_for_command('♣5'), HandSet.build_card_for_command('♠7')
                     ])
       end
 
       def two_pair
         create_hand([
-                      HandSet.card_from_string('♠A'), HandSet.card_from_string('♥A'), HandSet.card_from_string('♦K'), HandSet.card_from_string('♣K'), HandSet.card_from_string('♠7')
+                      HandSet.build_card_for_command('♠A'), HandSet.build_card_for_command('♥A'), HandSet.build_card_for_command('♦K'), HandSet.build_card_for_command('♣K'), HandSet.build_card_for_command('♠7')
                     ])
       end
 
       def three_of_a_kind
         create_hand([
-                      HandSet.card_from_string('♥7'), HandSet.card_from_string('♦7'), HandSet.card_from_string('♣7'), HandSet.card_from_string('♠3'), HandSet.card_from_string('♥5')
+                      HandSet.build_card_for_command('♥7'), HandSet.build_card_for_command('♦7'), HandSet.build_card_for_command('♣7'), HandSet.build_card_for_command('♠3'), HandSet.build_card_for_command('♥5')
                     ])
       end
 
       def straight
         create_hand([
-                      HandSet.card_from_string('♥2'), HandSet.card_from_string('♦3'), HandSet.card_from_string('♣4'), HandSet.card_from_string('♠5'), HandSet.card_from_string('♥6')
+                      HandSet.build_card_for_command('♥2'), HandSet.build_card_for_command('♦3'), HandSet.build_card_for_command('♣4'), HandSet.build_card_for_command('♠5'), HandSet.build_card_for_command('♥6')
                     ])
       end
 
       def flush
         create_hand([
-                      HandSet.card_from_string('♥2'), HandSet.card_from_string('♥5'), HandSet.card_from_string('♥7'), HandSet.card_from_string('♥9'), HandSet.card_from_string('♥J')
+                      HandSet.build_card_for_command('♥2'), HandSet.build_card_for_command('♥5'), HandSet.build_card_for_command('♥7'), HandSet.build_card_for_command('♥9'), HandSet.build_card_for_command('♥J')
                     ])
       end
 
       def full_house
         create_hand([
-                      HandSet.card_from_string('♥8'), HandSet.card_from_string('♦8'), HandSet.card_from_string('♣8'), HandSet.card_from_string('♠4'), HandSet.card_from_string('♥4')
+                      HandSet.build_card_for_command('♥8'), HandSet.build_card_for_command('♦8'), HandSet.build_card_for_command('♣8'), HandSet.build_card_for_command('♠4'), HandSet.build_card_for_command('♥4')
                     ])
       end
 
       def four_of_a_kind
         create_hand([
-                      HandSet.card_from_string('♥7'), HandSet.card_from_string('♦7'), HandSet.card_from_string('♣7'), HandSet.card_from_string('♠7'), HandSet.card_from_string('♥2')
+                      HandSet.build_card_for_command('♥7'), HandSet.build_card_for_command('♦7'), HandSet.build_card_for_command('♣7'), HandSet.build_card_for_command('♠7'), HandSet.build_card_for_command('♥2')
                     ])
       end
 
       def straight_flush
         create_hand([
-                      HandSet.card_from_string('♥2'), HandSet.card_from_string('♥3'), HandSet.card_from_string('♥4'), HandSet.card_from_string('♥5'), HandSet.card_from_string('♥6')
+                      HandSet.build_card_for_command('♥2'), HandSet.build_card_for_command('♥3'), HandSet.build_card_for_command('♥4'), HandSet.build_card_for_command('♥5'), HandSet.build_card_for_command('♥6')
                     ])
       end
 
       def royal_flush
         create_hand([
-                      HandSet.card_from_string('♥A'), HandSet.card_from_string('♥K'), HandSet.card_from_string('♥Q'), HandSet.card_from_string('♥J'), HandSet.card_from_string('♥10')
+                      HandSet.build_card_for_command('♥A'), HandSet.build_card_for_command('♥K'), HandSet.build_card_for_command('♥Q'), HandSet.build_card_for_command('♥J'), HandSet.build_card_for_command('♥10')
                     ])
       end
 
