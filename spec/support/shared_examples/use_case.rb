@@ -15,9 +15,7 @@ RSpec.shared_examples 'version conflict event' do
     aggregate_store = AggregateStore.new
     aggregate_store.append(event, error_version) # 1回目（正常）
     result = aggregate_store.append(event, error_version) # 2回目（競合）
-    raise 'shared_examplesの使い方エラー: 1回目のappend（正常登録）が実行されていません' if result.success?
-
-    expect(result.failure[0]).to eq(VersionConflictEvent.event_type)
-    expect(result.failure[1]).to be_a(VersionConflictEvent)
+    expect(result).to be_a(VersionConflictEvent)
+    expect(result.event_type).to eq(VersionConflictEvent.event_type)
   end
 end

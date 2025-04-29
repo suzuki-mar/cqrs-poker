@@ -10,9 +10,17 @@ class CommandHandler
     strategy = build_strategy(context.type, command, context)
     invalid_event = strategy.build_invalid_command_event_if_needed
     event = invalid_event || strategy.build_event_by_executing
-    result = aggregate_store.append(event, aggregate_store.current_version)
-    return handle_failure(result) if result.failure?
-
+    begin
+      result = aggregate_store.append(event, aggregate_store.current_version)
+    rescue ActiveRecord::RecordInvalid => e
+      error_event = aggregate_store.build_validation_error(e, command)
+      event_bus.publish(error_event)
+      return error_event
+    end
+    if result.is_a?(VersionConflictEvent) || result.is_a?(InvalidCommandEvent)
+      event_bus.publish(result)
+      return result
+    end
     event_bus.publish(event)
     event
   end
@@ -32,14 +40,8 @@ class CommandHandler
     }
 
     klass = strategy_map[type]
-    raise InvalidCommand, "不明なコマンドタイプです: #{type}" unless klass
+    raise "不明なコマンドタイプです: #{type}" unless klass
 
     klass.new(command, context, board, aggregate_store)
-  end
-
-  def handle_failure(result)
-    return result.failure[1] if result.failure[0] == VersionConflictEvent.event_type
-
-    result.failure[1]
   end
 end

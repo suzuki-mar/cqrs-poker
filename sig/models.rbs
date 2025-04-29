@@ -43,6 +43,10 @@ class Event < ApplicationRecord
   def self.maximum: (*untyped) -> untyped
   def self.exists?: (*untyped) -> untyped
   def self.create!: (*untyped) -> untyped
+  attr_reader event_type: String
+  attr_reader event_data: String
+  attr_reader occurred_at: Time
+  attr_reader version: Integer
 end
 
 class GameSetting

@@ -9,14 +9,14 @@ class AggregateStore
 
   def append(event, expected_current_version)
     failer = build_failer_if_conflict(event, expected_current_version)
-    return failer if failer.present?
+    return failer if failer
 
     add_event_to_store!(event, expected_current_version)
-    Dry::Monads::Result::Success.new(event)
+    event
   rescue ActiveRecord::RecordInvalid => e
     return build_version_conflict_event(event, expected_current_version) if version_conflict_error?(e)
 
-    build_validation_error(e)
+    raise 'build_validation_errorにはcommandが必要です。呼び出し元で渡してください。'
   end
 
   def load_all_events_in_order
@@ -56,12 +56,10 @@ class AggregateStore
   def build_failer_if_conflict(_event, expected_current_version)
     stored_version = current_version
     if expected_current_version < stored_version
-      return Failure[VersionConflictEvent.event_type,
-                     VersionConflictEvent.new(stored_version, expected_current_version)]
+      VersionConflictEvent.new(stored_version, expected_current_version)
+    else
+      nil
     end
-
-    # すでに開始済みの場合は何も返さない（上位層で判定・エラー生成）
-    nil
   end
 
   def add_event_to_store!(event, expected_current_version)
@@ -81,11 +79,10 @@ class AggregateStore
 
   def build_version_conflict_event(_event, expected_current_version)
     latest_version = Event.maximum(:version)
-    Failure[VersionConflictEvent.event_type,
-            VersionConflictEvent.new(latest_version + 1, expected_current_version)]
+    VersionConflictEvent.new(latest_version + 1, expected_current_version)
   end
 
-  def build_validation_error(err)
-    Failure[:validation_error, err.record.errors.full_messages]
+  def build_validation_error(err, command)
+    InvalidCommandEvent.new(command: command, reason: err.record.errors.full_messages.join(', '))
   end
 end

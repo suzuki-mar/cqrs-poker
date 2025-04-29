@@ -6,6 +6,7 @@ module HandlerStrategy
     attr_reader board: Aggregates::BoardAggregate
     attr_reader aggregate_store: AggregateStore
     def build_invalid_command_event_if_needed: () -> (VersionConflictEvent | InvalidCommandEvent | nil)
+    def build_event_by_executing: () -> _Event
   end
 
   class ExchangeCard
@@ -15,6 +16,7 @@ module HandlerStrategy
     attr_reader board: Aggregates::BoardAggregate
     attr_reader aggregate_store: AggregateStore
     def build_invalid_command_event_if_needed: () -> (VersionConflictEvent | InvalidCommandEvent | nil)
+    def build_event_by_executing: () -> _Event
     private
     def apply_event_to_replay_hand: (Array[_CardForCommand], _Event event) -> Array[_CardForCommand]
     def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand]) -> InvalidCommandEvent?
@@ -29,46 +31,44 @@ module HandlerStrategy
     attr_reader board: Aggregates::BoardAggregate
     attr_reader aggregate_store: AggregateStore
     def build_invalid_command_event_if_needed: () -> (VersionConflictEvent | InvalidCommandEvent | nil)
+    def build_event_by_executing: () -> _Event
   end
 end
 
 
 class Command
   def execute_for_game_start: (Aggregates::BoardAggregate) -> HandSet
-  def execute_for_exchange_card: (Aggregates::BoardAggregate) -> HandSet::Card
+  def execute_for_exchange_card: (Aggregates::BoardAggregate) -> _CardForCommand
   def execute_for_end_game: (Aggregates::BoardAggregate) -> void
 end
 
 
 class CommandHandler
   def initialize: (EventBus) -> void
-  def handle: (Command, CommandContext) -> untyped
+  def handle: (Command, CommandContext) -> (_Event | VersionConflictEvent | Array[String])
   private
   def aggregate_store: () -> AggregateStore
-  def build_strategy: (Symbol, Command, CommandContext) -> untyped
+  def build_strategy: (Symbol, Command, CommandContext) -> (HandlerStrategy::GameStart | HandlerStrategy::ExchangeCard | HandlerStrategy::EndGame)
   def event_bus: () -> EventBus
-  def load_events: () -> untyped
-  def build_board: (untyped) -> Aggregates::BoardAggregate
-  def append_event: (untyped) -> untyped
-  def handle_failure: (untyped) -> untyped
-  def publish_event: (untyped) -> void
-  InvalidCommand: untyped
+  def load_events: () -> Array[_Event]
+  def build_board: (Array[_Event]) -> Aggregates::BoardAggregate
+  def append_event: (_Event) -> void
 end
 
 
 class AggregateStore
   def current_version: () -> Integer
-  def append: (untyped, Integer) -> untyped
-  def load_all_events_in_order: () -> Array[untyped]
-  def latest_event: () -> untyped
+  def append: (_Event, Integer) -> _Event
+  def load_all_events_in_order: () -> Array[_Event]
+  def latest_event: () -> _Event?
   def game_already_started?: () -> bool
+  def build_validation_error: (ActiveRecord::RecordInvalid, Command) -> InvalidCommandEvent
   private
-  def build_event_from_store: (untyped) -> untyped
-  def build_failer_if_conflict: (untyped, Integer) -> untyped
-  def add_event_to_store!: (untyped, Integer) -> untyped
-  def version_conflict_error?: (untyped) -> bool
-  def build_version_conflict_event: (untyped, Integer) -> untyped
-  def build_validation_error: (untyped) -> untyped
+  def build_event_from_store: (Event) -> _Event
+  def build_failer_if_conflict: (_Event, Integer) -> VersionConflictEvent?
+  def add_event_to_store!: (_Event, Integer) -> Event
+  def version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
+  def build_version_conflict_event: (_Event, Integer) -> VersionConflictEvent
 end
 
 
@@ -89,17 +89,17 @@ end
 
 module Aggregates
   class BoardAggregate
-    def self.load_from_events: (untyped events) -> BoardAggregate
-    def apply: (untyped event) -> void
-    def draw_initial_hand: () -> untyped
-    def draw: () -> untyped
-    def discard_to_trash: (untyped card) -> void
+    def self.load_from_events: (Array[_Event] events) -> BoardAggregate
+    def apply: (_Event event) -> void
+    def draw_initial_hand: () -> HandSet
+    def draw: () -> _CardForCommand
+    def discard_to_trash: (_CardForCommand card) -> void
     def drawable?: () -> bool
-    def apply_game_started_event: (untyped event) -> void
-    def apply_card_exchanged_event: (untyped event) -> void
+    def apply_game_started_event: (GameStartedEvent event) -> void
+    def apply_card_exchanged_event: (CardExchangedEvent event) -> void
     private
-    attr_reader deck: untyped
-    attr_reader trash: untyped
+    attr_reader deck: Deck
+    attr_reader trash: Trash
     attr_reader game_started: bool
     attr_writer game_started: bool
   end
@@ -107,17 +107,18 @@ module Aggregates
 
   class Deck
     def self.build: () -> Deck
-    def draw_initial_hand: () -> untyped
-    def draw: () -> untyped
-    def remove: (untyped card) -> void
-    attr_reader cards: untyped
-    def generate_initial_cards: () -> untyped
+    def draw_initial_hand: () -> HandSet
+    def draw: () -> _CardForCommand
+    def remove: (_CardForCommand card) -> void
+    attr_reader cards: Array[_CardForCommand]
+    def generate_initial_cards: () -> Array[_CardForCommand]
+    def size: () -> Integer
   end
 
 
   class Trash
-    def accept: (untyped card) -> void
-    attr_reader cards: untyped
+    def accept: (_CardForCommand card) -> void
+    attr_reader cards: Array[_CardForCommand]
   end
 end
 
@@ -126,7 +127,7 @@ interface _CardForCommand
   def suit: () -> String
   def rank: () -> String
   def valid?: () -> bool
-  def ==: (untyped) -> bool
-  def eql?: (untyped) -> bool
+  def ==: (_CardForCommand) -> bool
+  def eql?: (_CardForCommand) -> bool
   def hash: () -> Integer
 end
