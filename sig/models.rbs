@@ -3,17 +3,23 @@ class ApplicationRecord < ActiveRecord::Base
   extend _ActiveRecordClass
 end
 
+module Query
+  class PlayerHandState < ApplicationRecord
+    MAX_HAND_SIZE: Integer
+    attr_accessor status: String
+    attr_accessor current_rank: String
+    attr_accessor current_turn: Integer
+    attr_accessor hand_set: Array[String]
+    def assign_hand_number_from_set: (Array[String]) -> void
+    def self.find_current_session: () -> PlayerHandState?
+  end
 
-class PlayerHandState < ApplicationRecord
-  MAX_HAND_SIZE: Integer
-  attr_accessor status: String
-  attr_accessor current_rank: String
-  attr_accessor current_turn: Integer
-  attr_accessor hand_set: Array[String]
-  def assign_hand_number_from_set: (Array[String]) -> void
-  def self.find_current_session: () -> PlayerHandState?
+  class History < ApplicationRecord
+    attr_accessor hand_set: Array[String]
+    attr_accessor rank: Integer
+    attr_accessor ended_at: Time
+  end
 end
-
 
 class Event < ApplicationRecord
   attr_reader event_type: String
@@ -24,12 +30,6 @@ end
 
 class GameSetting
   MAX_HAND_SIZE: Integer
-end
-
-class History < ApplicationRecord
-  attr_accessor hand_set: Array[String]
-  attr_accessor rank: Integer
-  attr_accessor ended_at: Time
 end
 
 # HandSet本体
@@ -51,7 +51,7 @@ class HandSet
   def self.build_card_for_command: (String) -> _CardForCommand
   def self.build_card_for_query: (String) -> _CardForQuery
   def apply_event_to_replay_hand: (Array[_CardForCommand] cards, _Event event) -> Array[_CardForCommand]
-  def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand] cards) -> InvalidCommandEvent
+  def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand] cards) -> FailureEvents::InvalidCommand
 
   module Rank
     # 重複定義はしていないがLinterが誤検知をしている

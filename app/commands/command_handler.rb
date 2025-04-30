@@ -3,7 +3,7 @@
 class CommandHandler
   def initialize(event_bus)
     @event_bus = event_bus
-    @aggregate_store = AggregateStore.new
+    @aggregate_store = Aggregates::Store.new
   end
 
   def handle(command, context)
@@ -12,7 +12,7 @@ class CommandHandler
     event = invalid_event || strategy.build_event_by_executing
     result = append_to_aggregate_store(event, command)
 
-    if result.is_a?(VersionConflictEvent) || result.is_a?(InvalidCommandEvent)
+    if result.is_a?(FailureEvents::VersionConflict) || result.is_a?(FailureEvents::InvalidCommand)
       event_bus.publish(result)
       return result
     end

@@ -1,10 +1,10 @@
 interface _HandlerStrategy
-  def initialize: (Command, CommandContext, Aggregates::BoardAggregate, AggregateStore) -> void
+  def initialize: (Command, CommandContext, Aggregates::BoardAggregate, Aggregates::Store) -> void
   def command: () -> Command
   def context: () -> CommandContext
   def board: () -> Aggregates::BoardAggregate
-  def aggregate_store: () -> AggregateStore
-  def build_invalid_command_event_if_needed: () -> (VersionConflictEvent | InvalidCommandEvent | nil)
+  def aggregate_store: () -> Aggregates::Store
+  def build_invalid_command_event_if_needed: () -> (FailureEvents::VersionConflict | FailureEvents::InvalidCommand | nil)
   def build_event_by_executing: () -> _Event
 end
 
@@ -30,27 +30,18 @@ end
 
 class CommandHandler
   def initialize: (EventBus) -> void
-  def handle: (Command, CommandContext) -> (_Event | VersionConflictEvent | Array[String])
+  def handle: (Command, CommandContext) -> (_Event | FailureEvents::VersionConflict | Array[String])
 end
 
 class CommandHandler
   private
-  def aggregate_store: () -> AggregateStore
+  def aggregate_store: () -> Aggregates::Store
   def build_strategy: (Symbol, Command, CommandContext) -> (HandlerStrategy::GameStart | HandlerStrategy::ExchangeCard | HandlerStrategy::EndGame)
   def event_bus: () -> EventBus
   def load_events: () -> Array[_Event]
   def build_board: (Array[_Event]) -> Aggregates::BoardAggregate
   def append_event: (_Event) -> void
-  def append_to_aggregate_store: (_Event, Command) -> (_Event | VersionConflictEvent | InvalidCommandEvent)
-end
-
-class AggregateStore
-  def current_version: () -> Integer
-  def append: (_Event, Integer) -> _Event
-  def load_all_events_in_order: () -> Array[_Event]
-  def latest_event: () -> _Event?
-  def game_already_started?: () -> bool
-  def build_validation_error: (ActiveRecord::RecordInvalid, Command) -> InvalidCommandEvent
+  def append_to_aggregate_store: (_Event, Command) -> (_Event | FailureEvents::VersionConflict | FailureEvents::InvalidCommand)
 end
 
 class CommandContext
@@ -75,8 +66,8 @@ module Aggregates
     def draw: () -> _CardForCommand
     def discard_to_trash: (_CardForCommand card) -> void
     def drawable?: () -> bool
-    def apply_game_started_event: (GameStartedEvent event) -> void
-    def apply_card_exchanged_event: (CardExchangedEvent event) -> void
+    def apply_game_started_event: (SuccessEvents::GameStarted event) -> void
+    def apply_card_exchanged_event: (SuccessEvents::CardExchanged event) -> void
   end
 
   class Deck
@@ -86,12 +77,21 @@ module Aggregates
     def remove: (_CardForCommand card) -> void
     attr_reader cards: Array[_CardForCommand]
     def generate_initial_cards: () -> Array[_CardForCommand]
-    def size: () -> Integer
+    def remaining_count: () -> Integer
   end
 
   class Trash
     def accept: (_CardForCommand card) -> void
     attr_reader cards: Array[_CardForCommand]
+  end
+
+  class Store
+    def current_version: () -> Integer
+    def append: (_Event, Integer) -> _Event
+    def load_all_events_in_order: () -> Array[_Event]
+    def latest_event: () -> _Event?
+    def game_already_started?: () -> bool
+    def build_validation_error: (ActiveRecord::RecordInvalid, Command) -> FailureEvents::InvalidCommand
   end
 end
 
@@ -119,9 +119,9 @@ module HandlerStrategy
   class ExchangeCard    
     private
     def apply_event_to_replay_hand: (Array[_CardForCommand], _Event event) -> Array[_CardForCommand]
-    def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand]) -> InvalidCommandEvent?
-    def rebuild_cards_by_event: (Array[_CardForCommand], CardExchangedEvent event) -> Array[_CardForCommand]
-    def build_cards_from_exchanged_event: (Array[_CardForCommand], CardExchangedEvent event) -> Array[_CardForCommand]
+    def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand]) -> FailureEvents::InvalidCommand?
+    def rebuild_cards_by_event: (Array[_CardForCommand], SuccessEvents::CardExchanged event) -> Array[_CardForCommand]
+    def build_cards_from_exchanged_event: (Array[_CardForCommand], SuccessEvents::CardExchanged event) -> Array[_CardForCommand]
   end
 
   class EndGame
@@ -130,16 +130,18 @@ module HandlerStrategy
   end
 end
 
-class AggregateStore
-  private
-  def build_event_from_store: (Event) -> _Event
-  def build_failer_if_conflict: (_Event, Integer) -> VersionConflictEvent?
-  def add_event_to_store!: (_Event, Integer) -> Event
-  def version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
-  def build_version_conflict_event: (_Event, Integer) -> VersionConflictEvent
-end
 
 module Aggregates
+  class Store
+    private
+    def build_event_from_store: (Event) -> _Event
+    def build_failer_if_conflict: (_Event, Integer) -> FailureEvents::VersionConflict?
+    def add_event_to_store!: (_Event, Integer) -> Event
+    def version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
+    def build_version_conflict_event: (_Event, Integer) -> FailureEvents::VersionConflict
+  end
+
+
   class BoardAggregate
     private
     attr_reader deck: Deck

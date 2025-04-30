@@ -28,7 +28,7 @@ RSpec.describe HandSet do
         [-> { Faker.full_house_hand.cards },     HandSet::Rank::FULL_HOUSE,     false],
         [-> { Faker.four_of_a_kind_hand.cards }, HandSet::Rank::FOUR_OF_A_KIND, false],
         [-> { Faker.straight_flush_hand.cards }, HandSet::Rank::STRAIGHT_FLUSH, false],
-        [-> { Faker::Hand.royal_flush.cards },   HandSet::Rank::ROYAL_FLUSH,    true]
+        [-> { Faker.royal_flush_hand.cards }, HandSet::Rank::ROYAL_FLUSH, true]
       ]
     end
 

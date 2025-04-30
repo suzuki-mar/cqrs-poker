@@ -12,41 +12,45 @@ interface _EventClass
   def event_type: () -> String
 end
 
-class GameStartedEvent
-  include _Event
-  extend _EventClass
-  def initialize: (HandSet) -> void
-  attr_reader initial_hand: HandSet
+module SuccessEvents
+  class GameStarted
+    include _Event
+    extend _EventClass
+    def initialize: (HandSet) -> void
+    attr_reader initial_hand: HandSet
+  end
+
+  class GameEnded
+    include _Event
+    extend _EventClass
+    def initialize: () -> void
+  end
+
+  class CardExchanged
+    include _Event
+    extend _EventClass
+    def initialize: (_CardForCommand, _CardForCommand) -> void
+    attr_reader discarded_card: _CardForCommand
+    attr_reader new_card: _CardForCommand
+  end
 end
 
-class GameEndedEvent
-  include _Event
-  extend _EventClass
-  def initialize: () -> void
-end
+module FailureEvents
+  class VersionConflict
+    include _Event
+    extend _EventClass
+    def initialize: (Integer, Integer) -> void
+    attr_reader expected_version: Integer
+    attr_reader actual_version: Integer
+  end
 
-class CardExchangedEvent
-  include _Event
-  extend _EventClass
-  def initialize: (_CardForCommand, _CardForCommand) -> void
-  attr_reader discarded_card: _CardForCommand
-  attr_reader new_card: _CardForCommand
-end
-
-class VersionConflictEvent
-  include _Event
-  extend _EventClass
-  def initialize: (Integer, Integer) -> void
-  attr_reader expected_version: Integer
-  attr_reader actual_version: Integer
-end
-
-class InvalidCommandEvent
-  include _Event
-  extend _EventClass
-  def initialize: (command: Command, reason: String) -> void
-  attr_reader command: Command
-  attr_reader reason: String
+  class InvalidCommand
+    include _Event
+    extend _EventClass
+    def initialize: (command: Command, reason: String) -> void
+    attr_reader command: Command
+    attr_reader reason: String
+  end
 end
 
 class EventBus

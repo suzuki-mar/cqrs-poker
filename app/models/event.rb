@@ -1,5 +1,5 @@
 # このクラスはRDBのテーブルを表すActiveRecordモデルです。
-# イベントオブジェクトの生成・復元はAggregateStoreで行います。
+# イベントオブジェクトの生成・復元はAggregates::Storeで行います。
 
 class Event < ApplicationRecord
   EVENT_TYPES = %w[game_started card_exchanged invalid_command_event].freeze

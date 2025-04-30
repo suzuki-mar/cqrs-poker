@@ -14,18 +14,18 @@ module HandlerStrategy
     # （現状の規模・責務ならこの方が可読性・保守性が高いため）
     def build_invalid_command_event_if_needed
       unless aggregate_store.game_already_started?
-        return InvalidCommandEvent.new(command: command, reason: 'ゲームが終了しています')
+        return FailureEvents::InvalidCommand.new(command: command, reason: 'ゲームが終了しています')
       end
 
       events = aggregate_store.load_all_events_in_order
 
       cards = [] # @type var cards: Array[_CardForCommand]
       events.each do |event|
-        if event.is_a?(GameStartedEvent)
+        if event.is_a?(SuccessEvents::GameStarted)
           cards = event.to_event_data[:initial_hand].map do |c|
             HandSet.build_card_for_command(c.is_a?(HandSet::Card) ? c.to_s : c)
           end
-        elsif event.is_a?(CardExchangedEvent)
+        elsif event.is_a?(SuccessEvents::CardExchanged)
           cards = build_cards_from_exchanged_event(cards, event)
         end
       end
@@ -39,7 +39,7 @@ module HandlerStrategy
       raise ArgumentError, 'discarded_cardがnilです' if discarded_card.nil?
 
       new_card = command.execute_for_exchange_card(board)
-      CardExchangedEvent.new(discarded_card, new_card)
+      SuccessEvents::CardExchanged.new(discarded_card, new_card)
     end
 
     private
@@ -49,10 +49,10 @@ module HandlerStrategy
       raise ArgumentError, 'discarded_cardがnilです' if discarded_card.nil?
 
       unless cards.include?(discarded_card)
-        return InvalidCommandEvent.new(command: command,
-                                       reason: '交換対象のカードが手札に存在しません')
+        return FailureEvents::InvalidCommand.new(command: command,
+                                                 reason: '交換対象のカードが手札に存在しません')
       end
-      InvalidCommandEvent.new(command: command, reason: 'デッキの残り枚数が不足しています') unless board.drawable?
+      FailureEvents::InvalidCommand.new(command: command, reason: 'デッキの残り枚数が不足しています') unless board.drawable?
     end
 
     def build_cards_from_exchanged_event(cards, event)

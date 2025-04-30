@@ -32,14 +32,14 @@ class LogEventListener
 
   def build_info_message(event)
     case event
-    when GameStartedEvent
+    when SuccessEvents::GameStarted
       format_event_message('ゲーム開始', format_cards(event.to_event_data[:initial_hand].map(&:to_s)))
-    when CardExchangedEvent
+    when SuccessEvents::CardExchanged
       format_event_message(
         'カード交換',
         "捨てたカード: #{event.discarded_card}, 引いたカード: #{event.new_card}"
       )
-    when GameEndedEvent
+    when SuccessEvents::GameEnded
       format_event_message('ゲーム終了')
     else
       format_event_message(event.class.name)
@@ -48,9 +48,9 @@ class LogEventListener
 
   def build_warning_message_if_needed(event)
     case event
-    when InvalidCommandEvent
+    when FailureEvents::InvalidCommand
       format_event_message('不正な選択肢の選択', event.to_event_data[:reason])
-    when VersionConflictEvent
+    when FailureEvents::VersionConflict
       expected = event.to_event_data[:expected_version]
       actual   = event.to_event_data[:actual_version]
       details  = "expected: #{expected}, actual: #{actual}"

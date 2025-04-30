@@ -8,26 +8,22 @@ class Projection
 end
 
 
-class PlayerHandStateReadModel
-  def initialize: () -> void
-  def start_new_game!: (GameStartedEvent) -> void
-  def exchange_card!: (CardExchangedEvent) -> void
-  def end_game!: (GameEndedEvent) -> void
-  def current_state_for_display: () -> { status: String, hand: String, current_rank: String, rank_name: String, turn: Integer }
-  def hand_set: () -> HandSet
-  def refreshed_hand_set: () -> HandSet
+module ReadModels
+  class PlayerHandState
+    def initialize: () -> void
+    def start_new_game!: (SuccessEvents::GameStarted) -> void
+    def exchange_card!: (SuccessEvents::CardExchanged) -> void
+    def end_game!: (SuccessEvents::GameEnded) -> void
+    def current_state_for_display: () -> { status: String, hand: String, current_rank: String, rank_name: String, turn: Integer }
+    def hand_set: () -> HandSet
+    def refreshed_hand_set: () -> HandSet
+  end
+
+  class Histories
+    def self.load: (?limit: Integer) -> Array[Query::History]
+    def self.add: (HandSet hand_set) -> Query::History
+  end
 end
-
-
-class LogEventListener
-  include _EventSubscriber
-  def initialize: (?Logger logger) -> void
-end
-
-
-class HistoriesReadModel
-  def self.load: (?limit: Integer) -> Array[History]
-end 
 
 interface _CardForQuery
   include _Card
@@ -46,13 +42,15 @@ end
 
 class Projection
   private
-  def apply_to_read_model: (PlayerHandStateReadModel read_model, _Event event) -> void
+  def apply_to_player_hand_state: (ReadModels::PlayerHandState player_hand_state, _Event event) -> void
 end
 
-class PlayerHandStateReadModel
-  private
-  attr_reader player_hand_state: PlayerHandState
-  def format_hand: () -> String
+module ReadModels
+  class PlayerHandState
+    private
+    attr_reader player_hand_state: Query::PlayerHandState
+    def format_hand: () -> String
+  end
 end
 
 class LogEventListener

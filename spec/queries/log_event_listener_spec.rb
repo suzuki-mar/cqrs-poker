@@ -10,7 +10,7 @@ RSpec.describe LogEventListener do
 
   describe '#handle_event' do
     it 'GameStartedEventのログ出力' do
-      event = GameStartedEvent.new(initial_hand)
+      event = SuccessEvents::GameStarted.new(initial_hand)
       listener.handle_event(event)
       expect(logger.messages_for_level(:info).last).to match(/ゲーム開始/)
     end
@@ -22,7 +22,7 @@ RSpec.describe LogEventListener do
     end
 
     it 'InvalidCommandEventのwarnログ出力' do
-      event = InvalidCommandEvent.new(command: 'Command', reason: '手札に存在しないカードです')
+      event = FailureEvents::InvalidCommand.new(command: 'Command', reason: '手札に存在しないカードです')
       listener.handle_event(event)
       expect(logger.messages_for_level(:warn).last).to match(/不正な選択肢の選択/)
       expect(logger.messages_for_level(:warn).last).to include('手札に存在しないカードです')

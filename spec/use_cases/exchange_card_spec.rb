@@ -10,8 +10,8 @@ RSpec.describe 'カード交換をするユースケース' do
     command_handler.handle(Command.new, CommandContext.build_for_game_start)
   end
 
-  let(:read_model) { PlayerHandStateReadModel.new }
-  let(:current_hand) { PlayerHandState.find_current_session.hand_set }
+  let(:read_model) { ReadModels::PlayerHandState.new }
+  let(:current_hand) { Query::PlayerHandState.find_current_session.hand_set }
   let(:discarded_card) { HandSet::Card.new(current_hand.first) }
   let(:context) { CommandContext.build_for_exchange(discarded_card) }
 
@@ -29,11 +29,11 @@ RSpec.describe 'カード交換をするユースケース' do
         context = CommandContext.build_for_exchange(discarded_card)
         published_event = command_handler.handle(Command.new, context)
 
-        expect(published_event).to be_a(CardExchangedEvent)
+        expect(published_event).to be_a(SuccessEvents::CardExchanged)
         expect(published_event.discarded_card.to_s).to eq(discarded_card.to_s)
 
-        stored_event = AggregateStore.new.latest_event
-        expect(stored_event.event_type).to eq(CardExchangedEvent.event_type)
+        stored_event = Aggregates::Store.new.latest_event
+        expect(stored_event.event_type).to eq(SuccessEvents::CardExchanged.event_type)
         expect(stored_event.to_event_data[:discarded_card].to_s).to eq(discarded_card.to_s)
       end
 
@@ -63,17 +63,17 @@ RSpec.describe 'カード交換をするユースケース' do
         subject
 
         log = logger.messages_for_level(:info).last
-        event_store_holder = AggregateStore.new
+        event_store_holder = Aggregates::Store.new
         last_event = event_store_holder.latest_event
 
-        expect(last_event).to be_a(CardExchangedEvent)
+        expect(last_event).to be_a(SuccessEvents::CardExchanged)
         expect(log).to match(/捨てたカード: #{discarded_card}/)
         expect(log).to match(/引いたカード: #{last_event.new_card}/)
       end
 
       it 'ゲーム終了前はHistoryが作成されていないこと' do
         subject
-        expect(History.count).to eq(0)
+        expect(Query::History.count).to eq(0)
       end
     end
   end
@@ -107,18 +107,18 @@ RSpec.describe 'カード交換をするユースケース' do
       it_behaves_like 'warnログが出力される'
     end
 
-    it 'ゲームが終了している状態で交換しようとするとInvalidCommandEventが発行されること' do
+    it 'ゲームが終了している状態で交換しようとするとInvalidCommandが発行されること' do
       command_handler.handle(Command.new, CommandContext.build_for_end_game)
 
       result = command_handler.handle(Command.new, CommandContext.build_for_exchange(discarded_card))
 
-      expect(result).to be_a(InvalidCommandEvent)
+      expect(result).to be_a(FailureEvents::InvalidCommand)
       expect(result.reason).to eq('ゲームが終了しています')
     end
   end
 
   context 'バージョン競合が発生した場合' do
-    let(:event) { CardExchangedEvent.new(HandSet::Card.new('♠A'), HandSet::Card.new('♣K')) }
+    let(:event) { SuccessEvents::CardExchanged.new(HandSet::Card.new('♠A'), HandSet::Card.new('♣K')) }
     let(:error_version) { 1 }
     it_behaves_like 'version conflict event'
   end

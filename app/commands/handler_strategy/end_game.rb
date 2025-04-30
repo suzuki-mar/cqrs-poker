@@ -11,7 +11,7 @@ module HandlerStrategy
 
     def build_invalid_command_event_if_needed
       unless aggregate_store.game_already_started?
-        return InvalidCommandEvent.new(command: command, reason: 'ゲームが開始されていません')
+        return FailureEvents::InvalidCommand.new(command: command, reason: 'ゲームが開始されていません')
       end
 
       nil
@@ -19,7 +19,7 @@ module HandlerStrategy
 
     def build_event_by_executing
       command.execute_for_end_game(board)
-      GameEndedEvent.new
+      SuccessEvents::GameEnded.new
     end
 
     private

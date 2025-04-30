@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe History, type: :model do
+RSpec.describe Query::History, type: :model do
   describe 'バリデーション' do
     subject { described_class.new(hand_set: hand_set, rank: rank, ended_at: ended_at) }
 

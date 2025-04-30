@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe PlayerHandStateReadModel do
+RSpec.describe ReadModels::PlayerHandState do
   describe '#current_state_for_display' do
     it 'returns formatted display data' do
       player_hand_state = create(:player_hand_state, status: :started)

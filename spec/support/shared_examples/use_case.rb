@@ -12,10 +12,10 @@ RSpec.shared_examples 'version conflict event' do
     raise 'eventがletで定義されていません' if event.nil?
     raise 'error_versionがletで定義されていません' if error_version.nil?
 
-    aggregate_store = AggregateStore.new
+    aggregate_store = Aggregates::Store.new
     aggregate_store.append(event, error_version) # 1回目（正常）
     result = aggregate_store.append(event, error_version) # 2回目（競合）
-    expect(result).to be_a(VersionConflictEvent)
-    expect(result.event_type).to eq(VersionConflictEvent.event_type)
+    expect(result).to be_a(FailureEvents::VersionConflict)
+    expect(result.event_type).to eq(FailureEvents::VersionConflict.event_type)
   end
 end

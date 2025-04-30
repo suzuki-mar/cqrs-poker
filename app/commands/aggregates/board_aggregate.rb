@@ -16,9 +16,9 @@ module Aggregates
 
     def apply(event)
       case event
-      when GameStartedEvent
+      when SuccessEvents::GameStarted
         apply_game_started_event(event)
-      when CardExchangedEvent
+      when SuccessEvents::CardExchanged
         apply_card_exchanged_event(event)
       end
     end
@@ -44,7 +44,7 @@ module Aggregates
     end
 
     def drawable?
-      deck.size.positive?
+      deck.remaining_count.positive?
     end
 
     attr_reader :deck, :trash

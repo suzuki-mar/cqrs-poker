@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe PlayerHandState, type: :model do
+RSpec.describe Query::PlayerHandState, type: :model do
   describe 'バリデーション' do
     describe '手札 hand_set' do
       subject { build_stubbed(:player_hand_state, hand_set: hand_set_value) }

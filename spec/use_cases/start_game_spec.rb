@@ -6,7 +6,7 @@ RSpec.describe 'ゲーム開始' do
   let(:logger) { TestLogger.new }
   let(:command_handler) { UseCaseHelper.build_command_handler(logger) }
   let(:context) { CommandContext.build_for_game_start }
-  let(:read_model) { PlayerHandStateReadModel.new }
+  let(:read_model) { ReadModels::PlayerHandState.new }
 
   context '正常系' do
     describe 'ゲームが正しく開始されること' do
@@ -17,9 +17,9 @@ RSpec.describe 'ゲーム開始' do
       end
 
       it 'イベントが正しく発行されること' do
-        event_store_holder = AggregateStore.new
+        event_store_holder = Aggregates::Store.new
         event = event_store_holder.latest_event
-        expect(event.event_type).to eq(GameStartedEvent.event_type)
+        expect(event.event_type).to eq(SuccessEvents::GameStarted.event_type)
       end
 
       it 'ログが正しく出力されること' do
@@ -47,7 +47,7 @@ RSpec.describe 'ゲーム開始' do
 
       it 'ゲーム開始直後はHistoryが作成されていないこと' do
         command_handler.handle(Command.new, context)
-        expect(History.count).to eq(0)
+        expect(Query::History.count).to eq(0)
       end
     end
   end
@@ -64,21 +64,21 @@ RSpec.describe 'ゲーム開始' do
       it 'InvalidCommandEventが発行・保存されること' do
         # 2回目のゲーム開始
         subject
-        event_store_holder = AggregateStore.new
+        event_store_holder = Aggregates::Store.new
         last_event = event_store_holder.latest_event
-        expect(last_event).to be_a(InvalidCommandEvent)
+        expect(last_event).to be_a(FailureEvents::InvalidCommand)
       end
 
       it 'GameStartedイベントが2回記録されないこと' do
         # TODO: EventStoreを使用するようにする
         expect do
           subject
-        end.not_to(change { Event.where(event_type: GameStartedEvent.event_type).count })
+        end.not_to(change { Event.where(event_type: SuccessEvents::GameStarted.event_type).count })
       end
 
       it 'PlayerHandStateが変更されないこと' do
         # TODO: ARのクラスを使用しないようにする
-        original_player_game_state = PlayerHandState.find_current_session.attributes
+        original_player_game_state = Query::PlayerHandState.find_current_session.attributes
 
         begin
           subject
@@ -86,12 +86,12 @@ RSpec.describe 'ゲーム開始' do
           nil
         end
 
-        expect(PlayerHandState.find_current_session.attributes).to eq(original_player_game_state)
+        expect(Query::PlayerHandState.find_current_session.attributes).to eq(original_player_game_state)
       end
     end
 
     context 'バージョン競合が発生した場合' do
-      let(:event) { GameStartedEvent.new(Faker.high_card_hand) }
+      let(:event) { SuccessEvents::GameStarted.new(Faker.high_card_hand) }
       let(:error_version) { 1 }
       it_behaves_like 'version conflict event'
     end

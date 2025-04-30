@@ -19,7 +19,7 @@ RSpec.describe CommandHandler do
 
       event = command_handler.handle(Command.new, CommandContext.build_for_game_start)
 
-      expect(event).to be_a(GameStartedEvent)
+      expect(event).to be_a(SuccessEvents::GameStarted)
       expect(event_publisher).to have_received(:broadcast)
     end
   end
@@ -44,7 +44,7 @@ RSpec.describe CommandHandler do
       result1 = thread.value
 
       # ここでresult1がバージョン競合エラーであることを検証（仮の例）
-      expect(result1).to be_a(InvalidCommandEvent)
+      expect(result1).to be_a(FailureEvents::InvalidCommand)
       # 実際の競合判定は実装に合わせて修正してください
     end
   end

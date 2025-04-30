@@ -11,7 +11,7 @@ module HandlerStrategy
 
     def build_invalid_command_event_if_needed
       if aggregate_store.game_already_started?
-        return InvalidCommandEvent.new(command: command, reason: 'already_started')
+        return FailureEvents::InvalidCommand.new(command: command, reason: 'already_started')
       end
 
       nil
@@ -19,7 +19,7 @@ module HandlerStrategy
 
     def build_event_by_executing
       initial_hand = command.execute_for_game_start(board)
-      GameStartedEvent.new(initial_hand)
+      SuccessEvents::GameStarted.new(initial_hand)
     end
 
     private
