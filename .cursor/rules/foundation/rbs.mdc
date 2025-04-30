@@ -1,0 +1,58 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# RBSについて
+## 型定義優先読解ルール
+コードの理解・修正・補完においては、RBS（型定義ファイル）を最初に参照する。
+
+RBSが定義されている場合は、実装コードよりも優先して読み取る指針とする。
+
+型定義から読み取れる情報（引数・戻り値・例外・関連構造）は、推論の出発点とする。
+
+## 実装変更時の型定義メンテナンス
+実装を変更した際は、必ず対応するRBS（型定義ファイル）を更新すること。
+
+作業を中断する前には、RBSが現時点の実装内容を正しく反映しているかどうかを確認・修正する責任を持つ。
+
+型定義は十分な理由がない限りuntypedは書かないで、Steepの型チェックがエラーなく通る状態にしておくことを原則とする。
+
+##  RBSファイルのpublic/private構成ルール
+各クラス・モジュールの型定義は、publicメソッド定義部とprivateメソッド定義部を明確に分離して記述する。
+publicメソッドはクラス定義の上部にまとめる。
+privateメソッドは「# privateメソッドだけを定義する」以降、クラス末尾にまとめて記述する。
+これにより、外部インターフェースと内部実装の責務が明確になり、保守性・可読性が向上する。
+RBSの型チェック（Steep）もこの構成で問題なく動作することを確認済み。
+例（記述例）
+```
+class Foo
+  def foo_public: () -> void
+end
+
+class Bar
+  def bar_public: (Integer) -> String
+end
+
+class Baz
+  def baz_public: (String) -> Integer
+end
+
+# privateメソッドだけを定義する
+class Foo
+  private
+  def foo_private: () -> void
+end
+
+class Bar
+  private
+  def bar_private: (String) -> void
+end
+
+class Baz
+  private
+  def baz_private: () -> bool
+end
+```
+
+
