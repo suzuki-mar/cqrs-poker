@@ -1,40 +1,26 @@
+interface _HandlerStrategy
+  def initialize: (Command, CommandContext, Aggregates::BoardAggregate, AggregateStore) -> void
+  def command: () -> Command
+  def context: () -> CommandContext
+  def board: () -> Aggregates::BoardAggregate
+  def aggregate_store: () -> AggregateStore
+  def build_invalid_command_event_if_needed: () -> (VersionConflictEvent | InvalidCommandEvent | nil)
+  def build_event_by_executing: () -> _Event
+end
+
 module HandlerStrategy
   class GameStart
-    def initialize: (Command, CommandContext, Aggregates::BoardAggregate, AggregateStore) -> void
-    attr_reader command: Command
-    attr_reader context: CommandContext
-    attr_reader board: Aggregates::BoardAggregate
-    attr_reader aggregate_store: AggregateStore
-    def build_invalid_command_event_if_needed: () -> (VersionConflictEvent | InvalidCommandEvent | nil)
-    def build_event_by_executing: () -> _Event
+    include _HandlerStrategy
   end
 
   class ExchangeCard
-    def initialize: (Command, CommandContext, Aggregates::BoardAggregate, AggregateStore) -> void
-    attr_reader command: Command
-    attr_reader context: CommandContext
-    attr_reader board: Aggregates::BoardAggregate
-    attr_reader aggregate_store: AggregateStore
-    def build_invalid_command_event_if_needed: () -> (VersionConflictEvent | InvalidCommandEvent | nil)
-    def build_event_by_executing: () -> _Event
-    private
-    def apply_event_to_replay_hand: (Array[_CardForCommand], _Event event) -> Array[_CardForCommand]
-    def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand]) -> InvalidCommandEvent?
-    def rebuild_cards_by_event: (Array[_CardForCommand], CardExchangedEvent event) -> Array[_CardForCommand]
-    def build_cards_from_exchanged_event: (Array[_CardForCommand], CardExchangedEvent event) -> Array[_CardForCommand]
+    include _HandlerStrategy
   end
 
   class EndGame
-    def initialize: (Command, CommandContext, Aggregates::BoardAggregate, AggregateStore) -> void
-    attr_reader command: Command
-    attr_reader context: CommandContext
-    attr_reader board: Aggregates::BoardAggregate
-    attr_reader aggregate_store: AggregateStore
-    def build_invalid_command_event_if_needed: () -> (VersionConflictEvent | InvalidCommandEvent | nil)
-    def build_event_by_executing: () -> _Event
+    include _HandlerStrategy
   end
 end
-
 
 class Command
   def execute_for_game_start: (Aggregates::BoardAggregate) -> HandSet
@@ -42,19 +28,10 @@ class Command
   def execute_for_end_game: (Aggregates::BoardAggregate) -> void
 end
 
-
 class CommandHandler
   def initialize: (EventBus) -> void
   def handle: (Command, CommandContext) -> (_Event | VersionConflictEvent | Array[String])
-  private
-  def aggregate_store: () -> AggregateStore
-  def build_strategy: (Symbol, Command, CommandContext) -> (HandlerStrategy::GameStart | HandlerStrategy::ExchangeCard | HandlerStrategy::EndGame)
-  def event_bus: () -> EventBus
-  def load_events: () -> Array[_Event]
-  def build_board: (Array[_Event]) -> Aggregates::BoardAggregate
-  def append_event: (_Event) -> void
 end
-
 
 class AggregateStore
   def current_version: () -> Integer
@@ -63,14 +40,7 @@ class AggregateStore
   def latest_event: () -> _Event?
   def game_already_started?: () -> bool
   def build_validation_error: (ActiveRecord::RecordInvalid, Command) -> InvalidCommandEvent
-  private
-  def build_event_from_store: (Event) -> _Event
-  def build_failer_if_conflict: (_Event, Integer) -> VersionConflictEvent?
-  def add_event_to_store!: (_Event, Integer) -> Event
-  def version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
-  def build_version_conflict_event: (_Event, Integer) -> VersionConflictEvent
 end
-
 
 class CommandContext
   module Types
@@ -86,7 +56,6 @@ class CommandContext
   def self.build_for_end_game: () -> CommandContext
 end
 
-
 module Aggregates
   class BoardAggregate
     def self.load_from_events: (Array[_Event] events) -> BoardAggregate
@@ -97,13 +66,7 @@ module Aggregates
     def drawable?: () -> bool
     def apply_game_started_event: (GameStartedEvent event) -> void
     def apply_card_exchanged_event: (CardExchangedEvent event) -> void
-    private
-    attr_reader deck: Deck
-    attr_reader trash: Trash
-    attr_reader game_started: bool
-    attr_writer game_started: bool
   end
-
 
   class Deck
     def self.build: () -> Deck
@@ -114,7 +77,6 @@ module Aggregates
     def generate_initial_cards: () -> Array[_CardForCommand]
     def size: () -> Integer
   end
-
 
   class Trash
     def accept: (_CardForCommand card) -> void
@@ -130,4 +92,58 @@ interface _CardForCommand
   def ==: (_CardForCommand) -> bool
   def eql?: (_CardForCommand) -> bool
   def hash: () -> Integer
+end
+
+
+
+###################
+# privateメソッド定義
+####################
+module HandlerStrategy
+  class GameStart
+    private
+    # GameStartのprivateメソッドがあればここに記述
+  end
+
+  class ExchangeCard    
+    private
+    def apply_event_to_replay_hand: (Array[_CardForCommand], _Event event) -> Array[_CardForCommand]
+    def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand]) -> InvalidCommandEvent?
+    def rebuild_cards_by_event: (Array[_CardForCommand], CardExchangedEvent event) -> Array[_CardForCommand]
+    def build_cards_from_exchanged_event: (Array[_CardForCommand], CardExchangedEvent event) -> Array[_CardForCommand]
+  end
+
+  class EndGame
+    private
+    # EndGameのprivateメソッドがあればここに記述
+  end
+end
+
+class CommandHandler
+  private
+  def aggregate_store: () -> AggregateStore
+  def build_strategy: (Symbol, Command, CommandContext) -> (HandlerStrategy::GameStart | HandlerStrategy::ExchangeCard | HandlerStrategy::EndGame)
+  def event_bus: () -> EventBus
+  def load_events: () -> Array[_Event]
+  def build_board: (Array[_Event]) -> Aggregates::BoardAggregate
+  def append_event: (_Event) -> void
+end
+
+class AggregateStore
+  private
+  def build_event_from_store: (Event) -> _Event
+  def build_failer_if_conflict: (_Event, Integer) -> VersionConflictEvent?
+  def add_event_to_store!: (_Event, Integer) -> Event
+  def version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
+  def build_version_conflict_event: (_Event, Integer) -> VersionConflictEvent
+end
+
+module Aggregates
+  class BoardAggregate
+    private
+    attr_reader deck: Deck
+    attr_reader trash: Trash
+    attr_reader game_started: bool
+    attr_writer game_started: bool
+  end
 end

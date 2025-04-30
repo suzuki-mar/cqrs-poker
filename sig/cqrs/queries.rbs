@@ -5,9 +5,6 @@ end
 
 class Projection
   include _EventSubscriber
-
-  private
-    def apply_to_read_model: (PlayerHandStateReadModel read_model, _Event event) -> void
 end
 
 
@@ -19,21 +16,12 @@ class PlayerHandStateReadModel
   def current_state_for_display: () -> { status: String, hand: String, current_rank: String, rank_name: String, turn: Integer }
   def hand_set: () -> HandSet
   def refreshed_hand_set: () -> HandSet
-  private
-  attr_reader player_hand_state: PlayerHandState
-  def format_hand: () -> String
 end
 
 
 class LogEventListener
   include _EventSubscriber
-  def initialize: (?untyped logger) -> void
-  private
-  def logger: () -> untyped
-  def format_event_message: (String?, ?String) -> String
-  def format_cards: (Array[String]) -> String
-  def build_info_message: (_Event event) -> String
-  def build_warning_message_if_needed: (_Event event) -> String?
+  def initialize: (?Logger logger) -> void
 end
 
 
@@ -43,4 +31,28 @@ end
 
 interface _CardForQuery
   include _Card
+end 
+
+####################
+# privateメソッド定義
+####################
+
+class Projection
+  private
+  def apply_to_read_model: (PlayerHandStateReadModel read_model, _Event event) -> void
+end
+
+class PlayerHandStateReadModel
+  private
+  attr_reader player_hand_state: PlayerHandState
+  def format_hand: () -> String
+end
+
+class LogEventListener
+  private
+  def logger: () -> Logger
+  def format_event_message: (String?, ?String) -> String
+  def format_cards: (Array[String]) -> String
+  def build_info_message: (_Event event) -> String
+  def build_warning_message_if_needed: (_Event event) -> String?
 end 

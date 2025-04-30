@@ -1,14 +1,14 @@
 interface _Event
   def event_type: () -> String
-  def to_event_data: () -> untyped
-  def to_serialized_hash: () -> untyped
+  def to_event_data: () -> Hash[Symbol, untyped]
+  def to_serialized_hash: () -> Hash[Symbol, untyped]
   def class: () -> Class
   def is_a?: (Class) -> bool
   def nil?: () -> bool
 end
 
 interface _EventClass
-  def from_store: (untyped) -> _Event
+  def from_store: (Event) -> _Event
   def event_type: () -> String
 end
 

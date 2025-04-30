@@ -1,48 +1,21 @@
-# このファイルで untyped が多用されている主な理由：
-#
-# ActiveRecordやRailsの動的性質
-#   - ActiveRecordは動的にメソッドや属性が追加されるため、厳密な型付けが困難な箇所が多い。
-#   - 代表的なメソッド（where, order, find など）は返り値が多様で、型を特定しづらい。
-# 柔軟性・拡張性の担保
-#   - Railsの柔軟なメタプログラミングや拡張性を損なわないため
-
-interface _ApplicationRecord
-  def save!: () -> void
-end
-
-interface _ApplicationRecordClass
-  def where: (*untyped) -> untyped
-  def last: () -> untyped
-  def new: (*untyped, **untyped) -> untyped
-  def order: (*untyped) -> untyped
-  def limit: (*untyped) -> untyped
-end
-
 class ApplicationRecord < ActiveRecord::Base
-  include _ApplicationRecord
-  extend _ApplicationRecordClass
+  include _ActiveRecord
+  extend _ActiveRecordClass
 end
 
 
 class PlayerHandState < ApplicationRecord
-  include _ApplicationRecord
-  extend _ApplicationRecordClass
   MAX_HAND_SIZE: Integer
   attr_accessor status: String
   attr_accessor current_rank: String
   attr_accessor current_turn: Integer
   attr_accessor hand_set: Array[String]
-  def assign_hand_number_from_set: (untyped) -> void
+  def assign_hand_number_from_set: (Array[String]) -> void
   def self.find_current_session: () -> PlayerHandState?
 end
 
 
 class Event < ApplicationRecord
-  include _ApplicationRecord
-  extend _ApplicationRecordClass
-  def self.maximum: (*untyped) -> untyped
-  def self.exists?: (*untyped) -> untyped
-  def self.create!: (*untyped) -> untyped
   attr_reader event_type: String
   attr_reader event_data: String
   attr_reader occurred_at: Time
@@ -54,7 +27,6 @@ class GameSetting
 end
 
 class History < ApplicationRecord
-  extend _ApplicationRecordClass
   attr_accessor hand_set: Array[String]
   attr_accessor rank: Integer
   attr_accessor ended_at: Time
@@ -74,30 +46,15 @@ class HandSet
   def fetch_by_number: (Integer) -> HandSet::Card
   def include?: (HandSet::Card) -> bool  
   def self.build_card_from_string: (String) -> HandSet::Card
-  def self.card?: (untyped) -> bool
+  def self.card?: (HandSet::Card | String | _CardForCommand | _CardForQuery) -> bool
   def self.rank_japanese_name: (String) -> String
   def self.build_card_for_command: (String) -> _CardForCommand
   def self.build_card_for_query: (String) -> _CardForQuery
   def apply_event_to_replay_hand: (Array[_CardForCommand] cards, _Event event) -> Array[_CardForCommand]
   def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand] cards) -> InvalidCommandEvent
-end
 
-class HandSet::Card
-  include _CardForCommand
-  include _CardForQuery
-  VALID_SUITS: ::Array[String]
-  VALID_RANKS: ::Array[String]
-
-  def self.generate_available: (?Array[HandSet::Card]) -> Array[HandSet::Card]
-  def initialize: (String) -> void
-end
-
-
-
-
-# HandSetの内部で使われるためrbsファイルでノイズにならないように分けてある
-class HandSet
   module Rank
+    # 重複定義はしていないがLinterが誤検知をしている
     HIGH_CARD: String
     ONE_PAIR: String
     TWO_PAIR: String
@@ -112,33 +69,60 @@ class HandSet
     NAMES: Hash[String, String]
     def self.japanese_name: (String) -> String
   end
+end
 
-  class Evaluate
-    def self.call: (Array[HandSet::Card] cards) -> String
-    def call: (Array[HandSet::Card] cards) -> String
-    def build_rank_checks_map: () -> Hash[String, ::Proc]
-    def valid_hand?: (Array[HandSet::Card] cards) -> bool
-    def straight_flush?: () -> bool
+class HandSet::Card
+  include _CardForCommand
+  include _CardForQuery
+  VALID_SUITS: ::Array[String]
+  VALID_RANKS: ::Array[String]
+
+  def self.generate_available: (?Array[HandSet::Card]) -> Array[HandSet::Card]
+  def initialize: (String) -> void
+end
+
+class HandSet::Evaluate
+  def self.call: (Array[HandSet::Card] cards) -> String
+  def call: (Array[HandSet::Card] cards) -> String
+  def build_rank_checks_map: () -> Hash[String, ::Proc]
+  def valid_hand?: (Array[HandSet::Card] cards) -> bool
+  def straight_flush?: () -> bool
+  def four_of_a_kind?: () -> bool
+  def full_house?: () -> bool
+  def flush?: () -> bool
+  def straight?: () -> bool
+  def three_of_a_kind?: () -> bool
+  def two_pair?: () -> bool
+  def one_pair?: () -> bool
+  def rank_combinations: () -> HandSet::Evaluate::RankCombinations
+  def rank_counts: () -> Hash[String, Integer]
+  def suits: () -> Array[String]
+  def ranks: () -> Array[String]
+
+  class RankCombinations
+    def initialize: (Array[Integer] values) -> void
+    def pair_count: () -> Integer
+    def three_of_a_kind?: () -> bool
     def four_of_a_kind?: () -> bool
     def full_house?: () -> bool
-    def flush?: () -> bool
-    def straight?: () -> bool
-    def three_of_a_kind?: () -> bool
-    def two_pair?: () -> bool
-    def one_pair?: () -> bool
-    def rank_combinations: () -> untyped
-    def suits: () -> Array[String]
-    def rank_counts: () -> untyped
-    def ranks: () -> Array[String]
-
-    class RankCombinations
-      def initialize: (untyped values) -> void
-      def pair_count: () -> Integer
-      def three_of_a_kind?: () -> bool
-      def four_of_a_kind?: () -> bool
-      def full_house?: () -> bool
-    end
   end
+end
 
-  
+####################
+# privateメソッド定義
+####################
+
+class HandSet
+  private
+  # HandSetのprivateメソッドがあればここに記述
+end
+
+class HandSet::Card
+  private
+  # HandSet::Cardのprivateメソッドがあればここに記述
+end
+
+class HandSet::Evaluate
+  private
+  # HandSet::Evaluateのprivateメソッドがあればここに記述
 end 

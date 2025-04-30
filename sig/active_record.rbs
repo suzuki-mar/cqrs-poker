@@ -1,0 +1,38 @@
+# sig/active_record.rbs について
+#
+# このファイルは、RailsのActiveRecord基盤の型定義（interface）を集約したものです。
+#
+# - ActiveRecordは動的にメソッドや属性が追加されるため、厳密な型付けが困難な箇所が多い
+# - 代表的なメソッド（where, order, find など）は返り値が多様で、型を特定しづらい
+# - 柔軟性・拡張性を損なわないため、untypedを多用している
+#
+# 目的：
+# - ドメインモデルやアプリ固有の型定義（models.rbs等）と分離し、責務を明確にする
+# - ActiveRecord基盤の型定義を一元管理し、他のプロジェクトやレイヤーでも再利用しやすくする
+#
+# この方針により、型定義の可読性・保守性・拡張性が向上します。
+
+# このファイルで untyped が多用されている主な理由：
+#
+# ActiveRecordやRailsの動的性質
+#   - ActiveRecordは動的にメソッドや属性が追加されるため、厳密な型付けが困難な箇所が多い。
+#   - 代表的なメソッド（where, order, find など）は返り値が多様で、型を特定しづらい。
+# 柔軟性・拡張性の担保
+#   - Railsの柔軟なメタプログラミングや拡張性を損なわないため
+
+
+
+interface _ActiveRecord
+  def save!: () -> void
+end
+
+interface _ActiveRecordClass
+  def where: (*untyped) -> untyped
+  def last: () -> untyped
+  def new: (*untyped, **untyped) -> untyped
+  def order: (*untyped) -> untyped
+  def limit: (*untyped) -> untyped
+  def maximum: (*untyped) -> untyped  
+  def create!: (*untyped) -> untyped
+  def exists?: (*untyped) -> bool
+end
