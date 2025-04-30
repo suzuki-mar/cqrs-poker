@@ -55,11 +55,9 @@ class AggregateStore
 
   def build_failer_if_conflict(_event, expected_current_version)
     stored_version = current_version
-    if expected_current_version < stored_version
-      VersionConflictEvent.new(stored_version, expected_current_version)
-    else
-      nil
-    end
+    return unless expected_current_version < stored_version
+
+    VersionConflictEvent.new(stored_version, expected_current_version)
   end
 
   def add_event_to_store!(event, expected_current_version)

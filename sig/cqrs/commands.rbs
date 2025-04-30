@@ -33,6 +33,17 @@ class CommandHandler
   def handle: (Command, CommandContext) -> (_Event | VersionConflictEvent | Array[String])
 end
 
+class CommandHandler
+  private
+  def aggregate_store: () -> AggregateStore
+  def build_strategy: (Symbol, Command, CommandContext) -> (HandlerStrategy::GameStart | HandlerStrategy::ExchangeCard | HandlerStrategy::EndGame)
+  def event_bus: () -> EventBus
+  def load_events: () -> Array[_Event]
+  def build_board: (Array[_Event]) -> Aggregates::BoardAggregate
+  def append_event: (_Event) -> void
+  def append_to_aggregate_store: (_Event, Command) -> (_Event | VersionConflictEvent | InvalidCommandEvent)
+end
+
 class AggregateStore
   def current_version: () -> Integer
   def append: (_Event, Integer) -> _Event
@@ -117,16 +128,6 @@ module HandlerStrategy
     private
     # EndGameのprivateメソッドがあればここに記述
   end
-end
-
-class CommandHandler
-  private
-  def aggregate_store: () -> AggregateStore
-  def build_strategy: (Symbol, Command, CommandContext) -> (HandlerStrategy::GameStart | HandlerStrategy::ExchangeCard | HandlerStrategy::EndGame)
-  def event_bus: () -> EventBus
-  def load_events: () -> Array[_Event]
-  def build_board: (Array[_Event]) -> Aggregates::BoardAggregate
-  def append_event: (_Event) -> void
 end
 
 class AggregateStore
