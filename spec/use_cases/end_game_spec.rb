@@ -43,9 +43,8 @@ RSpec.describe 'ゲーム終了ユースケース' do
       expect(history.hand_set).to eq(read_model.hand_set.cards.map(&:to_s))
       expect(history.rank).to eq(HandSet::Rank::ALL.index(read_model.hand_set.evaluate))
     end
+  end
 
-    it 'ゲーム終了前はHistoryが作成されていないこと' do
-      # ゲーム開始
   context '異常系' do
     it 'ゲームが開始されていない状態で終了しようとするとInvalidCommandEventが発行されること' do
       result = command_handler.handle(Command.new, context)

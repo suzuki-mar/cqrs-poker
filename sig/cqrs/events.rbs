@@ -47,4 +47,9 @@ class InvalidCommandEvent
   def initialize: (command: Command, reason: String) -> void
   attr_reader command: Command
   attr_reader reason: String
+end
+
+class EventBus
+  def initialize: (EventPublisher) -> void
+  def publish: (_Event) -> void
 end 

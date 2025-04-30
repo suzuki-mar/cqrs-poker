@@ -1,7 +1,7 @@
 module Faker
   class Hand
     class << self
-      def high_card
+      def high_card_hand
         create_hand([
                       HandSet.build_card_for_command('♠A'),
                       HandSet.build_card_for_command('♥K'),
@@ -11,7 +11,7 @@ module Faker
                     ])
       end
 
-      def one_pair
+      def one_pair_hand
         create_hand([
                       HandSet.build_card_for_command('♠A'),
                       HandSet.build_card_for_command('♥A'),
@@ -21,7 +21,7 @@ module Faker
                     ])
       end
 
-      def two_pair
+      def two_pair_hand
         create_hand([
                       HandSet.build_card_for_command('♠A'),
                       HandSet.build_card_for_command('♥A'),
@@ -31,7 +31,7 @@ module Faker
                     ])
       end
 
-      def three_of_a_kind
+      def three_of_a_kind_hand
         create_hand([
                       HandSet.build_card_for_command('♥7'),
                       HandSet.build_card_for_command('♦7'),
@@ -41,7 +41,7 @@ module Faker
                     ])
       end
 
-      def straight
+      def straight_hand
         create_hand([
                       HandSet.build_card_for_command('♥2'),
                       HandSet.build_card_for_command('♦3'),
@@ -51,7 +51,7 @@ module Faker
                     ])
       end
 
-      def flush
+      def flush_hand
         create_hand([
                       HandSet.build_card_for_command('♥2'),
                       HandSet.build_card_for_command('♥5'),
@@ -61,7 +61,7 @@ module Faker
                     ])
       end
 
-      def full_house
+      def full_house_hand
         create_hand([
                       HandSet.build_card_for_command('♥8'),
                       HandSet.build_card_for_command('♦8'),
@@ -71,7 +71,7 @@ module Faker
                     ])
       end
 
-      def four_of_a_kind
+      def four_of_a_kind_hand
         create_hand([
                       HandSet.build_card_for_command('♥7'),
                       HandSet.build_card_for_command('♦7'),
@@ -81,7 +81,7 @@ module Faker
                     ])
       end
 
-      def straight_flush
+      def straight_flush_hand
         create_hand([
                       HandSet.build_card_for_command('♥2'),
                       HandSet.build_card_for_command('♥3'),
@@ -91,7 +91,7 @@ module Faker
                     ])
       end
 
-      def royal_flush
+      def royal_flush_hand
         create_hand([
                       HandSet.build_card_for_command('♥A'),
                       HandSet.build_card_for_command('♥K'),

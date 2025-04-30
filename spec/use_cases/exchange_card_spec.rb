@@ -32,10 +32,9 @@ RSpec.describe 'カード交換をするユースケース' do
         expect(published_event).to be_a(CardExchangedEvent)
         expect(published_event.discarded_card.to_s).to eq(discarded_card.to_s)
 
-        # TODO: AgreegateStorteとかのを使用するようにする
-        stored_event = Event.last
+        stored_event = AggregateStore.new.latest_event
         expect(stored_event.event_type).to eq(CardExchangedEvent.event_type)
-        expect(stored_event.event_data).to include(discarded_card.to_s)
+        expect(stored_event.to_event_data[:discarded_card].to_s).to eq(discarded_card.to_s)
       end
 
       it '1回だけ手札を交換しても正しく状態が変化すること' do

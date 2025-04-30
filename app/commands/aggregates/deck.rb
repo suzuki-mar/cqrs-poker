@@ -8,8 +8,6 @@ module Aggregates
       new
     end
 
-    delegate :size, to: :cards
-
     def draw_initial_hand
       drawn_cards = Array.new(GameSetting::MAX_HAND_SIZE) { draw }
       HandSet.build(drawn_cards)
@@ -28,6 +26,10 @@ module Aggregates
 
       @cards = cards - [card]
       card
+    end
+
+    def remaining_count
+      cards.size
     end
 
     private

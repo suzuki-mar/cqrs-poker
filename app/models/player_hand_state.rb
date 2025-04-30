@@ -1,5 +1,4 @@
 class PlayerHandState < ApplicationRecord
-  MAX_HAND_SIZE = 5
   enum :status, { initial: 0, started: 1, ended: 2 }
 
   scope :started, -> { where(status: :started) }

@@ -33,6 +33,13 @@ interface _CardForQuery
   include _Card
 end 
 
+class EventPublisher
+  def initialize: (projection: Projection, event_listener: LogEventListener) -> void
+  def subscribe: (Projection | LogEventListener) -> void
+  def broadcast: (String, _Event) -> void
+  attr_reader published_events: Array[_Event] 
+end 
+
 ####################
 # privateメソッド定義
 ####################
@@ -55,4 +62,10 @@ class LogEventListener
   def format_cards: (Array[String]) -> String
   def build_info_message: (_Event event) -> String
   def build_warning_message_if_needed: (_Event event) -> String?
+end
+
+class EventPublisher
+  private
+  attr_reader projection: Projection
+  attr_reader event_listener: LogEventListener
 end 

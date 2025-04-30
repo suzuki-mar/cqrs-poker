@@ -17,10 +17,9 @@ RSpec.describe 'ゲーム開始' do
       end
 
       it 'イベントが正しく発行されること' do
-        # TODO: EventStoreを使用するようにする
-        event = Event.last
+        event_store_holder = AggregateStore.new
+        event = event_store_holder.latest_event
         expect(event.event_type).to eq(GameStartedEvent.event_type)
-        # 必要ならevent.event_dataの内容も検証
       end
 
       it 'ログが正しく出力されること' do
@@ -28,12 +27,11 @@ RSpec.describe 'ゲーム開始' do
       end
 
       it 'ゲーム状態が正しく更新されること' do
-        # TODO: AgreegateStorteとかを使うようにして　ARのクラスを使用しないようにする
-        player_game_state = PlayerHandState.find_current_session
+        display_data = read_model.current_state_for_display
         aggregate_failures do
-          expect(player_game_state).to be_started
-          expect(player_game_state.hand_set.size).to eq(GameSetting::MAX_HAND_SIZE)
-          expect(player_game_state.current_turn).to eq(1)
+          expect(display_data[:status]).to eq('started')
+          expect(display_data[:hand].split.size).to eq(GameSetting::MAX_HAND_SIZE)
+          expect(display_data[:turn]).to eq(1)
         end
       end
 

@@ -1,3 +1,7 @@
+# テスト専用のロガー
+# - 本番用のRails.logger等と異なり、出力内容を配列（messages）で保持
+# - テストで「どんなログが出力されたか」を明示的に検証したい場合に利用
+# - ログレベルごとのフィルタや一時的なサイレンス機能もサポート
 class TestLogger
   LEVELS = %i[debug info warn error fatal].freeze
   LEVEL_MAP = {

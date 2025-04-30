@@ -123,15 +123,14 @@ sig/cqrs 以下の各ファイルはレイヤー責務ごとに疎結合で構�
 ```mermaid
 graph TD
 
+  %% 依存関係を逆転させるものだけを定義
   interface_rbs[interface.rbs]
   active_record_rbs[active_record.rbs]
   models_rbs[models.rbs]  
 
   subgraph cqrs
     commands[commands.rbs]
-    events[events.rbs]
-    %% 依存関係を逆転させるものだけを定義
-    infrastructure[infrastructure.rbs]
+    events[events.rbs]    
     queries[queries.rbs]
   end
 
@@ -146,11 +145,7 @@ graph TD
   %% active_recordはmodelsへ
   models_rbs --> active_record_rbs 
 
-  cqrs --> models_rbs  
-
-  %% infrastructureはEventBusやStoreなど
-  commands --> infrastructure
-  queries --> infrastructure
+  cqrs --> models_rbs    
 
   commands --> events
   queries --> events
