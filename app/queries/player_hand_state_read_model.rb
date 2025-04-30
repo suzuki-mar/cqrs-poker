@@ -46,6 +46,12 @@ class PlayerHandStateReadModel
   def end_game!(_event)
     @player_hand_state.status = 'ended'
     @player_hand_state.save!
+
+    History.create!(
+      hand_set: @player_hand_state.hand_set,
+      rank: HandSet::Rank::ALL.index(@player_hand_state.current_rank),
+      ended_at: Time.current
+    )
   end
 
   private

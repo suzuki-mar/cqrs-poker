@@ -33,7 +33,7 @@ RSpec.describe 'ゲーム終了ユースケース' do
       expect(player_game_state.status).to eq('ended')
     end
 
-    xit 'Historyクラスが生成され、最終手札とcurrentRankを保持していること' do
+    it 'Historyクラスが生成され、最終手札とcurrentRankを保持していること' do
       subject
       histories = HistoriesReadModel.load(limit: 1)
       history = histories.first
@@ -43,14 +43,14 @@ RSpec.describe 'ゲーム終了ユースケース' do
       expect(history.hand_set).to eq(read_model.hand_set.cards.map(&:to_s))
       expect(history.rank).to eq(HandSet::Rank::ALL.index(read_model.hand_set.evaluate))
     end
-  end
 
+    it 'ゲーム終了前はHistoryが作成されていないこと' do
+      # ゲーム開始
   context '異常系' do
-    xit 'ゲームが開始されていない状態で終了しようとするとInvalidCommandEventが発行されること' do
-      # command_handler.handle(Command.new, context)
-      # event_store_holder = AggregateStore.new
-      # last_event = event_store_holder.latest_event
-      # expect(last_event).to be_a(InvalidCommandEvent)
+    it 'ゲームが開始されていない状態で終了しようとするとInvalidCommandEventが発行されること' do
+      result = command_handler.handle(Command.new, context)
+      expect(result).to be_a(InvalidCommandEvent)
+      expect(result.reason).to eq('ゲームが開始されていません')
     end
   end
 end

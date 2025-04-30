@@ -10,6 +10,10 @@ module HandlerStrategy
     end
 
     def build_invalid_command_event_if_needed
+      unless aggregate_store.game_already_started?
+        return InvalidCommandEvent.new(command: command, reason: 'ゲームが開始されていません')
+      end
+
       nil
     end
 

@@ -46,6 +46,11 @@ RSpec.describe 'ゲーム開始' do
           expect(display_data[:turn]).to eq(1)
         end
       end
+
+      it 'ゲーム開始直後はHistoryが作成されていないこと' do
+        command_handler.handle(Command.new, context)
+        expect(History.count).to eq(0)
+      end
     end
   end
 

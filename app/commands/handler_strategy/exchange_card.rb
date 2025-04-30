@@ -13,6 +13,10 @@ module HandlerStrategy
     # 状態遷移の全体像を一目で把握できるよう、あえてメソッド分割せずインラインで記述しています。
     # （現状の規模・責務ならこの方が可読性・保守性が高いため）
     def build_invalid_command_event_if_needed
+      unless aggregate_store.game_already_started?
+        return InvalidCommandEvent.new(command: command, reason: 'ゲームが終了しています')
+      end
+
       events = aggregate_store.load_all_events_in_order
 
       cards = [] # @type var cards: Array[_CardForCommand]

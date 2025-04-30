@@ -33,7 +33,9 @@ class AggregateStore
   end
 
   def game_already_started?
-    Event.exists?(event_type: GameStartedEvent.event_type)
+    started = Event.exists?(event_type: GameStartedEvent.event_type)
+    ended = Event.exists?(event_type: GameEndedEvent.event_type)
+    started && !ended
   end
 
   private

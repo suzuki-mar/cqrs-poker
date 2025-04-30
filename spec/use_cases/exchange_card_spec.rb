@@ -71,6 +71,11 @@ RSpec.describe 'カード交換をするユースケース' do
         expect(log).to match(/捨てたカード: #{discarded_card}/)
         expect(log).to match(/引いたカード: #{last_event.new_card}/)
       end
+
+      it 'ゲーム終了前はHistoryが作成されていないこと' do
+        subject
+        expect(History.count).to eq(0)
+      end
     end
   end
 
@@ -103,10 +108,13 @@ RSpec.describe 'カード交換をするユースケース' do
       it_behaves_like 'warnログが出力される'
     end
 
-    xit 'ゲームが終了している状態で交換しようとするとInvalidCommandEventが発行されること' do
-      # ゲーム終了状態を作る
-      # 交換を試みる
-      # InvalidCommandEventになることを検証
+    it 'ゲームが終了している状態で交換しようとするとInvalidCommandEventが発行されること' do
+      command_handler.handle(Command.new, CommandContext.build_for_end_game)
+
+      result = command_handler.handle(Command.new, CommandContext.build_for_exchange(discarded_card))
+
+      expect(result).to be_a(InvalidCommandEvent)
+      expect(result.reason).to eq('ゲームが終了しています')
     end
   end
 
