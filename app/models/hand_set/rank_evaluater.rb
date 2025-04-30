@@ -1,76 +1,85 @@
 # frozen_string_literal: true
 
 class HandSet
-  module RankEvaluater
-    module_function
+  class RankEvaluater
+    def self.call(cards)
+      new(cards).call
+    end
 
-    def call(cards)
-      raise ArgumentError, '手札が不正です' unless valid_hand?(cards)
+    def initialize(cards)
+      @cards = cards
+    end
 
-      rank_checks = build_rank_checks_map(cards)
+    def call
+      raise ArgumentError, '手札が不正です' unless valid_hand?(@cards)
+
+      rank_checks = build_rank_checks_map(@cards)
       found = rank_checks.find { |_, check| check.call }
       found ? found[0] : Rank::HIGH_CARD
     end
 
-    def build_rank_checks_map(cards)
-      {
-        Rank::STRAIGHT_FLUSH => proc { straight_flush?(cards) },
-        Rank::FOUR_OF_A_KIND => proc { four_of_a_kind?(cards) },
-        Rank::FULL_HOUSE => proc { full_house?(cards) },
-        Rank::FLUSH => proc { flush?(cards) },
-        Rank::STRAIGHT => proc { straight?(cards) },
-        Rank::THREE_OF_A_KIND => proc { three_of_a_kind?(cards) },
-        Rank::TWO_PAIR => proc { two_pair?(cards) },
-        Rank::ONE_PAIR => proc { one_pair?(cards) }
-      }
+    private
+
+    attr_reader :cards
+
+    def royal_flush?
+      flush? && ranks.sort == %w[10 A J K Q]
     end
 
-    def one_pair?(cards)
-      rank_combinations(cards).pair_count == 1
+    def straight_flush?
+      straight? && flush?
     end
 
-    def two_pair?(cards)
-      rank_combinations(cards).pair_count == 2
+    delegate :four_of_a_kind?, to: :rank_combinations
+
+    delegate :full_house?, to: :rank_combinations
+
+    def flush?
+      suits.uniq.size == 1
     end
 
-    def three_of_a_kind?(cards)
-      rank_combinations(cards).three_of_a_kind?
-    end
-
-    def four_of_a_kind?(cards)
-      rank_combinations(cards).four_of_a_kind?
-    end
-
-    def full_house?(cards)
-      rank_combinations(cards).full_house?
-    end
-
-    def flush?(cards)
-      suits(cards).uniq.size == 1
-    end
-
-    def straight?(cards)
-      sorted_ranks = ranks(cards).map(&:to_i).sort
+    def straight?
+      sorted_ranks = ranks.map(&:to_i).sort
       sorted_ranks.each_cons(2).all? { |a, b| b - a == 1 }
     end
 
-    def straight_flush?(cards)
-      straight?(cards) && flush?(cards)
+    delegate :three_of_a_kind?, to: :rank_combinations
+
+    def two_pair?
+      rank_combinations.pair_count == 2
     end
 
-    def suits(cards)
+    def one_pair?
+      rank_combinations.pair_count == 1
+    end
+
+    def build_rank_checks_map(_cards)
+      {
+        Rank::ROYAL_FLUSH => proc { royal_flush? },
+        Rank::STRAIGHT_FLUSH => proc { straight_flush? },
+        Rank::FOUR_OF_A_KIND => proc { four_of_a_kind? },
+        Rank::FULL_HOUSE => proc { full_house? },
+        Rank::FLUSH => proc { flush? },
+        Rank::STRAIGHT => proc { straight? },
+        Rank::THREE_OF_A_KIND => proc { three_of_a_kind? },
+        Rank::TWO_PAIR => proc { two_pair? },
+        Rank::ONE_PAIR => proc { one_pair? }
+      }
+    end
+
+    def suits
       cards.map(&:suit)
     end
 
-    def rank_combinations(cards)
-      RankCombinations.new(rank_counts(cards).values)
+    def rank_combinations
+      RankCombinations.new(rank_counts.values)
     end
 
-    def rank_counts(cards)
-      ranks(cards).group_by(&:itself).transform_values(&:size)
+    def rank_counts
+      ranks.group_by(&:itself).transform_values(&:size)
     end
 
-    def ranks(cards)
+    def ranks
       cards.map(&:rank)
     end
 

@@ -84,28 +84,8 @@ end
 class HandSet::Evaluate
   def self.call: (Array[HandSet::Card] cards) -> String
   def call: (Array[HandSet::Card] cards) -> String
-  def build_rank_checks_map: () -> Hash[String, ::Proc]
-  def valid_hand?: (Array[HandSet::Card] cards) -> bool
-  def straight_flush?: () -> bool
-  def four_of_a_kind?: () -> bool
-  def full_house?: () -> bool
-  def flush?: () -> bool
-  def straight?: () -> bool
-  def three_of_a_kind?: () -> bool
-  def two_pair?: () -> bool
-  def one_pair?: () -> bool
-  def rank_combinations: () -> HandSet::Evaluate::RankCombinations
-  def rank_counts: () -> Hash[String, Integer]
-  def suits: () -> Array[String]
-  def ranks: () -> Array[String]
-
-  class RankCombinations
-    def initialize: (Array[Integer] values) -> void
-    def pair_count: () -> Integer
-    def three_of_a_kind?: () -> bool
-    def four_of_a_kind?: () -> bool
-    def full_house?: () -> bool
-  end
+  
+  
 end
 
 ####################
@@ -123,6 +103,30 @@ class HandSet::Card
 end
 
 class HandSet::Evaluate
-  private
-  # HandSet::Evaluateのprivateメソッドがあればここに記述
+  private  
+  def build_rank_checks_map: () -> Hash[String, ::Proc]
+  def valid_hand?: (Array[HandSet::Card] cards) -> bool
+  def straight_flush?: () -> bool
+  def four_of_a_kind?: () -> bool
+  def full_house?: () -> bool
+  def flush?: () -> bool
+  def straight?: () -> bool
+  def three_of_a_kind?: () -> bool
+  def two_pair?: () -> bool
+  def one_pair?: () -> bool
+  def royal_flush?: () -> bool
+               
+  def rank_combinations: () -> HandSet::Evaluate::RankCombinations
+  def rank_counts: () -> Hash[String, Integer]
+  def suits: () -> Array[String]
+  def ranks: () -> Array[String]
+
+  # RankCombinationsはEvaluate内部でしか使わない
+  class RankCombinations
+    def initialize: (Array[Integer] values) -> void
+    def pair_count: () -> Integer
+    def three_of_a_kind?: () -> bool
+    def four_of_a_kind?: () -> bool
+    def full_house?: () -> bool
+  end
 end 
