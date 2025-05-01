@@ -23,16 +23,23 @@ module Aggregates
       end
     end
 
+    def drawable?
+      deck.remaining_count.positive?
+    end
+
     private
 
     def apply_game_started_event(event)
       @game_started = true
       cards = event.to_event_data[:initial_hand].map { |c| HandSet.card?(c) ? c : HandSet.build_card_for_command(c) }
-      cards.each { |card| deck.remove(card) if deck.cards.include?(card) }
+      cards.each do |card|
+        deck.remove(card) if deck.has?(card)
+      end
     end
 
     def apply_card_exchanged_event(event)
-      deck.remove(event.new_card) if deck.cards.include?(event.new_card)
+      new_card = event.to_event_data[:new_card]
+      deck.remove(new_card) if deck.has?(new_card)
     end
 
     delegate :draw_initial_hand, to: :deck
@@ -43,11 +50,6 @@ module Aggregates
       trash.accept(card)
     end
 
-    def drawable?
-      deck.remaining_count.positive?
-    end
-
     attr_reader :deck, :trash
-    public :drawable?
   end
 end

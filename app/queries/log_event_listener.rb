@@ -37,7 +37,7 @@ class LogEventListener
     when SuccessEvents::CardExchanged
       format_event_message(
         'カード交換',
-        "捨てたカード: #{event.discarded_card}, 引いたカード: #{event.new_card}"
+        "捨てたカード: #{event.to_event_data[:discarded_card]}, 引いたカード: #{event.to_event_data[:new_card]}"
       )
     when SuccessEvents::GameEnded
       format_event_message('ゲーム終了')

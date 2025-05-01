@@ -30,7 +30,7 @@ RSpec.describe 'カード交換をするユースケース' do
         published_event = command_handler.handle(Command.new, context)
 
         expect(published_event).to be_a(SuccessEvents::CardExchanged)
-        expect(published_event.discarded_card.to_s).to eq(discarded_card.to_s)
+        expect(published_event.to_event_data[:discarded_card].to_s).to eq(discarded_card.to_s)
 
         stored_event = Aggregates::Store.new.latest_event
         expect(stored_event.event_type).to eq(SuccessEvents::CardExchanged.event_type)
@@ -68,7 +68,7 @@ RSpec.describe 'カード交換をするユースケース' do
 
         expect(last_event).to be_a(SuccessEvents::CardExchanged)
         expect(log).to match(/捨てたカード: #{discarded_card}/)
-        expect(log).to match(/引いたカード: #{last_event.new_card}/)
+        expect(log).to match(/引いたカード: #{last_event.to_event_data[:new_card]}/)
       end
 
       it 'ゲーム終了前はHistoryが作成されていないこと' do
@@ -113,7 +113,7 @@ RSpec.describe 'カード交換をするユースケース' do
       result = command_handler.handle(Command.new, CommandContext.build_for_exchange(discarded_card))
 
       expect(result).to be_a(FailureEvents::InvalidCommand)
-      expect(result.reason).to eq('ゲームが終了しています')
+      expect(result.to_event_data[:reason]).to eq('ゲームが進行中ではありません')
     end
   end
 

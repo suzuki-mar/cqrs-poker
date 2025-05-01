@@ -28,13 +28,15 @@ module SuccessEvents
       }
     end
 
-    attr_reader :discarded_card, :new_card
-
     def self.from_store(store)
       event_data = JSON.parse(store.event_data, symbolize_names: true)
       discarded = HandSet.build_card_for_command(event_data[:discarded_card])
       new_c = HandSet.build_card_for_command(event_data[:new_card])
       new(discarded, new_c)
     end
+
+    private
+
+    attr_reader :discarded_card, :new_card
   end
 end

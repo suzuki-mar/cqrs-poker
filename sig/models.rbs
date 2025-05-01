@@ -39,7 +39,7 @@ class HandSet
   def self.build: (Array[HandSet::Card | _CardForQuery | _CardForCommand]) -> HandSet
   def self.valid_cards?: (Array[HandSet::Card]) -> bool
   def initialize: (Array[HandSet::Card]) -> void
-  def rebuild_after_exchange: (_CardForCommand, _CardForCommand) -> HandSet
+  def rebuild_after_exchange: (_Card, _Card) -> HandSet
   def evaluate: () -> String
   def rank_name: () -> String
   def valid?: () -> bool

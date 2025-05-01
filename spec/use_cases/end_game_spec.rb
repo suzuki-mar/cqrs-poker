@@ -49,7 +49,7 @@ RSpec.describe 'ゲーム終了ユースケース' do
     it 'ゲームが開始されていない状態で終了しようとするとInvalidCommandEventが発行されること' do
       result = command_handler.handle(Command.new, context)
       expect(result).to be_a(FailureEvents::InvalidCommand)
-      expect(result.reason).to eq('ゲームが開始されていません')
+      expect(result.to_event_data[:reason]).to eq('ゲームが進行中ではありません')
     end
   end
 end

@@ -10,7 +10,7 @@ module HandlerStrategy
     end
 
     def build_invalid_command_event_if_needed
-      if aggregate_store.game_already_started?
+      if aggregate_store.game_in_progress?
         return FailureEvents::InvalidCommand.new(command: command, reason: 'already_started')
       end
 

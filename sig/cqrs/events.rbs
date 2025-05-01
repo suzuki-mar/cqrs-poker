@@ -16,8 +16,7 @@ module SuccessEvents
   class GameStarted
     include _Event
     extend _EventClass
-    def initialize: (HandSet) -> void
-    attr_reader initial_hand: HandSet
+    def initialize: (HandSet) -> void    
   end
 
   class GameEnded
@@ -29,9 +28,7 @@ module SuccessEvents
   class CardExchanged
     include _Event
     extend _EventClass
-    def initialize: (_CardForCommand, _CardForCommand) -> void
-    attr_reader discarded_card: _CardForCommand
-    attr_reader new_card: _CardForCommand
+    def initialize: (_CardForCommand, _CardForCommand) -> void    
   end
 end
 
@@ -39,17 +36,13 @@ module FailureEvents
   class VersionConflict
     include _Event
     extend _EventClass
-    def initialize: (Integer, Integer) -> void
-    attr_reader expected_version: Integer
-    attr_reader actual_version: Integer
+    def initialize: (Integer, Integer) -> void    
   end
 
   class InvalidCommand
     include _Event
     extend _EventClass
-    def initialize: (command: Command, reason: String) -> void
-    attr_reader command: Command
-    attr_reader reason: String
+    def initialize: (command: Command, reason: String) -> void    
   end
 end
 
@@ -57,3 +50,39 @@ class EventBus
   def initialize: (EventPublisher) -> void
   def publish: (_Event) -> void
 end 
+
+
+###################
+# privateメソッド定義
+####################
+module SuccessEvents
+  class GameStarted
+    private
+    attr_reader initial_hand: HandSet
+  end
+
+  class GameEnded
+    private
+    # GameEndedのprivateメソッドがあればここに記述
+  end
+
+  class CardExchanged
+    private
+    attr_reader discarded_card: _Card
+    attr_reader new_card: _Card
+  end
+end
+
+module FailureEvents
+  class VersionConflict
+    private
+    attr_reader expected_version: Integer
+    attr_reader actual_version: Integer
+  end
+  
+  class InvalidCommand
+    private
+    attr_reader command: Command
+    attr_reader reason: String
+  end
+end

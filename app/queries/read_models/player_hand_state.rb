@@ -6,23 +6,23 @@ module ReadModels
 
     def start_new_game!(event)
       @player_hand_state = Query::PlayerHandState.new
-      @player_hand_state.status = 'started'
-      @player_hand_state.current_rank = event.to_event_data[:evaluate]
-      @player_hand_state.current_turn = 1
-      @player_hand_state.hand_set = event.to_event_data[:initial_hand].map(&:to_s)
-      @player_hand_state.save!
+      player_hand_state.status = 'started'
+      player_hand_state.current_rank = event.to_event_data[:evaluate]
+      player_hand_state.current_turn = 1
+      player_hand_state.hand_set = event.to_event_data[:initial_hand].map(&:to_s)
+      player_hand_state.save!
     end
 
     def exchange_card!(event)
-      # 現在の手札をHandSetとして再構築
-      hand_set = HandSet.build(@player_hand_state.hand_set.map { |c| HandSet.build_card_for_query(c) })
-      # 手札を交換
-      new_hand_set = hand_set.rebuild_after_exchange(event.discarded_card, event.new_card)
-      # PlayerHandStateを更新
+      new_hand_set = build_exchanged_hand_set(
+        event.to_event_data[:discarded_card],
+        event.to_event_data[:new_card]
+      )
+
       @player_hand_state.hand_set = new_hand_set.cards.map(&:to_s)
-      @player_hand_state.current_rank = new_hand_set.evaluate
-      @player_hand_state.current_turn += 1
-      @player_hand_state.save!
+      player_hand_state.current_rank = new_hand_set.evaluate
+      player_hand_state.current_turn += 1
+      player_hand_state.save!
     end
 
     def current_state_for_display
@@ -36,7 +36,7 @@ module ReadModels
     end
 
     def hand_set
-      HandSet.build(@player_hand_state.hand_set.map { |c| HandSet.build_card_for_query(c) })
+      HandSet.build(player_hand_state.hand_set.map { |c| HandSet.build_card_for_query(c) })
     end
 
     def refreshed_hand_set
@@ -45,8 +45,8 @@ module ReadModels
     end
 
     def end_game!(_event)
-      @player_hand_state.status = 'ended'
-      @player_hand_state.save!
+      player_hand_state.status = 'ended'
+      player_hand_state.save!
     end
 
     private
@@ -55,6 +55,11 @@ module ReadModels
 
     def format_hand
       player_hand_state.hand_set.join(' ')
+    end
+
+    def build_exchanged_hand_set(discarded_card, new_card)
+      hand_set = HandSet.build(player_hand_state.hand_set.map { |c| HandSet.build_card_for_query(c) })
+      hand_set.rebuild_after_exchange(discarded_card, new_card)
     end
   end
 end

@@ -53,6 +53,8 @@ class HandSet
       rank_combinations.pair_count == 1
     end
 
+    # 役判定の一覧を返すだけのシンプルなメソッドのため、RubocopのAbcSize警告は無視します
+    # rubocop:disable Metrics/AbcSize
     def build_rank_checks_map(_cards)
       {
         Rank::ROYAL_FLUSH => proc { royal_flush? },
@@ -66,6 +68,7 @@ class HandSet
         Rank::ONE_PAIR => proc { one_pair? }
       }
     end
+    # rubocop:enable Metrics/AbcSize
 
     def suits
       cards.map(&:suit)

@@ -35,7 +35,7 @@ module Aggregates
       build_event_from_store(store)
     end
 
-    def game_already_started?
+    def game_in_progress?
       started = Event.exists?(event_type: SuccessEvents::GameStarted.event_type)
       ended = Event.exists?(event_type: SuccessEvents::GameEnded.event_type)
       started && !ended

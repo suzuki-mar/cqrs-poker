@@ -75,14 +75,14 @@ module Aggregates
     def draw_initial_hand: () -> HandSet
     def draw: () -> _CardForCommand
     def remove: (_CardForCommand card) -> void
+    def has?: (_CardForCommand card) -> bool
     attr_reader cards: Array[_CardForCommand]
     def generate_initial_cards: () -> Array[_CardForCommand]
     def remaining_count: () -> Integer
   end
 
   class Trash
-    def accept: (_CardForCommand card) -> void
-    attr_reader cards: Array[_CardForCommand]
+    def accept: (_CardForCommand card) -> void    
   end
 
   class Store
@@ -90,7 +90,7 @@ module Aggregates
     def append: (_Event, Integer) -> _Event
     def load_all_events_in_order: () -> Array[_Event]
     def latest_event: () -> _Event?
-    def game_already_started?: () -> bool
+    def game_in_progress?: () -> bool
     def build_validation_error: (ActiveRecord::RecordInvalid, Command) -> FailureEvents::InvalidCommand
   end
 end
@@ -122,6 +122,7 @@ module HandlerStrategy
     def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand]) -> FailureEvents::InvalidCommand?
     def rebuild_cards_by_event: (Array[_CardForCommand], SuccessEvents::CardExchanged event) -> Array[_CardForCommand]
     def build_cards_from_exchanged_event: (Array[_CardForCommand], SuccessEvents::CardExchanged event) -> Array[_CardForCommand]
+    def rebuild_hand_from_event: (Array[_CardForCommand], _Event) -> Array[_CardForCommand]
   end
 
   class EndGame
@@ -148,5 +149,15 @@ module Aggregates
     attr_reader trash: Trash
     attr_reader game_started: bool
     attr_writer game_started: bool
+  end
+
+  class Deck
+    private
+    
+  end
+
+  class Trash
+    private
+    attr_reader cards: Array[_CardForCommand]
   end
 end

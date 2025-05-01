@@ -2,8 +2,6 @@
 
 module FailureEvents
   class VersionConflict
-    attr_reader :expected_version, :actual_version
-
     def initialize(expected_version, actual_version)
       @expected_version = expected_version
       @actual_version = actual_version
@@ -33,5 +31,9 @@ module FailureEvents
       event_data = JSON.parse(store.event_data, symbolize_names: true)
       new(event_data[:expected_version], event_data[:actual_version])
     end
+
+    private
+
+    attr_reader :expected_version, :actual_version
   end
 end

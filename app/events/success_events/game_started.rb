@@ -25,8 +25,6 @@ module SuccessEvents
       }
     end
 
-    attr_reader :initial_hand
-
     def self.from_store(store)
       event_data = JSON.parse(store.event_data, symbolize_names: true)
       hand_data = event_data[:initial_hand]
@@ -34,5 +32,9 @@ module SuccessEvents
       hand_set = HandSet.build(hand_cards)
       new(hand_set)
     end
+
+    private
+
+    attr_reader :initial_hand
   end
 end

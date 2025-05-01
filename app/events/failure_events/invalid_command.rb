@@ -28,11 +28,13 @@ module FailureEvents
       }
     end
 
-    attr_reader :command, :reason
-
     def self.from_store(store)
       event_data = JSON.parse(store.event_data, symbolize_names: true)
       new(command: event_data[:command], reason: event_data[:reason])
     end
+
+    private
+
+    attr_reader :command, :reason
   end
 end

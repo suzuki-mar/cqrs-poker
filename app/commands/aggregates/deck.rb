@@ -32,6 +32,10 @@ module Aggregates
       cards.size
     end
 
+    def has?(card)
+      cards.include?(card)
+    end
+
     private
 
     def initialize

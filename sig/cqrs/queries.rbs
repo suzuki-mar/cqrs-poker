@@ -50,6 +50,7 @@ module ReadModels
     private
     attr_reader player_hand_state: Query::PlayerHandState
     def format_hand: () -> String
+    def build_exchanged_hand_set: (_Card discarded_card, _Card new_card) -> HandSet
   end
 end
 

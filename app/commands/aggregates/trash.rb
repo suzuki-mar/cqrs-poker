@@ -10,8 +10,8 @@ module Aggregates
       @cards << card
     end
 
-    def cards
-      @cards.dup
-    end
+    private
+
+    attr_reader :cards
   end
 end
