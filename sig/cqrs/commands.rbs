@@ -1,24 +1,25 @@
-interface _HandlerStrategy
-  def initialize: (Command, CommandContext, Aggregates::BoardAggregate, Aggregates::Store) -> void
-  def command: () -> Command
-  def context: () -> CommandContext
-  def board: () -> Aggregates::BoardAggregate
+interface _CommandHandler
+  def initialize: (EventBus) -> void
+  def handle: (Command, CommandContext) -> (_Event | FailureEvents::VersionConflict | FailureEvents::InvalidCommand)
+  def append_to_aggregate_store: (_Event, Command) -> (_Event | FailureEvents::VersionConflict | FailureEvents::InvalidCommand)
+  def event_bus: () -> EventBus
   def aggregate_store: () -> Aggregates::Store
-  def build_invalid_command_event_if_needed: () -> (FailureEvents::VersionConflict | FailureEvents::InvalidCommand | nil)
-  def build_event_by_executing: () -> _Event
 end
 
-module HandlerStrategy
+module CommandHandlers
   class GameStart
-    include _HandlerStrategy
+    include _CommandHandler
   end
 
   class ExchangeCard
-    include _HandlerStrategy
+    include _CommandHandler
+    private
+    def rebuild_hand_from_event: (Array[_CardForCommand], _Event) -> Array[_CardForCommand]
+    def build_cards_from_exchanged_event: (Array[_CardForCommand], SuccessEvents::CardExchanged) -> Array[_CardForCommand]
   end
 
   class EndGame
-    include _HandlerStrategy
+    include _CommandHandler
   end
 end
 
@@ -28,21 +29,6 @@ class Command
   def execute_for_end_game: (Aggregates::BoardAggregate) -> void
 end
 
-class CommandHandler
-  def initialize: (EventBus) -> void
-  def handle: (Command, CommandContext) -> (_Event | FailureEvents::VersionConflict | Array[String])
-end
-
-class CommandHandler
-  private
-  def aggregate_store: () -> Aggregates::Store
-  def build_strategy: (Symbol, Command, CommandContext) -> (HandlerStrategy::GameStart | HandlerStrategy::ExchangeCard | HandlerStrategy::EndGame)
-  def event_bus: () -> EventBus
-  def load_events: () -> Array[_Event]
-  def build_board: (Array[_Event]) -> Aggregates::BoardAggregate
-  def append_event: (_Event) -> void
-  def append_to_aggregate_store: (_Event, Command) -> (_Event | FailureEvents::VersionConflict | FailureEvents::InvalidCommand)
-end
 
 class CommandContext
   module Types
@@ -105,33 +91,14 @@ interface _CardForCommand
   def hash: () -> Integer
 end
 
-
+class CommandBus
+  def initialize: (EventBus) -> void
+  def execute: (Command, CommandContext) -> (_Event | FailureEvents::VersionConflict | FailureEvents::InvalidCommand)
+end
 
 ###################
 # privateメソッド定義
 ####################
-module HandlerStrategy
-  class GameStart
-    private
-    # GameStartのprivateメソッドがあればここに記述
-  end
-
-  class ExchangeCard    
-    private
-    def apply_event_to_replay_hand: (Array[_CardForCommand], _Event event) -> Array[_CardForCommand]
-    def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand]) -> FailureEvents::InvalidCommand?
-    def rebuild_cards_by_event: (Array[_CardForCommand], SuccessEvents::CardExchanged event) -> Array[_CardForCommand]
-    def build_cards_from_exchanged_event: (Array[_CardForCommand], SuccessEvents::CardExchanged event) -> Array[_CardForCommand]
-    def rebuild_hand_from_event: (Array[_CardForCommand], _Event) -> Array[_CardForCommand]
-  end
-
-  class EndGame
-    private
-    # EndGameのprivateメソッドがあればここに記述
-  end
-end
-
-
 module Aggregates
   class Store
     private
@@ -159,5 +126,22 @@ module Aggregates
   class Trash
     private
     attr_reader cards: Array[_CardForCommand]
+  end
+end
+
+module CommandHandlers
+  class GameStart    
+    private
+    # GameStartのprivateメソッドがあればここに記述
+  end
+
+  class ExchangeCard    
+    private
+    # ExchangeCardのprivateメソッドがあればここに記述
+  end
+
+  class EndGame    
+    private
+    # EndGameのprivateメソッドがあればここに記述
   end
 end

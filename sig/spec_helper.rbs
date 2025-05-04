@@ -1,5 +1,5 @@
 # =============================
 # spec用型定義（SlowCommandHandler など）
 # =============================
-class SlowCommandHandler < CommandHandler
+class SlowCommandHandler < CommandHandlers::GameStart
 end 

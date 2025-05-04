@@ -4,17 +4,17 @@ require 'rails_helper'
 
 RSpec.describe 'ゲーム終了ユースケース' do
   let(:logger) { TestLogger.new }
-  let!(:command_handler) { UseCaseHelper.build_command_handler(logger) }
+  let!(:command_bus) { UseCaseHelper.build_command_bus(logger) }
   let(:read_model) { ReadModels::PlayerHandState.new }
   let(:context) { CommandContext.build_for_end_game }
 
   context '正常系' do
     before do
       # まずゲームを開始しておく
-      command_handler.handle(Command.new, CommandContext.build_for_game_start)
+      command_bus.execute(Command.new, CommandContext.build_for_game_start)
     end
 
-    subject { command_handler.handle(Command.new, context) }
+    subject { command_bus.execute(Command.new, context) }
 
     it 'GameEndedEventがEventStoreに記録されること' do
       subject
@@ -47,7 +47,7 @@ RSpec.describe 'ゲーム終了ユースケース' do
 
   context '異常系' do
     it 'ゲームが開始されていない状態で終了しようとするとInvalidCommandEventが発行されること' do
-      result = command_handler.handle(Command.new, context)
+      result = command_bus.execute(Command.new, context)
       expect(result).to be_a(FailureEvents::InvalidCommand)
       expect(result.to_event_data[:reason]).to eq('ゲームが進行中ではありません')
     end

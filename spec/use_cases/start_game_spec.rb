@@ -4,7 +4,7 @@ require 'rails_helper'
 
 RSpec.describe 'ゲーム開始' do
   let(:logger) { TestLogger.new }
-  let(:command_handler) { UseCaseHelper.build_command_handler(logger) }
+  let(:command_bus) { UseCaseHelper.build_command_bus(logger) }
   let(:context) { CommandContext.build_for_game_start }
   let(:read_model) { ReadModels::PlayerHandState.new }
 
@@ -13,7 +13,7 @@ RSpec.describe 'ゲーム開始' do
       let(:command) { Command.new }
 
       before do
-        command_handler.handle(command, context)
+        command_bus.execute(command, context)
       end
 
       it 'イベントが正しく発行されること' do
@@ -46,7 +46,7 @@ RSpec.describe 'ゲーム開始' do
       end
 
       it 'ゲーム開始直後はHistoryが作成されていないこと' do
-        command_handler.handle(Command.new, context)
+        command_bus.execute(Command.new, context)
         expect(Query::History.count).to eq(0)
       end
     end
@@ -54,11 +54,11 @@ RSpec.describe 'ゲーム開始' do
 
   context '異常系' do
     context 'ゲームがすでに開始されている場合' do
-      subject { command_handler.handle(Command.new, context) }
+      subject { command_bus.execute(Command.new, context) }
 
       before do
         # 最初のゲーム開始
-        command_handler.handle(Command.new, context)
+        command_bus.execute(Command.new, context)
       end
 
       it 'InvalidCommandEventが発行・保存されること' do

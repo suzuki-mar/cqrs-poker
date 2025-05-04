@@ -4,10 +4,10 @@ require 'rails_helper'
 
 RSpec.describe 'カード交換をするユースケース' do
   let(:logger) { TestLogger.new }
-  let!(:command_handler) { UseCaseHelper.build_command_handler(logger) }
+  let!(:command_bus) { UseCaseHelper.build_command_bus(logger) }
 
   before do
-    command_handler.handle(Command.new, CommandContext.build_for_game_start)
+    command_bus.execute(Command.new, CommandContext.build_for_game_start)
   end
 
   let(:read_model) { ReadModels::PlayerHandState.new }
@@ -15,7 +15,7 @@ RSpec.describe 'カード交換をするユースケース' do
   let(:discarded_card) { HandSet::Card.new(current_hand.first) }
   let(:context) { CommandContext.build_for_exchange(discarded_card) }
 
-  subject { command_handler.handle(Command.new, CommandContext.build_for_exchange(card)) }
+  subject { command_bus.execute(Command.new, CommandContext.build_for_exchange(card)) }
 
   context '正常系' do
     let(:card) { discarded_card }
@@ -27,7 +27,7 @@ RSpec.describe 'カード交換をするユースケース' do
         current_hand = read_model.refreshed_hand_set
         discarded_card = current_hand.fetch_by_number(1)
         context = CommandContext.build_for_exchange(discarded_card)
-        published_event = command_handler.handle(Command.new, context)
+        published_event = command_bus.execute(Command.new, context)
 
         expect(published_event).to be_a(SuccessEvents::CardExchanged)
         expect(published_event.to_event_data[:discarded_card].to_s).to eq(discarded_card.to_s)
@@ -51,7 +51,7 @@ RSpec.describe 'カード交換をするユースケース' do
         hand_after_first = read_model.refreshed_hand_set
         discarded_card2 = hand_after_first.fetch_by_number(1)
         context2 = CommandContext.build_for_exchange(discarded_card2)
-        command_handler.handle(Command.new, context2)
+        command_bus.execute(Command.new, context2)
 
         hand_after_second = read_model.refreshed_hand_set
         expect(hand_after_second.cards).not_to include(discarded_card2)
@@ -87,8 +87,8 @@ RSpec.describe 'カード交換をするユースケース' do
     context '同じカードを2回交換した場合' do
       let(:card) { discarded_card }
       it '2回目でwarnログが出力されること' do
-        command_handler.handle(Command.new, CommandContext.build_for_exchange(card)) # 1回目
-        command_handler.handle(Command.new, CommandContext.build_for_exchange(card)) # 2回目
+        command_bus.execute(Command.new, CommandContext.build_for_exchange(card)) # 1回目
+        command_bus.execute(Command.new, CommandContext.build_for_exchange(card)) # 2回目
         expect(logger.messages_for_level(:warn).last).to match(/不正な選択肢の選択/)
       end
     end
@@ -100,17 +100,17 @@ RSpec.describe 'カード交換をするユースケース' do
         hand_size = GameSetting::MAX_HAND_SIZE
         exchange_count = deck_size - hand_size
         exchange_count.times do
-          command_handler.handle(Command.new,
-                                 CommandContext.build_for_exchange(read_model.refreshed_hand_set.cards.first))
+          command_bus.execute(Command.new,
+                              CommandContext.build_for_exchange(read_model.refreshed_hand_set.cards.first))
         end
       end
       it_behaves_like 'warnログが出力される'
     end
 
     it 'ゲームが終了している状態で交換しようとするとInvalidCommandが発行されること' do
-      command_handler.handle(Command.new, CommandContext.build_for_end_game)
+      command_bus.execute(Command.new, CommandContext.build_for_end_game)
 
-      result = command_handler.handle(Command.new, CommandContext.build_for_exchange(discarded_card))
+      result = command_bus.execute(Command.new, CommandContext.build_for_exchange(discarded_card))
 
       expect(result).to be_a(FailureEvents::InvalidCommand)
       expect(result.to_event_data[:reason]).to eq('ゲームが進行中ではありません')
