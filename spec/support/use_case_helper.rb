@@ -14,6 +14,6 @@ module UseCaseHelper
     projection = Projection.new
     event_publisher = EventPublisher.new(projection: projection, event_listener: event_listener)
     event_bus = EventBus.new(event_publisher)
-    CommandBus.new(event_bus)
+    CommandBus.new(event_bus, logger)
   end
 end

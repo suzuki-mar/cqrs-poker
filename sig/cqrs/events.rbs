@@ -32,16 +32,21 @@ module SuccessEvents
   end
 end
 
-module FailureEvents
+interface _CommandError  
+end
+
+module CommandErrors
   class VersionConflict
-    include _Event
-    extend _EventClass
+    include _CommandError
+    attr_reader expected_version: Integer
+    attr_reader actual_version: Integer
     def initialize: (Integer, Integer) -> void    
   end
 
   class InvalidCommand
-    include _Event
-    extend _EventClass
+    include _CommandError
+    attr_reader command: Command
+    attr_reader reason: String
     def initialize: (command: Command, reason: String) -> void    
   end
 end
@@ -73,16 +78,12 @@ module SuccessEvents
   end
 end
 
-module FailureEvents
+module CommandErrors
   class VersionConflict
-    private
-    attr_reader expected_version: Integer
-    attr_reader actual_version: Integer
+    # CommandErrorsのprivate attr_reader定義を削除
   end
   
   class InvalidCommand
-    private
-    attr_reader command: Command
-    attr_reader reason: String
+    # CommandErrorsのprivate attr_reader定義を削除
   end
 end

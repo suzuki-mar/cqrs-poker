@@ -10,7 +10,7 @@ RSpec.describe Aggregates::Store do
       current_version = aggregate_store.current_version
       expect do
         result = aggregate_store.append(event, current_version)
-        expect(result).to be_a(SuccessEvents::GameStarted)
+        expect(result[:event]).to be_a(SuccessEvents::GameStarted)
       end.to change(Event, :count).by(1)
 
       saved_event = Event.last
@@ -51,11 +51,9 @@ RSpec.describe Aggregates::Store do
       aggregate_store.append(event1, v1)
       # 同じバージョンで再度append
       result = aggregate_store.append(event1, v1)
-      expect(result).to be_a(FailureEvents::VersionConflict)
-      expect(result.event_type).to eq(FailureEvents::VersionConflict.event_type)
-      expect(result).to be_a(FailureEvents::VersionConflict)
-      expect(result.to_event_data[:expected_version]).to be >= 1
-      expect(result.to_event_data[:actual_version]).to be >= 0
+      expect(result[:error]).to be_a(CommandErrors::VersionConflict)
+      expect(result[:error].expected_version).to be >= 1
+      expect(result[:error].actual_version).to be >= 0
     end
 
     it '並行保存時のversion競合（簡易シミュレーション）' do
@@ -66,8 +64,8 @@ RSpec.describe Aggregates::Store do
       # v2を2回同時に保存しようとする
       v2 = aggregate_store.current_version
       result = aggregate_store.append(event1, v2)
-      expect(result).to be_a(FailureEvents::VersionConflict)
-      expect(result.event_type).to eq(FailureEvents::VersionConflict.event_type)
+      expect(result[:error]).to be_a(CommandErrors::VersionConflict)
+      expect(result[:error]).to be_a(CommandErrors::VersionConflict)
     end
 
     # スナップショット整合性テストは、スナップショット機能実装後に追加

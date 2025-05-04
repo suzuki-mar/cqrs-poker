@@ -14,6 +14,13 @@ module Aggregates
       aggregate
     end
 
+    def self.load_for_current_state
+      events = Aggregates::Store.new.load_all_events_in_order
+      aggregate = new
+      events.each { |event| aggregate.apply(event) }
+      aggregate
+    end
+
     def apply(event)
       case event
       when SuccessEvents::GameStarted

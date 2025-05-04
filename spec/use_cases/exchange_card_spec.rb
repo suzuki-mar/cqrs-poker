@@ -17,6 +17,9 @@ RSpec.describe 'カード交換をするユースケース' do
 
   subject { command_bus.execute(Command.new, CommandContext.build_for_exchange(card)) }
 
+  let(:event_publisher) { EventPublisher.new(projection: Projection.new, event_listener: LogEventListener.new(logger)) }
+  let(:event_bus) { EventBus.new(event_publisher) }
+
   context '正常系' do
     let(:card) { discarded_card }
 
@@ -29,8 +32,8 @@ RSpec.describe 'カード交換をするユースケース' do
         context = CommandContext.build_for_exchange(discarded_card)
         published_event = command_bus.execute(Command.new, context)
 
-        expect(published_event).to be_a(SuccessEvents::CardExchanged)
-        expect(published_event.to_event_data[:discarded_card].to_s).to eq(discarded_card.to_s)
+        expect(published_event[:event]).to be_a(SuccessEvents::CardExchanged)
+        expect(published_event[:event].to_event_data[:discarded_card].to_s).to eq(discarded_card.to_s)
 
         stored_event = Aggregates::Store.new.latest_event
         expect(stored_event.event_type).to eq(SuccessEvents::CardExchanged.event_type)
@@ -81,15 +84,18 @@ RSpec.describe 'カード交換をするユースケース' do
   context '異常系' do
     context '手札に存在しないカードを交換した場合' do
       let(:card) { Faker::Hand.not_in_hand_card(read_model.refreshed_hand_set) }
-      it_behaves_like 'warnログが出力される'
+      it '警告ログが正しく出力されること' do
+        result = subject
+        expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: 交換対象のカードが手札に存在しません/)
+      end
     end
 
     context '同じカードを2回交換した場合' do
       let(:card) { discarded_card }
-      it '2回目でwarnログが出力されること' do
+      it '2回目で警告ログが正しく出力されること' do
         command_bus.execute(Command.new, CommandContext.build_for_exchange(card)) # 1回目
-        command_bus.execute(Command.new, CommandContext.build_for_exchange(card)) # 2回目
-        expect(logger.messages_for_level(:warn).last).to match(/不正な選択肢の選択/)
+        result = command_bus.execute(Command.new, CommandContext.build_for_exchange(card)) # 2回目
+        expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: 交換対象のカードが手札に存在しません/)
       end
     end
 
@@ -104,7 +110,10 @@ RSpec.describe 'カード交換をするユースケース' do
                               CommandContext.build_for_exchange(read_model.refreshed_hand_set.cards.first))
         end
       end
-      it_behaves_like 'warnログが出力される'
+      it '警告ログが正しく出力されること' do
+        result = subject
+        expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: デッキの残り枚数が不足しています/)
+      end
     end
 
     it 'ゲームが終了している状態で交換しようとするとInvalidCommandが発行されること' do
@@ -112,14 +121,28 @@ RSpec.describe 'カード交換をするユースケース' do
 
       result = command_bus.execute(Command.new, CommandContext.build_for_exchange(discarded_card))
 
-      expect(result).to be_a(FailureEvents::InvalidCommand)
-      expect(result.to_event_data[:reason]).to eq('ゲームが進行中ではありません')
+      expect(result[:error]).to be_a(CommandErrors::InvalidCommand)
+      expect(result[:error].reason).to eq('ゲームが進行中ではありません')
     end
   end
 
   context 'バージョン競合が発生した場合' do
-    let(:event) { SuccessEvents::CardExchanged.new(HandSet::Card.new('♠A'), HandSet::Card.new('♣K')) }
-    let(:error_version) { 1 }
-    it_behaves_like 'version conflict event'
+    it '並行実行でバージョン競合が発生し、警告ログが出力されること' do
+      command_bus.instance_variable_set(:@exchange_card_handler,
+                                        SlowCommandHandler.new(CommandHandlers::ExchangeCard.new(event_bus),
+                                                               delay: 0.5))
+      card = read_model.refreshed_hand_set.cards.first
+      context = CommandContext.build_for_exchange(card)
+      results = []
+      threads = 2.times.map do
+        Thread.new do
+          results << command_bus.execute(Command.new, context)
+        end
+      end
+      threads.each(&:join)
+      expect(results.map { |r| r[:event].class if r[:success] }.compact).to include(SuccessEvents::CardExchanged)
+      expect(results.map { |r| r[:error].class unless r[:success] }.compact).to include(CommandErrors::VersionConflict)
+      expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
+    end
   end
 end

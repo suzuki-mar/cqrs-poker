@@ -1,7 +1,7 @@
 interface _CommandHandler
   def initialize: (EventBus) -> void
-  def handle: (Command, CommandContext) -> (_Event | FailureEvents::VersionConflict | FailureEvents::InvalidCommand)
-  def append_to_aggregate_store: (_Event, Command) -> (_Event | FailureEvents::VersionConflict | FailureEvents::InvalidCommand)
+  def handle: (Command, CommandContext) -> ({ success: true, event: _Event } | { success: false, error: _CommandError })
+  def append_to_aggregate_store: (_Event, Command) -> ({ success: true, event: _Event } | { success: false, error: _CommandError })
   def event_bus: () -> EventBus
   def aggregate_store: () -> Aggregates::Store
 end
@@ -54,6 +54,7 @@ module Aggregates
     def drawable?: () -> bool
     def apply_game_started_event: (SuccessEvents::GameStarted event) -> void
     def apply_card_exchanged_event: (SuccessEvents::CardExchanged event) -> void
+    def self.load_for_current_state: () -> BoardAggregate
   end
 
   class Deck
@@ -73,11 +74,11 @@ module Aggregates
 
   class Store
     def current_version: () -> Integer
-    def append: (_Event, Integer) -> _Event
+    def append: (_Event, Integer) -> ({ success: true, event: _Event } | { success: false, error: _CommandError })
     def load_all_events_in_order: () -> Array[_Event]
     def latest_event: () -> _Event?
     def game_in_progress?: () -> bool
-    def build_validation_error: (ActiveRecord::RecordInvalid, Command) -> FailureEvents::InvalidCommand
+    def build_validation_error: (ActiveRecord::RecordInvalid, Command) -> CommandErrors::InvalidCommand
   end
 end
 
@@ -93,7 +94,9 @@ end
 
 class CommandBus
   def initialize: (EventBus) -> void
-  def execute: (Command, CommandContext) -> (_Event | FailureEvents::VersionConflict | FailureEvents::InvalidCommand)
+  def execute: (Command, CommandContext) -> (_Event | CommandErrors::VersionConflict | CommandErrors::InvalidCommand)
+  private
+  attr_reader logger: Logger?
 end
 
 ###################
@@ -102,11 +105,11 @@ end
 module Aggregates
   class Store
     private
-    def build_event_from_store: (Event) -> _Event
-    def build_failer_if_conflict: (_Event, Integer) -> FailureEvents::VersionConflict?
+    def build_event_from_store: (Event) -> (_Event | CommandErrors::InvalidCommand | CommandErrors::VersionConflict)
+    def build_failer_if_conflict: (_Event, Integer) -> CommandErrors::VersionConflict?
     def add_event_to_store!: (_Event, Integer) -> Event
     def version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
-    def build_version_conflict_event: (_Event, Integer) -> FailureEvents::VersionConflict
+    def build_version_conflict_event: (_Event, Integer) -> CommandErrors::VersionConflict
   end
 
 

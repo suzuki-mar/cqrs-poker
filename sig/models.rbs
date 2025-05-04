@@ -51,7 +51,7 @@ class HandSet
   def self.build_card_for_command: (String) -> _CardForCommand
   def self.build_card_for_query: (String) -> _CardForQuery
   def apply_event_to_replay_hand: (Array[_CardForCommand] cards, _Event event) -> Array[_CardForCommand]
-  def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand] cards) -> FailureEvents::InvalidCommand
+  def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand] cards) -> CommandErrors::InvalidCommand
 
   module Rank
     # 重複定義はしていないがLinterが誤検知をしている

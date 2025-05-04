@@ -8,14 +8,13 @@ RSpec.shared_examples 'warnログが出力される' do
 end
 
 RSpec.shared_examples 'version conflict event' do
-  it 'バージョン競合エラー（version_conflict）が返ること' do
-    raise 'eventがletで定義されていません' if event.nil?
-    raise 'error_versionがletで定義されていません' if error_version.nil?
+  it 'ユースケース経由でバージョン競合が発生した場合、VersionConflictが返ること' do
+    # 1回目のゲーム開始（正常）
+    result1 = command_bus.execute(Command.new, context)
+    expect(result1).to be_a(SuccessEvents::GameStarted)
 
-    aggregate_store = Aggregates::Store.new
-    aggregate_store.append(event, error_version) # 1回目（正常）
-    result = aggregate_store.append(event, error_version) # 2回目（競合）
-    expect(result).to be_a(FailureEvents::VersionConflict)
-    expect(result.event_type).to eq(FailureEvents::VersionConflict.event_type)
+    # 2回目のゲーム開始（バージョン競合を発生させる）
+    result2 = command_bus.execute(Command.new, context)
+    expect(result2).to be_a(CommandErrors::VersionConflict)
   end
 end

@@ -11,37 +11,49 @@ module CommandHandlers
       raise ArgumentError, 'このハンドラーはEXCHANGE_CARD専用です' unless context.type == CommandContext::Types::EXCHANGE_CARD
 
       unless aggregate_store.game_in_progress?
-        invalid_event = FailureEvents::InvalidCommand.new(command: command, reason: 'ゲームが進行中ではありません')
-        event_bus.publish(invalid_event)
-        return invalid_event
+        return { success: false, error: CommandErrors::InvalidCommand.new(command: command, reason: 'ゲームが進行中ではありません') }
       end
 
-      events = aggregate_store.load_all_events_in_order
-      hand = events.reduce([]) { |acc, event| rebuild_hand_from_event(acc, event) }
+      board = Aggregates::BoardAggregate.load_for_current_state
       discarded_card = context.discarded_card
       raise ArgumentError, 'discarded_cardがnilです' if discarded_card.nil?
 
+      events = aggregate_store.load_all_events_in_order
+      hand = events.reduce([]) { |acc, event| rebuild_hand_from_event(acc, event) }
+
       unless hand.include?(discarded_card)
-        invalid_event = FailureEvents::InvalidCommand.new(command: command, reason: '交換対象のカードが手札に存在しません')
-        event_bus.publish(invalid_event)
-        return invalid_event
+        return { success: false,
+                 error: CommandErrors::InvalidCommand.new(command: command, reason: '交換対象のカードが手札に存在しません') }
       end
-      board = Aggregates::BoardAggregate.load_from_events(events)
+
       unless board.drawable?
-        invalid_event = FailureEvents::InvalidCommand.new(command: command, reason: 'デッキの残り枚数が不足しています')
-        event_bus.publish(invalid_event)
-        return invalid_event
+        return { success: false,
+                 error: CommandErrors::InvalidCommand.new(command: command, reason: 'デッキの残り枚数が不足しています') }
       end
 
       new_card = command.execute_for_exchange_card(board)
       event = SuccessEvents::CardExchanged.new(discarded_card, new_card)
       result = append_to_aggregate_store(event, command)
-      if result.is_a?(FailureEvents::VersionConflict) || result.is_a?(FailureEvents::InvalidCommand)
-        event_bus.publish(result)
-        return result
+      event_obj = result[:event] if result[:success]
+      error_obj = result[:error] unless result[:success]
+      if result[:success] == true && event_obj
+        case event_obj
+        when SuccessEvents::CardExchanged, SuccessEvents::GameStarted, SuccessEvents::GameEnded
+          event_bus.publish(event_obj)
+          { success: true, event: event_obj }
+        else
+          raise "[BUG] handle: event_objが想定外の型: \\#{event_obj}"
+        end
+      elsif result[:success] == false && error_obj
+        case error_obj
+        when CommandErrors::InvalidCommand, CommandErrors::VersionConflict
+          { success: false, error: error_obj }
+        else
+          raise "[BUG] handle: error_objが想定外の型: \\#{error_obj}"
+        end
+      else
+        raise "[BUG] handle: 型通りでない返り値: \\#{result.inspect}"
       end
-      event_bus.publish(event)
-      event
     end
 
     private
@@ -69,11 +81,30 @@ module CommandHandlers
     end
 
     def append_to_aggregate_store(event, command)
-      aggregate_store.append(event, aggregate_store.current_version)
+      result = aggregate_store.append(event, aggregate_store.current_version)
+      event_obj = result[:event] if result[:success]
+      error_obj = result[:error] unless result[:success]
+      if result.is_a?(Hash)
+        if result[:success] == true && event_obj
+          case event_obj
+          when SuccessEvents::CardExchanged, SuccessEvents::GameStarted, SuccessEvents::GameEnded
+            return { success: true, event: event_obj }
+          else
+            raise "[BUG] append_to_aggregate_store: event_objが想定外の型: \\#{event_obj}"
+          end
+        elsif result[:success] == false && error_obj
+          case error_obj
+          when CommandErrors::InvalidCommand, CommandErrors::VersionConflict
+            return { success: false, error: error_obj }
+          else
+            raise "[BUG] append_to_aggregate_store: error_objが想定外の型: \\#{error_obj}"
+          end
+        end
+      end
+      raise "[BUG] append_to_aggregate_store: 型通りでない返り値: \\#{result.inspect}"
     rescue ActiveRecord::RecordInvalid => e
       error_event = aggregate_store.build_validation_error(e, command)
-      event_bus.publish(error_event)
-      error_event
+      { success: false, error: error_event }
     end
   end
 end

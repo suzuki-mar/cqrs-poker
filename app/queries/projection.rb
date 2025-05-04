@@ -2,7 +2,7 @@ class Projection
   def handle_event(event)
     player_hand_state = ReadModels::PlayerHandState.new
 
-    if event.is_a?(FailureEvents::InvalidCommand) || event.is_a?(FailureEvents::VersionConflict)
+    if event.is_a?(CommandErrors::InvalidCommand) || event.is_a?(CommandErrors::VersionConflict)
       return player_hand_state
     end
 

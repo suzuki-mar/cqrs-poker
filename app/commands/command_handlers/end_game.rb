@@ -11,22 +11,33 @@ module CommandHandlers
       raise ArgumentError, 'このハンドラーはEND_GAME専用です' unless context.type == CommandContext::Types::END_GAME
 
       unless aggregate_store.game_in_progress?
-        invalid_event = FailureEvents::InvalidCommand.new(command: command, reason: 'ゲームが進行中ではありません')
-        event_bus.publish(invalid_event)
-        return invalid_event
+        return { success: false, error: CommandErrors::InvalidCommand.new(command: command, reason: 'ゲームが進行中ではありません') }
       end
 
-      events = aggregate_store.load_all_events_in_order
-      board = Aggregates::BoardAggregate.load_from_events(events)
+      board = Aggregates::BoardAggregate.load_for_current_state
       command.execute_for_end_game(board)
       event = SuccessEvents::GameEnded.new
       result = append_to_aggregate_store(event, command)
-      if result.is_a?(FailureEvents::VersionConflict) || result.is_a?(FailureEvents::InvalidCommand)
-        event_bus.publish(result)
-        return result
+      event_obj = result[:event] if result[:success]
+      error_obj = result[:error] unless result[:success]
+      if result[:success] == true && event_obj
+        case event_obj
+        when SuccessEvents::GameStarted, SuccessEvents::GameEnded, SuccessEvents::CardExchanged
+          event_bus.publish(event_obj)
+          { success: true, event: event_obj }
+        else
+          raise "[BUG] handle: event_objが想定外の型: \\#{event_obj}"
+        end
+      elsif result[:success] == false && error_obj
+        case error_obj
+        when CommandErrors::InvalidCommand, CommandErrors::VersionConflict
+          { success: false, error: error_obj }
+        else
+          raise "[BUG] handle: error_objが想定外の型: \\#{error_obj}"
+        end
+      else
+        raise "[BUG] handle: 型通りでない返り値: \\#{result.inspect}"
       end
-      event_bus.publish(event)
-      event
     end
 
     private
@@ -34,11 +45,30 @@ module CommandHandlers
     attr_reader :event_bus, :aggregate_store
 
     def append_to_aggregate_store(event, command)
-      aggregate_store.append(event, aggregate_store.current_version)
+      result = aggregate_store.append(event, aggregate_store.current_version)
+      event_obj = result[:event] if result[:success]
+      error_obj = result[:error] unless result[:success]
+      if result.is_a?(Hash)
+        if result[:success] == true && event_obj
+          case event_obj
+          when SuccessEvents::GameStarted, SuccessEvents::GameEnded, SuccessEvents::CardExchanged
+            return { success: true, event: event_obj }
+          else
+            raise "[BUG] append_to_aggregate_store: event_objが想定外の型: \\#{event_obj}"
+          end
+        elsif result[:success] == false && error_obj
+          case error_obj
+          when CommandErrors::InvalidCommand, CommandErrors::VersionConflict
+            return { success: false, error: error_obj }
+          else
+            raise "[BUG] append_to_aggregate_store: error_objが想定外の型: \\#{error_obj}"
+          end
+        end
+      end
+      raise "[BUG] append_to_aggregate_store: 型通りでない返り値: \\#{result.inspect}"
     rescue ActiveRecord::RecordInvalid => e
       error_event = aggregate_store.build_validation_error(e, command)
-      event_bus.publish(error_event)
-      error_event
+      { success: false, error: error_event }
     end
   end
 end

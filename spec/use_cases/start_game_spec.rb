@@ -7,6 +7,8 @@ RSpec.describe 'ゲーム開始' do
   let(:command_bus) { UseCaseHelper.build_command_bus(logger) }
   let(:context) { CommandContext.build_for_game_start }
   let(:read_model) { ReadModels::PlayerHandState.new }
+  let(:event_publisher) { EventPublisher.new(projection: Projection.new, event_listener: LogEventListener.new(logger)) }
+  let(:event_bus) { EventBus.new(event_publisher) }
 
   context '正常系' do
     describe 'ゲームが正しく開始されること' do
@@ -61,19 +63,24 @@ RSpec.describe 'ゲーム開始' do
         command_bus.execute(Command.new, context)
       end
 
-      it 'InvalidCommandEventが発行・保存されること' do
+      it 'VersionConflictが返るがEventStoreには保存されないこと' do
+        # 1回目のゲーム開始で保存されたイベントを記録
+        first_event = Aggregates::Store.new.latest_event
         # 2回目のゲーム開始
-        subject
+        result = subject
+        expect(result[:error]).to be_a(CommandErrors::VersionConflict)
+
         event_store_holder = Aggregates::Store.new
         last_event = event_store_holder.latest_event
-        expect(last_event).to be_a(FailureEvents::InvalidCommand)
+        # 直近のイベントはGameStartedのままで、VersionConflictは保存されていない
+        expect(last_event).to be_a(SuccessEvents::GameStarted)
+        # 内容も完全一致していることを検証
+        expect(last_event.to_event_data).to eq(first_event.to_event_data)
       end
 
-      it 'GameStartedイベントが2回記録されないこと' do
-        # TODO: EventStoreを使用するようにする
-        expect do
-          subject
-        end.not_to(change { Event.where(event_type: SuccessEvents::GameStarted.event_type).count })
+      it '警告のログが発生していること' do
+        subject
+        expect(logger.messages_for_level(:warn)).to include(/コマンド失敗: バージョン競合/)
       end
 
       it 'PlayerHandStateが変更されないこと' do
@@ -91,9 +98,24 @@ RSpec.describe 'ゲーム開始' do
     end
 
     context 'バージョン競合が発生した場合' do
-      let(:event) { SuccessEvents::GameStarted.new(Faker.high_card_hand) }
-      let(:error_version) { 1 }
-      it_behaves_like 'version conflict event'
+      it '並行実行でバージョン競合が発生し、警告ログが出力されること' do
+        command_bus.instance_variable_set(:@game_start_handler,
+                                          SlowCommandHandler.new(CommandHandlers::GameStart.new(event_bus), delay: 0.5))
+        command = Command.new
+        context = CommandContext.build_for_game_start
+        results = []
+        threads = 2.times.map do
+          Thread.new do
+            results << command_bus.execute(command, context)
+          end
+        end
+        threads.each(&:join)
+        expect(results.map { |r| r[:event].class if r[:success] }.compact).to include(SuccessEvents::GameStarted)
+        expect(results.map do |r|
+          r[:error].class unless r[:success]
+        end.compact).to include(CommandErrors::VersionConflict)
+        expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
+      end
     end
   end
 end

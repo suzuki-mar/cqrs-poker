@@ -48,11 +48,11 @@ class LogEventListener
 
   def build_warning_message_if_needed(event)
     case event
-    when FailureEvents::InvalidCommand
-      format_event_message('不正な選択肢の選択', event.to_event_data[:reason])
-    when FailureEvents::VersionConflict
-      expected = event.to_event_data[:expected_version]
-      actual   = event.to_event_data[:actual_version]
+    when CommandErrors::InvalidCommand
+      format_event_message('不正な選択肢の選択', event.reason)
+    when CommandErrors::VersionConflict
+      expected = event.expected_version
+      actual   = event.actual_version
       details  = "expected: #{expected}, actual: #{actual}"
       format_event_message('バージョン競合', details)
     end
