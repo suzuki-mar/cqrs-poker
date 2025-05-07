@@ -30,9 +30,9 @@ module CommandHandlers
     def append_event_to_store!(command)
       board = Aggregates::BoardAggregate.load_for_current_state
       command.execute_for_end_game(board)
-      event = SuccessEvents::GameEnded.new
+      event = GameEndedEvent.new
 
-      aggregate_store.append(event, aggregate_store.current_version)
+      aggregate_store.append_event(event)
     end
   end
 end

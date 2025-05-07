@@ -8,16 +8,14 @@ module CommandHandlers
     end
 
     def handle(command, context)
+      @command = command
+
       raise ArgumentError, 'このハンドラーはGAME_START専用です' unless context.type == CommandContext::Types::GAME_START
 
-      if aggregate_store.game_in_progress?
-        actual_version = aggregate_store.current_version
-        return CommandResult.new(
-          error: CommandErrors::VersionConflict.new(1, actual_version)
-        )
-      end
+      error_result = build_already_started_error_result
+      return error_result if error_result
 
-      result = append_event_to_store!(command)
+      result = append_event_to_store!
       return result if result.error
 
       event_bus.publish(result.event)
@@ -26,14 +24,25 @@ module CommandHandlers
 
     private
 
-    attr_reader :event_bus, :aggregate_store
+    attr_reader :event_bus, :aggregate_store, :command
 
-    def append_event_to_store!(command)
+    def build_already_started_error_result
+      return unless aggregate_store.game_in_progress?
+
+      CommandResult.new(
+        error: CommandErrors::InvalidCommand.new(
+          command: command,
+          reason: 'すでにゲームが開始されています'
+        )
+      )
+    end
+
+    def append_event_to_store!
       board = Aggregates::BoardAggregate.load_for_current_state
       initial_hand = command.execute_for_game_start(board)
-      event = SuccessEvents::GameStarted.new(initial_hand)
+      event = GameStartedEvent.new(initial_hand)
 
-      aggregate_store.append(event, aggregate_store.current_version)
+      aggregate_store.append_event(event)
     end
   end
 end

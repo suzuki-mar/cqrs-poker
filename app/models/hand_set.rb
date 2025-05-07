@@ -47,8 +47,9 @@ class HandSet
     raise ArgumentError, 'discarded_cardはCardでなければなりません' unless HandSet.card?(discarded_card)
     raise ArgumentError, 'new_cardはCardでなければなりません' unless HandSet.card?(new_card)
 
+    # バージョン競合チェックの後でカードの存在チェックを行う
     index = @cards.find_index { |card| card == discarded_card }
-    raise ArgumentError, '交換対象のカードが手札に存在しません' if index.nil?
+    return nil if index.nil?
 
     new_cards = @cards.dup
     new_cards[index] = new_card

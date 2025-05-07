@@ -8,7 +8,7 @@ class Projection
 
     apply_to_player_hand_state(player_hand_state, event)
 
-    ReadModels::Histories.add(player_hand_state.hand_set) if event.is_a?(SuccessEvents::GameEnded)
+    ReadModels::Histories.add(player_hand_state.hand_set) if event.is_a?(GameEndedEvent)
 
     player_hand_state
   end
@@ -17,11 +17,11 @@ class Projection
 
   def apply_to_player_hand_state(player_hand_state, event)
     case event
-    when SuccessEvents::GameStarted
+    when GameStartedEvent
       player_hand_state.start_new_game!(event)
-    when SuccessEvents::CardExchanged
+    when CardExchangedEvent
       player_hand_state.exchange_card!(event)
-    when SuccessEvents::GameEnded
+    when GameEndedEvent
       player_hand_state.end_game!(event)
     else
       raise ArgumentError, "未対応のイベントです: #{event.class.name}"

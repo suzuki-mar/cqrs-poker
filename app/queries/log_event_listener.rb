@@ -32,14 +32,14 @@ class LogEventListener
 
   def build_info_message(event)
     case event
-    when SuccessEvents::GameStarted
+    when GameStartedEvent
       format_event_message('ゲーム開始', format_cards(event.to_event_data[:initial_hand].map(&:to_s)))
-    when SuccessEvents::CardExchanged
+    when CardExchangedEvent
       format_event_message(
         'カード交換',
         "捨てたカード: #{event.to_event_data[:discarded_card]}, 引いたカード: #{event.to_event_data[:new_card]}"
       )
-    when SuccessEvents::GameEnded
+    when GameEndedEvent
       format_event_message('ゲーム終了')
     else
       format_event_message(event.class.name)

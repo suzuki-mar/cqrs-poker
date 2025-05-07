@@ -21,7 +21,7 @@ RSpec.describe 'ゲーム開始' do
       it 'イベントが正しく発行されること' do
         event_store_holder = Aggregates::Store.new
         event = event_store_holder.latest_event
-        expect(event.event_type).to eq(SuccessEvents::GameStarted.event_type)
+        expect(event.event_type).to eq(GameStartedEvent.event_type)
       end
 
       it 'ログが正しく出力されること' do
@@ -63,24 +63,25 @@ RSpec.describe 'ゲーム開始' do
         command_bus.execute(Command.new, context)
       end
 
-      it 'VersionConflictが返るがEventStoreには保存されないこと' do
+      it 'InvalidCommandが返るがEventStoreには保存されないこと' do
         # 1回目のゲーム開始で保存されたイベントを記録
         first_event = Aggregates::Store.new.latest_event
         # 2回目のゲーム開始
         result = subject
-        expect(result.error).to be_a(CommandErrors::VersionConflict)
+        expect(result.error).to be_a(CommandErrors::InvalidCommand)
+        expect(result.error.reason).to eq('すでにゲームが開始されています')
 
         event_store_holder = Aggregates::Store.new
         last_event = event_store_holder.latest_event
-        # 直近のイベントはGameStartedのままで、VersionConflictは保存されていない
-        expect(last_event).to be_a(SuccessEvents::GameStarted)
+        # 直近のイベントはGameStartedのままで、InvalidCommandは保存されていない
+        expect(last_event).to be_a(GameStartedEvent)
         # 内容も完全一致していることを検証
         expect(last_event.to_event_data).to eq(first_event.to_event_data)
       end
 
       it '警告のログが発生していること' do
         subject
-        expect(logger.messages_for_level(:warn)).to include(/コマンド失敗: バージョン競合/)
+        expect(logger.messages_for_level(:warn)).to include(/コマンド失敗: すでにゲームが開始されています/)
       end
 
       it 'PlayerHandStateが変更されないこと' do
@@ -110,7 +111,7 @@ RSpec.describe 'ゲーム開始' do
           end
         end
         threads.each(&:join)
-        expect(results.filter_map { |r| r.event.class if r.success? }).to include(SuccessEvents::GameStarted)
+        expect(results.filter_map { |r| r.event.class if r.success? }).to include(GameStartedEvent)
         expect(results.filter_map do |r|
           r.error.class unless r.success?
         end).to include(CommandErrors::VersionConflict)

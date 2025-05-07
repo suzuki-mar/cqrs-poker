@@ -12,43 +12,25 @@ interface _EventClass
   def event_type: () -> String
 end
 
-module SuccessEvents
-  class GameStarted
-    include _Event
-    extend _EventClass
-    def initialize: (HandSet) -> void    
-  end
+class GameStartedEvent
+  include _Event
+  extend _EventClass
 
-  class GameEnded
-    include _Event
-    extend _EventClass
-    def initialize: () -> void
-  end
-
-  class CardExchanged
-    include _Event
-    extend _EventClass
-    def initialize: (_CardForCommand, _CardForCommand) -> void    
-  end
+  def initialize: (HandSet initial_hand) -> void
 end
 
-interface _CommandError  
+class CardExchangedEvent
+  include _Event
+  extend _EventClass
+
+  def initialize: (_CardForCommand discarded_card, _CardForCommand new_card) -> void
 end
 
-module CommandErrors
-  class VersionConflict
-    include _CommandError
-    attr_reader expected_version: Integer
-    attr_reader actual_version: Integer
-    def initialize: (Integer, Integer) -> void    
-  end
+class GameEndedEvent
+  include _Event
+  extend _EventClass
 
-  class InvalidCommand
-    include _CommandError
-    attr_reader command: Command
-    attr_reader reason: String
-    def initialize: (command: Command, reason: String) -> void    
-  end
+  def initialize: () -> void
 end
 
 class EventBus
@@ -57,33 +39,22 @@ class EventBus
 end 
 
 
+
 ###################
 # privateメソッド定義
 ####################
-module SuccessEvents
-  class GameStarted
-    private
-    attr_reader initial_hand: HandSet
-  end
-
-  class GameEnded
-    private
-    # GameEndedのprivateメソッドがあればここに記述
-  end
-
-  class CardExchanged
-    private
-    attr_reader discarded_card: _Card
-    attr_reader new_card: _Card
-  end
+class GameStartedEvent
+  private
+  attr_reader initial_hand: HandSet
 end
 
-module CommandErrors
-  class VersionConflict
-    # CommandErrorsのprivate attr_reader定義を削除
-  end
-  
-  class InvalidCommand
-    # CommandErrorsのprivate attr_reader定義を削除
-  end
+class CardExchangedEvent
+  private
+  attr_reader discarded_card: _CardForCommand
+  attr_reader new_card: _CardForCommand
+end
+
+class GameEndedEvent
+  private
+  # privateメソッドはここに定義する
 end

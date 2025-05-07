@@ -7,9 +7,10 @@ class EventBus
   end
 
   def publish(event)
+    return if event.nil?
+
     Rails.logger.info "Event published: #{event.class.name}"
-    current_version = @event_store_holder.current_version
-    @event_store_holder.append(event, current_version)
+    @event_store_holder.append_event(event)
     @event_publisher.broadcast(:handle_event, event)
   end
 

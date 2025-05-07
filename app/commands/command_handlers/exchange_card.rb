@@ -7,44 +7,51 @@ module CommandHandlers
       @aggregate_store = Aggregates::Store.new
     end
 
+    # すでにメソッド内が整理されているため、メソッドを分割するほうが見通しがわるくなるのでignoreにしている
+    # rubocop:disable Metrics/MethodLength
     def handle(command, context)
+      @command = command
+      @discarded_card = context.discarded_card
       @board = Aggregates::BoardAggregate.load_for_current_state
 
       raise_if_invalid_context(context)
 
-      discarded_card = context.discarded_card
-      # @type var discarded_card: _CardForCommand
-      error = build_error_result_if_needed(command, @board, discarded_card)
+      error = build_game_state_error_result_if_needed || build_board_error_result_if_needed
       return error unless error.nil?
 
-      result = append_event_to_store!(command, discarded_card)
+      # バージョン競合チェックを実行直前に行う
+      new_card = command.execute_for_exchange_card(@board)
+      event = CardExchangedEvent.new(@discarded_card, new_card)
+
+      # バージョン競合チェックと保存を一連の操作として実行
+      result = aggregate_store.append_event(event)
       return result if result.error
 
       event_bus.publish(result.event)
       result
     end
+    # rubocop:enable Metrics/MethodLength
 
     private
 
-    attr_reader :event_bus, :aggregate_store, :board
+    attr_reader :event_bus, :aggregate_store, :board, :command
 
     def raise_if_invalid_context(context)
       raise ArgumentError, 'このハンドラーはEXCHANGE_CARD専用です' unless context.type == CommandContext::Types::EXCHANGE_CARD
       raise ArgumentError, 'discarded_cardがnilです' if context.discarded_card.nil?
     end
 
-    def append_event_to_store!(command, discarded_card)
+    def append_event_to_store!
       new_card = command.execute_for_exchange_card(@board)
-      event = SuccessEvents::CardExchanged.new(discarded_card, new_card)
-
-      aggregate_store.append(event, aggregate_store.current_version)
+      event = CardExchangedEvent.new(@discarded_card, new_card)
+      aggregate_store.append_event(event)
     end
 
-    def build_error_result_if_needed(command, board, discarded_card)
+    def build_board_error_result_if_needed
       events = aggregate_store.load_all_events_in_order
       hand = events.reduce([]) { |acc, event| rebuild_hand_from_event(acc, event) }
 
-      unless hand.include?(discarded_card)
+      unless hand.include?(@discarded_card)
         return CommandResult.new(
           error: CommandErrors::InvalidCommand.new(command: command, reason: '交換対象のカードが手札に存在しません')
         )
@@ -56,6 +63,10 @@ module CommandHandlers
         )
       end
 
+      nil
+    end
+
+    def build_game_state_error_result_if_needed
       unless aggregate_store.game_in_progress?
         return CommandResult.new(
           error: CommandErrors::InvalidCommand.new(command: command, reason: 'ゲームが進行中ではありません')
@@ -66,11 +77,11 @@ module CommandHandlers
     end
 
     def rebuild_hand_from_event(hand, event)
-      if event.is_a?(SuccessEvents::GameStarted)
+      if event.is_a?(GameStartedEvent)
         hand = event.to_event_data[:initial_hand].map do |c|
           HandSet.build_card_for_command(c.is_a?(HandSet::Card) ? c.to_s : c)
         end
-      elsif event.is_a?(SuccessEvents::CardExchanged)
+      elsif event.is_a?(CardExchangedEvent)
         hand = build_cards_from_exchanged_event(hand, event)
       end
       hand

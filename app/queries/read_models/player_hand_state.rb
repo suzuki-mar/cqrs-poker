@@ -19,6 +19,9 @@ module ReadModels
         event.to_event_data[:new_card]
       )
 
+      # カードが存在しない場合は処理をスキップ
+      return if new_hand_set.nil?
+
       @player_hand_state.hand_set = new_hand_set.cards.map(&:to_s)
       player_hand_state.current_rank = new_hand_set.evaluate
       player_hand_state.current_turn += 1

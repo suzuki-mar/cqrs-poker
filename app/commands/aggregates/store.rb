@@ -1,21 +1,13 @@
 # frozen_string_literal: true
 
-require 'dry/monads'
-
 module Aggregates
   class Store
-    include Dry::Monads[:result]
-
-    def current_version
-      Event.maximum(:version) || 0
-    end
-
-    def append(event, expected_current_version)
-      add_event_to_store_may_raise_version_conflict!(event, expected_current_version)
+    def append_event(event)
+      create_event!(event)
       CommandResult.new(event: event)
     rescue ActiveRecord::RecordInvalid => e
       if version_conflict_error?(e)
-        error = build_version_conflict_event(event, expected_current_version)
+        error = build_version_conflict_event(event, current_version)
         return CommandResult.new(error: error)
       end
       raise "イベントの保存に失敗しました: #{e.record.errors.full_messages.join(', ')}"
@@ -38,24 +30,39 @@ module Aggregates
     end
 
     def game_in_progress?
-      started = Event.exists?(event_type: SuccessEvents::GameStarted.event_type)
-      ended = Event.exists?(event_type: SuccessEvents::GameEnded.event_type)
+      started = Event.exists?(event_type: GameStartedEvent.event_type)
+      ended = Event.exists?(event_type: GameEndedEvent.event_type)
       started && !ended
     end
 
     private
 
+    def create_event!(event)
+      version = event.is_a?(GameStartedEvent) ? 1 : current_version + 1
+
+      Event.create!(
+        event_type: event.event_type,
+        event_data: event.to_serialized_hash.to_json,
+        occurred_at: Time.current,
+        version: version
+      )
+    end
+
+    def current_version
+      Event.maximum(:version) || 0
+    end
+
     def valid_event_type?(event)
-      event.is_a?(SuccessEvents::GameStarted) ||
-        event.is_a?(SuccessEvents::CardExchanged) ||
-        event.is_a?(SuccessEvents::GameEnded)
+      event.is_a?(GameStartedEvent) ||
+        event.is_a?(CardExchangedEvent) ||
+        event.is_a?(GameEndedEvent)
     end
 
     def build_event_from_store(store)
       maps = {
-        SuccessEvents::GameStarted.event_type => SuccessEvents::GameStarted,
-        SuccessEvents::CardExchanged.event_type => SuccessEvents::CardExchanged,
-        SuccessEvents::GameEnded.event_type => SuccessEvents::GameEnded
+        GameStartedEvent.event_type => GameStartedEvent,
+        CardExchangedEvent.event_type => CardExchangedEvent,
+        GameEndedEvent.event_type => GameEndedEvent
       }
 
       event_class = maps[store.event_type]
@@ -66,24 +73,6 @@ module Aggregates
       raise "[BUG] build_event_from_store: eventが_Event型でない: #{event}" unless valid_event_type?(event)
 
       event
-    end
-
-    def build_failer_if_conflict(_event, expected_current_version)
-      stored_version = current_version
-      return unless expected_current_version < stored_version
-
-      CommandErrors::VersionConflict.new(stored_version, expected_current_version)
-    end
-
-    def add_event_to_store_may_raise_version_conflict!(event, expected_current_version)
-      version = event.is_a?(SuccessEvents::GameStarted) ? 1 : expected_current_version + 1
-
-      Event.create!(
-        event_type: event.event_type,
-        event_data: event.to_serialized_hash.to_json,
-        occurred_at: Time.current,
-        version: version
-      )
     end
 
     def version_conflict_error?(err)
@@ -101,6 +90,15 @@ module Aggregates
       CommandErrors::InvalidCommand.new(
         command: command,
         reason: error.record.errors.full_messages.join(', ')
+      )
+    end
+
+    def build_version_conflict_result_if_needed(expected_current_version)
+      current_stored_version = current_version
+      return nil if expected_current_version == current_stored_version
+
+      CommandResult.new(
+        error: CommandErrors::VersionConflict.new(current_stored_version, expected_current_version)
       )
     end
   end

@@ -10,7 +10,7 @@ RSpec.describe LogEventListener do
 
   describe '#handle_event' do
     it 'GameStartedEventのログ出力' do
-      event = SuccessEvents::GameStarted.new(initial_hand)
+      event = GameStartedEvent.new(initial_hand)
       listener.handle_event(event)
       expect(logger.messages_for_level(:info).last).to match(/ゲーム開始/)
     end

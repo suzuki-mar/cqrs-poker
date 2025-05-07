@@ -23,10 +23,10 @@ module Aggregates
 
     def apply(event)
       case event
-      when SuccessEvents::GameStarted
+      when GameStartedEvent
         cards = build_cards_from_event(event)
         apply_game_started_event_from_cards(cards)
-      when SuccessEvents::CardExchanged
+      when CardExchangedEvent
         apply_card_exchanged_event(event)
       end
     end

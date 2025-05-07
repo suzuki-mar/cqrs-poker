@@ -6,9 +6,23 @@ interface _CommandHandler
   def aggregate_store: () -> Aggregates::Store
 end
 
+module CommandErrors
+  class VersionConflict
+    attr_reader expected_version: Integer
+    attr_reader actual_version: Integer
+    def initialize: (Integer, Integer) -> void    
+  end
+
+  class InvalidCommand
+    attr_reader command: Command
+    attr_reader reason: String
+    def initialize: (command: Command, reason: String) -> void    
+  end
+end
+
 module CommandHandlers
   class GameStart
-    include _CommandHandler    
+    include _CommandHandler   
     
   end
 
@@ -17,8 +31,7 @@ module CommandHandlers
   end
 
   class EndGame
-    include _CommandHandler
-    private
+    include _CommandHandler    
     
   end
 end
@@ -52,9 +65,10 @@ module Aggregates
     def draw: () -> _CardForCommand
     def discard_to_trash: (_CardForCommand card) -> void
     def drawable?: () -> bool
-    def apply_game_started_event: (SuccessEvents::GameStarted event) -> void
-    def apply_card_exchanged_event: (SuccessEvents::CardExchanged event) -> void
+    def apply_game_started_event: (_Event event) -> void
+    def apply_card_exchanged_event: (_Event event) -> void
     def self.load_for_current_state: () -> BoardAggregate
+    def build_cards_from_exchanged_event: (Array[_CardForCommand], CardExchangedEvent) -> Array[_CardForCommand]
   end
 
   class Deck
@@ -74,7 +88,7 @@ module Aggregates
 
   class Store
     def current_version: () -> Integer
-    def append: (_Event, Integer) -> CommandResult
+    def append_event: (_Event) -> CommandResult    
     def load_all_events_in_order: () -> Array[_Event]
     def latest_event: () -> _Event?
     def game_in_progress?: () -> bool
@@ -96,11 +110,6 @@ end
 class CommandBus
   def initialize: (EventBus, Logger) -> void
   def execute: (Command, CommandContext) -> CommandResult
-  private
-  attr_reader event_bus: EventBus
-  attr_reader logger: Logger
-  def build_handler_map: () -> Hash[Symbol, _CommandHandler]
-  def log_error_if_needed: (CommandErrors::InvalidCommand | CommandErrors::VersionConflict | nil) -> void
 end
 
 class CommandResult
@@ -122,6 +131,7 @@ module Aggregates
     def add_event_to_store_may_raise_version_conflict!: (_Event, Integer) -> Event
     def version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
     def build_version_conflict_event: (_Event, Integer) -> CommandErrors::VersionConflict
+    def create_event!: (_Event) -> Event
   end
 
   class BoardAggregate
@@ -130,7 +140,7 @@ module Aggregates
     attr_reader trash: Trash
     attr_reader game_started: bool
     attr_writer game_started: bool
-    def build_cards_from_event: (SuccessEvents::GameStarted) -> Array[_CardForCommand]
+    def build_cards_from_event: (GameStartedEvent) -> Array[_CardForCommand]
     def apply_game_started_event_from_cards: (Array[_CardForCommand]) -> void
   end
 
@@ -148,18 +158,21 @@ end
 module CommandHandlers
   class GameStart    
     private
-    def append_event_to_store!: (Command) -> CommandResult
+    attr_reader command: Command
+    def append_event_to_store!: () -> CommandResult
+    def build_already_started_error_result: () -> CommandResult?
   end
 
   class ExchangeCard    
     private
     def rebuild_hand_from_event: (Array[_CardForCommand], _Event) -> Array[_CardForCommand]
-    def build_cards_from_exchanged_event: (Array[_CardForCommand], SuccessEvents::CardExchanged) -> Array[_CardForCommand]
-    def process_exchange: (Command, Aggregates::BoardAggregate, _CardForCommand) -> CommandResult
-    def build_error_result_if_needed: (Command, Aggregates::BoardAggregate, _CardForCommand) -> CommandResult?
+    def build_cards_from_exchanged_event: (Array[_CardForCommand], CardExchangedEvent) -> Array[_CardForCommand]
+    def build_board_error_result_if_needed: () -> CommandResult?
+    def build_game_state_error_result_if_needed: () -> CommandResult?
     def raise_if_invalid_context: (CommandContext) -> void
-    def append_event_to_store!: (Command, _CardForCommand) -> CommandResult
+    def append_event_to_store!: () -> CommandResult
     attr_reader board: Aggregates::BoardAggregate
+    attr_reader command: Command
   end
 
   class EndGame    
@@ -168,4 +181,12 @@ module CommandHandlers
     def process_end_game: (Command) -> CommandResult
     def append_event_to_store!: (Command) -> CommandResult
   end
+end
+
+class CommandBus  
+  private
+  attr_reader event_bus: EventBus
+  attr_reader logger: Logger
+  def build_handler_map: () -> Hash[Symbol, _CommandHandler]
+  def log_error_if_needed: (CommandErrors::InvalidCommand | CommandErrors::VersionConflict | nil) -> void
 end

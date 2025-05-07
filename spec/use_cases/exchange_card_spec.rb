@@ -32,11 +32,11 @@ RSpec.describe 'カード交換をするユースケース' do
         context = CommandContext.build_for_exchange(discarded_card)
         published_event = command_bus.execute(Command.new, context)
 
-        expect(published_event.event).to be_a(SuccessEvents::CardExchanged)
+        expect(published_event.event).to be_a(CardExchangedEvent)
         expect(published_event.event.to_event_data[:discarded_card].to_s).to eq(discarded_card.to_s)
 
         stored_event = Aggregates::Store.new.latest_event
-        expect(stored_event.event_type).to eq(SuccessEvents::CardExchanged.event_type)
+        expect(stored_event.event_type).to eq(CardExchangedEvent.event_type)
         expect(stored_event.to_event_data[:discarded_card].to_s).to eq(discarded_card.to_s)
       end
 
@@ -69,7 +69,7 @@ RSpec.describe 'カード交換をするユースケース' do
         event_store_holder = Aggregates::Store.new
         last_event = event_store_holder.latest_event
 
-        expect(last_event).to be_a(SuccessEvents::CardExchanged)
+        expect(last_event).to be_a(CardExchangedEvent)
         expect(log).to match(/捨てたカード: #{discarded_card}/)
         expect(log).to match(/引いたカード: #{last_event.to_event_data[:new_card]}/)
       end
@@ -140,8 +140,22 @@ RSpec.describe 'カード交換をするユースケース' do
         end
       end
       threads.each(&:join)
-      expect(results.filter_map { |r| r.event.class if r.success? }).to include(SuccessEvents::CardExchanged)
-      expect(results.filter_map { |r| r.error.class unless r.success? }).to include(CommandErrors::VersionConflict)
+
+      # 成功と失敗の結果を確認
+      success_results = results.select(&:success?)
+      error_results = results.select(&:failure?)
+
+      # 1つは成功し、1つは失敗することを確認
+      expect(success_results.size).to eq(1)
+      expect(error_results.size).to eq(1)
+
+      # 成功した結果はCardExchangedEventであることを確認
+      expect(success_results.first.event).to be_a(CardExchangedEvent)
+
+      # 失敗した結果はバージョン競合であることを確認
+      expect(error_results.first.error).to be_a(CommandErrors::VersionConflict)
+
+      # 警告ログが出力されることを確認
       expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
     end
   end

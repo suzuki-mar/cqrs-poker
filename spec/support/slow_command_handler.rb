@@ -10,11 +10,24 @@ class SlowCommandHandler
   end
 
   def handle(command, context)
+    # 元のハンドラーを呼び出す前に遅延を入れる
     sleep(@delay)
-    @handler.handle(command, context)
+    handler.handle(command, context)
   end
 
   private
 
   attr_reader :handler, :delay
+
+  def method_missing(method_name, *, &)
+    if handler.respond_to?(method_name, true)
+      handler.send(method_name, *, &)
+    else
+      super
+    end
+  end
+
+  def respond_to_missing?(method_name, include_private = false)
+    handler.respond_to?(method_name, include_private) || super
+  end
 end

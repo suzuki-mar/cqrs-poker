@@ -19,7 +19,7 @@ RSpec.describe 'ゲーム終了ユースケース' do
     it 'GameEndedEventがEventStoreに記録されること' do
       subject
       event = Event.last
-      expect(event.event_type).to eq(SuccessEvents::GameEnded.event_type)
+      expect(event.event_type).to eq(GameEndedEvent.event_type)
     end
 
     it 'ログにゲーム終了が記録されること' do

@@ -10,7 +10,7 @@ RSpec.describe EventBus do
     let(:event_bus) { EventBus.new(event_publisher) }
     let(:board) { Aggregates::BoardAggregate.new }
     let(:initial_hand) { board.draw_initial_hand }
-    let(:event) { SuccessEvents::GameStarted.new(initial_hand) }
+    let(:event) { GameStartedEvent.new(initial_hand) }
 
     it 'イベントがリスナーに届くこと' do
       # イベントを発行
