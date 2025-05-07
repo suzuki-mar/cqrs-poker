@@ -98,25 +98,6 @@ RSpec.describe 'ゲーム開始' do
       end
     end
 
-    context 'バージョン競合が発生した場合' do
-      it '並行実行でバージョン競合が発生し、警告ログが出力されること' do
-        command_bus.instance_variable_set(:@game_start_handler,
-                                          SlowCommandHandler.new(CommandHandlers::GameStart.new(event_bus), delay: 0.5))
-        command = Command.new
-        context = CommandContext.build_for_game_start
-        results = []
-        threads = Array.new(2) do
-          Thread.new do
-            results << command_bus.execute(command, context)
-          end
-        end
-        threads.each(&:join)
-        expect(results.filter_map { |r| r.event.class if r.success? }).to include(GameStartedEvent)
-        expect(results.filter_map do |r|
-          r.error.class unless r.success?
-        end).to include(CommandErrors::VersionConflict)
-        expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
-      end
-    end
+    # バージョン競合が発生した場合は version_conflict_specでテストをしている
   end
 end

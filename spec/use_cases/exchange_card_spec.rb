@@ -4,30 +4,31 @@ require 'rails_helper'
 
 RSpec.describe 'カード交換をするユースケース' do
   let(:logger) { TestLogger.new }
+  # コマンドバスの初期化による副作用や前提状態のセットアップを、テスト実行前に必ず行いたい
   let!(:command_bus) { UseCaseHelper.build_command_bus(logger) }
+  let(:player_hand_state) { ReadModels::PlayerHandState.new }
+  let(:current_hand) { Query::PlayerHandState.find_current_session.hand_set }
+  let(:discarded_card) { HandSet::Card.new(current_hand.first) }
+  let(:context) { CommandContext.build_for_exchange(discarded_card) }
+  let(:event_bus) do
+    event_publisher = EventPublisher.new(projection: Projection.new, event_listener: LogEventListener.new(logger))
+    EventBus.new(event_publisher)
+  end
 
   before do
     command_bus.execute(Command.new, CommandContext.build_for_game_start)
   end
 
-  let(:read_model) { ReadModels::PlayerHandState.new }
-  let(:current_hand) { Query::PlayerHandState.find_current_session.hand_set }
-  let(:discarded_card) { HandSet::Card.new(current_hand.first) }
-  let(:context) { CommandContext.build_for_exchange(discarded_card) }
-
   subject { command_bus.execute(Command.new, CommandContext.build_for_exchange(card)) }
-
-  let(:event_publisher) { EventPublisher.new(projection: Projection.new, event_listener: LogEventListener.new(logger)) }
-  let(:event_bus) { EventBus.new(event_publisher) }
 
   context '正常系' do
     let(:card) { discarded_card }
 
     describe '手札のカードを1枚交換できること' do
-      let(:original_hand) { read_model.hand_set }
+      let(:original_hand) { player_hand_state.hand_set }
 
       it 'イベントが正しく発行されること' do
-        current_hand = read_model.refreshed_hand_set
+        current_hand = player_hand_state.refreshed_hand_set
         discarded_card = current_hand.fetch_by_number(1)
         context = CommandContext.build_for_exchange(discarded_card)
         published_event = command_bus.execute(Command.new, context)
@@ -42,7 +43,7 @@ RSpec.describe 'カード交換をするユースケース' do
 
       it '1回だけ手札を交換しても正しく状態が変化すること' do
         subject
-        hand_after = read_model.refreshed_hand_set
+        hand_after = player_hand_state.refreshed_hand_set
 
         expect(hand_after.cards).not_to include(discarded_card)
         expect(hand_after.cards - [discarded_card]).to match_array(original_hand.cards - [discarded_card])
@@ -51,12 +52,12 @@ RSpec.describe 'カード交換をするユースケース' do
       it '2回連続で手札を交換しても正しく状態が変化すること' do
         subject
 
-        hand_after_first = read_model.refreshed_hand_set
+        hand_after_first = player_hand_state.refreshed_hand_set
         discarded_card2 = hand_after_first.fetch_by_number(1)
         context2 = CommandContext.build_for_exchange(discarded_card2)
         command_bus.execute(Command.new, context2)
 
-        hand_after_second = read_model.refreshed_hand_set
+        hand_after_second = player_hand_state.refreshed_hand_set
         expect(hand_after_second.cards).not_to include(discarded_card2)
         expect(hand_after_second.cards - [discarded_card2]).to match_array(original_hand.cards - [discarded_card,
                                                                                                   discarded_card2])
@@ -83,7 +84,7 @@ RSpec.describe 'カード交換をするユースケース' do
 
   context '異常系' do
     context '手札に存在しないカードを交換した場合' do
-      let(:card) { Faker::Hand.not_in_hand_card(read_model.refreshed_hand_set) }
+      let(:card) { Faker::Hand.not_in_hand_card(player_hand_state.refreshed_hand_set) }
       it '警告ログが正しく出力されること' do
         subject
         expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: 交換対象のカードが手札に存在しません/)
@@ -100,14 +101,16 @@ RSpec.describe 'カード交換をするユースケース' do
     end
 
     context 'デッキが空のときに交換した場合' do
-      let(:card) { read_model.refreshed_hand_set.cards.first }
+      let(:card) { player_hand_state.refreshed_hand_set.cards.first }
       before do
+        # デッキが空の状態を事前に作るためのセットアップ
+        # これにより、「デッキが空のときに交換しようとした場合のエラーやログ出力をテストする
         deck_size = HandSet::Card::VALID_SUITS.size * HandSet::Card::VALID_RANKS.size
         hand_size = GameSetting::MAX_HAND_SIZE
         exchange_count = deck_size - hand_size
         exchange_count.times do
           command_bus.execute(Command.new,
-                              CommandContext.build_for_exchange(read_model.refreshed_hand_set.cards.first))
+                              CommandContext.build_for_exchange(player_hand_state.refreshed_hand_set.cards.first))
         end
       end
       it '警告ログが正しく出力されること' do
@@ -126,37 +129,5 @@ RSpec.describe 'カード交換をするユースケース' do
     end
   end
 
-  context 'バージョン競合が発生した場合' do
-    it '並行実行でバージョン競合が発生し、警告ログが出力されること' do
-      command_bus.instance_variable_set(:@exchange_card_handler,
-                                        SlowCommandHandler.new(CommandHandlers::ExchangeCard.new(event_bus),
-                                                               delay: 0.5))
-      card = read_model.refreshed_hand_set.cards.first
-      context = CommandContext.build_for_exchange(card)
-      results = []
-      threads = Array.new(2) do
-        Thread.new do
-          results << command_bus.execute(Command.new, context)
-        end
-      end
-      threads.each(&:join)
-
-      # 成功と失敗の結果を確認
-      success_results = results.select(&:success?)
-      error_results = results.select(&:failure?)
-
-      # 1つは成功し、1つは失敗することを確認
-      expect(success_results.size).to eq(1)
-      expect(error_results.size).to eq(1)
-
-      # 成功した結果はCardExchangedEventであることを確認
-      expect(success_results.first.event).to be_a(CardExchangedEvent)
-
-      # 失敗した結果はバージョン競合であることを確認
-      expect(error_results.first.error).to be_a(CommandErrors::VersionConflict)
-
-      # 警告ログが出力されることを確認
-      expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
-    end
-  end
+  # バージョン競合が発生した場合は version_conflict_specでテストをしている
 end
