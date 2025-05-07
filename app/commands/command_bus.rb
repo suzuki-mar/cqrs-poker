@@ -1,41 +1,36 @@
 class CommandBus
-  def initialize(event_bus, logger = nil)
-    @game_start_handler = CommandHandlers::GameStart.new(event_bus)
-    @exchange_card_handler = CommandHandlers::ExchangeCard.new(event_bus)
-    @end_game_handler = CommandHandlers::EndGame.new(event_bus)
+  def initialize(event_bus, logger)
+    @event_bus = event_bus
     @logger = logger
   end
 
   def execute(command, context)
-    result = case context.type
-             when CommandContext::Types::GAME_START
-               @game_start_handler.handle(command, context)
-             when CommandContext::Types::EXCHANGE_CARD
-               @exchange_card_handler.handle(command, context)
-             when CommandContext::Types::END_GAME
-               @end_game_handler.handle(command, context)
-             else
-               raise ArgumentError, "未対応のコマンドタイプです: #{context.type}"
-             end
+    handler = build_handler_map[context.type]
+    raise ArgumentError, "未知のコマンドタイプです: #{context.type}" unless handler
 
-    if logger
-      error_obj =
-        if result.is_a?(Hash)
-          result[:error]
-        elsif result.respond_to?(:error)
-          result.error
-        end
-      case error_obj
-      when CommandErrors::InvalidCommand
-        logger.warn "[警告] コマンド失敗: #{error_obj.reason}"
-      when CommandErrors::VersionConflict
-        logger.warn '[警告] コマンド失敗: バージョン競合'
-      end
-    end
+    result = handler.handle(command, context)
+    log_error_if_needed(result.error)
     result
   end
 
   private
 
-  attr_reader :game_start_handler, :exchange_card_handler, :end_game_handler, :logger
+  attr_reader :event_bus, :logger
+
+  def log_error_if_needed(error)
+    case error
+    when CommandErrors::InvalidCommand
+      logger.warn "[警告] コマンド失敗: #{error.reason}"
+    when CommandErrors::VersionConflict
+      logger.warn '[警告] コマンド失敗: バージョン競合'
+    end
+  end
+
+  def build_handler_map
+    {
+      CommandContext::Types::GAME_START => CommandHandlers::GameStart.new(event_bus),
+      CommandContext::Types::EXCHANGE_CARD => CommandHandlers::ExchangeCard.new(event_bus),
+      CommandContext::Types::END_GAME => CommandHandlers::EndGame.new(event_bus)
+    }
+  end
 end

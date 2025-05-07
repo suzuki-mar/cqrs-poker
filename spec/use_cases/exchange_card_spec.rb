@@ -85,7 +85,7 @@ RSpec.describe 'カード交換をするユースケース' do
     context '手札に存在しないカードを交換した場合' do
       let(:card) { Faker::Hand.not_in_hand_card(read_model.refreshed_hand_set) }
       it '警告ログが正しく出力されること' do
-        result = subject
+        subject
         expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: 交換対象のカードが手札に存在しません/)
       end
     end
@@ -94,7 +94,7 @@ RSpec.describe 'カード交換をするユースケース' do
       let(:card) { discarded_card }
       it '2回目で警告ログが正しく出力されること' do
         command_bus.execute(Command.new, CommandContext.build_for_exchange(card)) # 1回目
-        result = command_bus.execute(Command.new, CommandContext.build_for_exchange(card)) # 2回目
+        command_bus.execute(Command.new, CommandContext.build_for_exchange(card)) # 2回目
         expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: 交換対象のカードが手札に存在しません/)
       end
     end
@@ -111,7 +111,7 @@ RSpec.describe 'カード交換をするユースケース' do
         end
       end
       it '警告ログが正しく出力されること' do
-        result = subject
+        subject
         expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: デッキの残り枚数が不足しています/)
       end
     end
@@ -134,14 +134,14 @@ RSpec.describe 'カード交換をするユースケース' do
       card = read_model.refreshed_hand_set.cards.first
       context = CommandContext.build_for_exchange(card)
       results = []
-      threads = 2.times.map do
+      threads = Array.new(2) do
         Thread.new do
           results << command_bus.execute(Command.new, context)
         end
       end
       threads.each(&:join)
-      expect(results.map { |r| r.event.class if r.success? }.compact).to include(SuccessEvents::CardExchanged)
-      expect(results.map { |r| r.error.class unless r.success? }.compact).to include(CommandErrors::VersionConflict)
+      expect(results.filter_map { |r| r.event.class if r.success? }).to include(SuccessEvents::CardExchanged)
+      expect(results.filter_map { |r| r.error.class unless r.success? }).to include(CommandErrors::VersionConflict)
       expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
     end
   end

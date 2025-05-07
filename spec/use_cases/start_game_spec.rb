@@ -104,16 +104,16 @@ RSpec.describe 'ゲーム開始' do
         command = Command.new
         context = CommandContext.build_for_game_start
         results = []
-        threads = 2.times.map do
+        threads = Array.new(2) do
           Thread.new do
             results << command_bus.execute(command, context)
           end
         end
         threads.each(&:join)
-        expect(results.map { |r| r.event.class if r.success? }.compact).to include(SuccessEvents::GameStarted)
-        expect(results.map do |r|
+        expect(results.filter_map { |r| r.event.class if r.success? }).to include(SuccessEvents::GameStarted)
+        expect(results.filter_map do |r|
           r.error.class unless r.success?
-        end.compact).to include(CommandErrors::VersionConflict)
+        end).to include(CommandErrors::VersionConflict)
         expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
       end
     end

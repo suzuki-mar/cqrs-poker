@@ -11,22 +11,14 @@ module Aggregates
     end
 
     def append(event, expected_current_version)
-      # 失敗イベント（InvalidCommand, VersionConflict）は保存しない
-      if event.is_a?(CommandErrors::InvalidCommand) || event.is_a?(CommandErrors::VersionConflict)
-        return ::CommandResult.new(event: nil, error: event)
-      end
-
-      failer = build_failer_if_conflict(event, expected_current_version)
-      return ::CommandResult.new(event: nil, error: failer) if failer
-
-      add_event_to_store!(event, expected_current_version)
-      ::CommandResult.new(event: event, error: nil)
+      add_event_to_store_may_raise_version_conflict!(event, expected_current_version)
+      CommandResult.new(event: event)
     rescue ActiveRecord::RecordInvalid => e
       if version_conflict_error?(e)
         error = build_version_conflict_event(event, expected_current_version)
-        return ::CommandResult.new(event: nil, error: error)
+        return CommandResult.new(error: error)
       end
-      raise 'build_validation_errorにはcommandが必要です。呼び出し元で渡してください。'
+      raise "イベントの保存に失敗しました: #{e.record.errors.full_messages.join(', ')}"
     end
 
     def load_all_events_in_order
@@ -40,9 +32,7 @@ module Aggregates
       return nil if store.nil?
 
       event = build_event_from_store(store)
-      unless event.is_a?(SuccessEvents::GameStarted) || event.is_a?(SuccessEvents::CardExchanged) || event.is_a?(SuccessEvents::GameEnded)
-        raise "[BUG] latest_event: eventが_Event型でない: \\#{event}"
-      end
+      raise "[BUG] latest_event: eventが_Event型でない: \\#{event}" unless valid_event_type?(event)
 
       event
     end
@@ -55,6 +45,12 @@ module Aggregates
 
     private
 
+    def valid_event_type?(event)
+      event.is_a?(SuccessEvents::GameStarted) ||
+        event.is_a?(SuccessEvents::CardExchanged) ||
+        event.is_a?(SuccessEvents::GameEnded)
+    end
+
     def build_event_from_store(store)
       maps = {
         SuccessEvents::GameStarted.event_type => SuccessEvents::GameStarted,
@@ -62,11 +58,12 @@ module Aggregates
         SuccessEvents::GameEnded.event_type => SuccessEvents::GameEnded
       }
 
-      event = maps[store.event_type].from_store(store)
-      raise "未知のイベントタイプです: \\#{store.event_type}" if event.nil?
-      unless event.is_a?(SuccessEvents::GameStarted) || event.is_a?(SuccessEvents::CardExchanged) || event.is_a?(SuccessEvents::GameEnded)
-        raise "[BUG] build_event_from_store: eventが_Event型でない: \\#{event}"
-      end
+      event_class = maps[store.event_type]
+      raise "未知のイベントタイプです: #{store.event_type}" if event_class.nil?
+
+      event = event_class.from_store(store)
+      raise "イベントの復元に失敗しました: #{store.event_type}" if event.nil?
+      raise "[BUG] build_event_from_store: eventが_Event型でない: #{event}" unless valid_event_type?(event)
 
       event
     end
@@ -78,7 +75,7 @@ module Aggregates
       CommandErrors::VersionConflict.new(stored_version, expected_current_version)
     end
 
-    def add_event_to_store!(event, expected_current_version)
+    def add_event_to_store_may_raise_version_conflict!(event, expected_current_version)
       version = event.is_a?(SuccessEvents::GameStarted) ? 1 : expected_current_version + 1
 
       Event.create!(
@@ -98,8 +95,13 @@ module Aggregates
       CommandErrors::VersionConflict.new(latest_version + 1, expected_current_version)
     end
 
-    def build_validation_error(err, command)
-      CommandErrors::InvalidCommand.new(command: command, reason: err.record.errors.full_messages.join(', '))
+    def build_validation_error(error, command)
+      raise ArgumentError, 'Command parameter is required for build_validation_error' if command.nil?
+
+      CommandErrors::InvalidCommand.new(
+        command: command,
+        reason: error.record.errors.full_messages.join(', ')
+      )
     end
   end
 end

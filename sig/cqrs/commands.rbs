@@ -8,18 +8,18 @@ end
 
 module CommandHandlers
   class GameStart
-    include _CommandHandler
+    include _CommandHandler    
+    
   end
 
   class ExchangeCard
-    include _CommandHandler
-    private
-    def rebuild_hand_from_event: (Array[_CardForCommand], _Event) -> Array[_CardForCommand]
-    def build_cards_from_exchanged_event: (Array[_CardForCommand], SuccessEvents::CardExchanged) -> Array[_CardForCommand]
+    include _CommandHandler    
   end
 
   class EndGame
     include _CommandHandler
+    private
+    
   end
 end
 
@@ -79,6 +79,7 @@ module Aggregates
     def latest_event: () -> _Event?
     def game_in_progress?: () -> bool
     def build_validation_error: (ActiveRecord::RecordInvalid, Command) -> CommandErrors::InvalidCommand
+    def valid_event_type?: (_Event | CommandErrors::InvalidCommand | CommandErrors::VersionConflict) -> bool
   end
 end
 
@@ -93,10 +94,21 @@ interface _CardForCommand
 end
 
 class CommandBus
-  def initialize: (EventBus) -> void
-  def execute: (Command, CommandContext) -> (_Event | CommandErrors::VersionConflict | CommandErrors::InvalidCommand)
+  def initialize: (EventBus, Logger) -> void
+  def execute: (Command, CommandContext) -> CommandResult
   private
-  attr_reader logger: Logger?
+  attr_reader event_bus: EventBus
+  attr_reader logger: Logger
+  def build_handler_map: () -> Hash[Symbol, _CommandHandler]
+  def log_error_if_needed: (CommandErrors::InvalidCommand | CommandErrors::VersionConflict | nil) -> void
+end
+
+class CommandResult
+  attr_reader event: untyped
+  attr_reader error: untyped
+  def initialize: (?event: untyped, ?error: untyped) -> void
+  def success?: () -> bool
+  def failure?: () -> bool
 end
 
 ###################
@@ -105,13 +117,12 @@ end
 module Aggregates
   class Store
     private
-    def build_event_from_store: (Event) -> (_Event | CommandErrors::InvalidCommand | CommandErrors::VersionConflict)
+    def build_event_from_store: (Event) -> _Event
     def build_failer_if_conflict: (_Event, Integer) -> CommandErrors::VersionConflict?
-    def add_event_to_store!: (_Event, Integer) -> Event
+    def add_event_to_store_may_raise_version_conflict!: (_Event, Integer) -> Event
     def version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
     def build_version_conflict_event: (_Event, Integer) -> CommandErrors::VersionConflict
   end
-
 
   class BoardAggregate
     private
@@ -119,6 +130,8 @@ module Aggregates
     attr_reader trash: Trash
     attr_reader game_started: bool
     attr_writer game_started: bool
+    def build_cards_from_event: (SuccessEvents::GameStarted) -> Array[_CardForCommand]
+    def apply_game_started_event_from_cards: (Array[_CardForCommand]) -> void
   end
 
   class Deck
@@ -135,24 +148,24 @@ end
 module CommandHandlers
   class GameStart    
     private
-    # GameStartのprivateメソッドがあればここに記述
+    def append_event_to_store!: (Command) -> CommandResult
   end
 
   class ExchangeCard    
     private
-    # ExchangeCardのprivateメソッドがあればここに記述
+    def rebuild_hand_from_event: (Array[_CardForCommand], _Event) -> Array[_CardForCommand]
+    def build_cards_from_exchanged_event: (Array[_CardForCommand], SuccessEvents::CardExchanged) -> Array[_CardForCommand]
+    def process_exchange: (Command, Aggregates::BoardAggregate, _CardForCommand) -> CommandResult
+    def build_error_result_if_needed: (Command, Aggregates::BoardAggregate, _CardForCommand) -> CommandResult?
+    def raise_if_invalid_context: (CommandContext) -> void
+    def append_event_to_store!: (Command, _CardForCommand) -> CommandResult
+    attr_reader board: Aggregates::BoardAggregate
   end
 
   class EndGame    
     private
-    # EndGameのprivateメソッドがあればここに記述
+    def validate_game_state: (Command) -> CommandResult?
+    def process_end_game: (Command) -> CommandResult
+    def append_event_to_store!: (Command) -> CommandResult
   end
-end
-
-class CommandResult
-  attr_reader event: untyped
-  attr_reader error: untyped
-  def initialize: (?event: untyped, ?error: untyped) -> void
-  def success?: () -> bool
-  def failure?: () -> bool
 end

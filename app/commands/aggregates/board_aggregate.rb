@@ -24,7 +24,8 @@ module Aggregates
     def apply(event)
       case event
       when SuccessEvents::GameStarted
-        apply_game_started_event(event)
+        cards = build_cards_from_event(event)
+        apply_game_started_event_from_cards(cards)
       when SuccessEvents::CardExchanged
         apply_card_exchanged_event(event)
       end
@@ -36,11 +37,22 @@ module Aggregates
 
     private
 
-    attr_reader :deck, :trash
+    attr_reader :deck, :trash, :game_started
 
-    def apply_game_started_event(event)
+    delegate :draw_initial_hand, :draw, to: :deck
+
+    def build_cards_from_event(event)
+      event.to_event_data[:initial_hand].map do |card|
+        if HandSet.card?(card)
+          card
+        else
+          HandSet.build_card_for_command(card)
+        end
+      end
+    end
+
+    def apply_game_started_event_from_cards(cards)
       @game_started = true
-      cards = event.to_event_data[:initial_hand].map { |c| HandSet.card?(c) ? c : HandSet.build_card_for_command(c) }
       cards.each do |card|
         deck.remove(card) if deck.has?(card)
       end
@@ -50,8 +62,6 @@ module Aggregates
       new_card = event.to_event_data[:new_card]
       deck.remove(new_card) if deck.has?(new_card)
     end
-
-    delegate :draw_initial_hand, :draw, to: :deck
 
     def discard_to_trash(card)
       trash.accept(card)
