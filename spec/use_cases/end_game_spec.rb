@@ -48,8 +48,8 @@ RSpec.describe 'ゲーム終了ユースケース' do
   context '異常系' do
     it 'ゲームが開始されていない状態で終了しようとするとInvalidCommandEventが発行されること' do
       result = command_bus.execute(Command.new, context)
-      expect(result[:error]).to be_a(CommandErrors::InvalidCommand)
-      expect(result[:error].reason).to eq('ゲームが進行中ではありません')
+      expect(result.error).to be_a(CommandErrors::InvalidCommand)
+      expect(result.error.reason).to eq('ゲームが進行中ではありません')
     end
 
     # xit 'バージョン競合が発生した場合、警告ログが出力されること' do

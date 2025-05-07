@@ -1,7 +1,7 @@
 interface _CommandHandler
   def initialize: (EventBus) -> void
-  def handle: (Command, CommandContext) -> ({ success: true, event: _Event } | { success: false, error: _CommandError })
-  def append_to_aggregate_store: (_Event, Command) -> ({ success: true, event: _Event } | { success: false, error: _CommandError })
+  def handle: (Command, CommandContext) -> CommandResult
+  def append_to_aggregate_store: (_Event, Command) -> CommandResult
   def event_bus: () -> EventBus
   def aggregate_store: () -> Aggregates::Store
 end
@@ -74,7 +74,7 @@ module Aggregates
 
   class Store
     def current_version: () -> Integer
-    def append: (_Event, Integer) -> ({ success: true, event: _Event } | { success: false, error: _CommandError })
+    def append: (_Event, Integer) -> CommandResult
     def load_all_events_in_order: () -> Array[_Event]
     def latest_event: () -> _Event?
     def game_in_progress?: () -> bool
@@ -147,4 +147,12 @@ module CommandHandlers
     private
     # EndGameのprivateメソッドがあればここに記述
   end
+end
+
+class CommandResult
+  attr_reader event: untyped
+  attr_reader error: untyped
+  def initialize: (?event: untyped, ?error: untyped) -> void
+  def success?: () -> bool
+  def failure?: () -> bool
 end

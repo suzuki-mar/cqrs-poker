@@ -13,18 +13,18 @@ module Aggregates
     def append(event, expected_current_version)
       # 失敗イベント（InvalidCommand, VersionConflict）は保存しない
       if event.is_a?(CommandErrors::InvalidCommand) || event.is_a?(CommandErrors::VersionConflict)
-        return { success: false, error: event }
+        return ::CommandResult.new(event: nil, error: event)
       end
 
       failer = build_failer_if_conflict(event, expected_current_version)
-      return { success: false, error: failer } if failer
+      return ::CommandResult.new(event: nil, error: failer) if failer
 
       add_event_to_store!(event, expected_current_version)
-      { success: true, event: event }
+      ::CommandResult.new(event: event, error: nil)
     rescue ActiveRecord::RecordInvalid => e
       if version_conflict_error?(e)
         error = build_version_conflict_event(event, expected_current_version)
-        return { success: false, error: error }
+        return ::CommandResult.new(event: nil, error: error)
       end
       raise 'build_validation_errorにはcommandが必要です。呼び出し元で渡してください。'
     end

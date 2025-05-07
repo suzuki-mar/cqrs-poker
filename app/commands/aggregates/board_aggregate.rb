@@ -36,6 +36,8 @@ module Aggregates
 
     private
 
+    attr_reader :deck, :trash
+
     def apply_game_started_event(event)
       @game_started = true
       cards = event.to_event_data[:initial_hand].map { |c| HandSet.card?(c) ? c : HandSet.build_card_for_command(c) }
@@ -49,14 +51,10 @@ module Aggregates
       deck.remove(new_card) if deck.has?(new_card)
     end
 
-    delegate :draw_initial_hand, to: :deck
-
-    delegate :draw, to: :deck
+    delegate :draw_initial_hand, :draw, to: :deck
 
     def discard_to_trash(card)
       trash.accept(card)
     end
-
-    attr_reader :deck, :trash
   end
 end

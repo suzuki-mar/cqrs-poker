@@ -32,8 +32,8 @@ RSpec.describe 'カード交換をするユースケース' do
         context = CommandContext.build_for_exchange(discarded_card)
         published_event = command_bus.execute(Command.new, context)
 
-        expect(published_event[:event]).to be_a(SuccessEvents::CardExchanged)
-        expect(published_event[:event].to_event_data[:discarded_card].to_s).to eq(discarded_card.to_s)
+        expect(published_event.event).to be_a(SuccessEvents::CardExchanged)
+        expect(published_event.event.to_event_data[:discarded_card].to_s).to eq(discarded_card.to_s)
 
         stored_event = Aggregates::Store.new.latest_event
         expect(stored_event.event_type).to eq(SuccessEvents::CardExchanged.event_type)
@@ -121,8 +121,8 @@ RSpec.describe 'カード交換をするユースケース' do
 
       result = command_bus.execute(Command.new, CommandContext.build_for_exchange(discarded_card))
 
-      expect(result[:error]).to be_a(CommandErrors::InvalidCommand)
-      expect(result[:error].reason).to eq('ゲームが進行中ではありません')
+      expect(result.error).to be_a(CommandErrors::InvalidCommand)
+      expect(result.error.reason).to eq('ゲームが進行中ではありません')
     end
   end
 
@@ -140,8 +140,8 @@ RSpec.describe 'カード交換をするユースケース' do
         end
       end
       threads.each(&:join)
-      expect(results.map { |r| r[:event].class if r[:success] }.compact).to include(SuccessEvents::CardExchanged)
-      expect(results.map { |r| r[:error].class unless r[:success] }.compact).to include(CommandErrors::VersionConflict)
+      expect(results.map { |r| r.event.class if r.success? }.compact).to include(SuccessEvents::CardExchanged)
+      expect(results.map { |r| r.error.class unless r.success? }.compact).to include(CommandErrors::VersionConflict)
       expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
     end
   end

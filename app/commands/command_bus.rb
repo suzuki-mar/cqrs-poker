@@ -18,10 +18,16 @@ class CommandBus
                raise ArgumentError, "未対応のコマンドタイプです: #{context.type}"
              end
 
-    if logger && result.is_a?(Hash) && result[:error]
-      case result[:error]
+    if logger
+      error_obj =
+        if result.is_a?(Hash)
+          result[:error]
+        elsif result.respond_to?(:error)
+          result.error
+        end
+      case error_obj
       when CommandErrors::InvalidCommand
-        logger.warn "[警告] コマンド失敗: #{result[:error].reason}"
+        logger.warn "[警告] コマンド失敗: #{error_obj.reason}"
       when CommandErrors::VersionConflict
         logger.warn '[警告] コマンド失敗: バージョン競合'
       end

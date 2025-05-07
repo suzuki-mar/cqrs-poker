@@ -68,7 +68,7 @@ RSpec.describe 'ゲーム開始' do
         first_event = Aggregates::Store.new.latest_event
         # 2回目のゲーム開始
         result = subject
-        expect(result[:error]).to be_a(CommandErrors::VersionConflict)
+        expect(result.error).to be_a(CommandErrors::VersionConflict)
 
         event_store_holder = Aggregates::Store.new
         last_event = event_store_holder.latest_event
@@ -110,9 +110,9 @@ RSpec.describe 'ゲーム開始' do
           end
         end
         threads.each(&:join)
-        expect(results.map { |r| r[:event].class if r[:success] }.compact).to include(SuccessEvents::GameStarted)
+        expect(results.map { |r| r.event.class if r.success? }.compact).to include(SuccessEvents::GameStarted)
         expect(results.map do |r|
-          r[:error].class unless r[:success]
+          r.error.class unless r.success?
         end.compact).to include(CommandErrors::VersionConflict)
         expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
       end
