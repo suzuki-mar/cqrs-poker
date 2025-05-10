@@ -19,6 +19,11 @@ module Query
     attr_accessor rank: Integer
     attr_accessor ended_at: Time
   end
+
+  class Trash < ApplicationRecord
+    attr_accessor discarded_cards: Array[String]
+    attr_accessor current_turn: Integer
+  end
 end
 
 class Event < ApplicationRecord

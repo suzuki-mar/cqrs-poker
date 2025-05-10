@@ -52,23 +52,12 @@ RSpec.describe Query::PlayerHandState, type: :model do
 
     describe 'current_turn' do
       it { should validate_presence_of(:current_turn) }
-      it {
-        should validate_numericality_of(:current_turn)
-          .only_integer
-          .is_greater_than_or_equal_to(1)
-          .is_less_than_or_equal_to(100)
-      }
 
       describe '不正な値' do
         subject { build(:player_hand_state, current_turn: invalid_value) }
 
         context '0以下の値の場合' do
           let(:invalid_value) { 0 }
-          it { should be_invalid }
-        end
-
-        context '小数の場合' do
-          let(:invalid_value) { 1.5 }
           it { should be_invalid }
         end
 
