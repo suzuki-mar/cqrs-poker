@@ -51,9 +51,5 @@ RSpec.describe 'ゲーム終了ユースケース' do
       expect(result.error).to be_a(CommandErrors::InvalidCommand)
       expect(result.error.reason).to eq('ゲームが進行中ではありません')
     end
-
-    # xit 'バージョン競合が発生した場合、警告ログが出力されること' do
-    #   # テスト未実装
-    # end
   end
 end

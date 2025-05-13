@@ -97,7 +97,5 @@ RSpec.describe 'ゲーム開始' do
         expect(Query::PlayerHandState.find_current_session.attributes).to eq(original_player_game_state)
       end
     end
-
-    # バージョン競合が発生した場合は version_conflict_specでテストをしている
   end
 end
