@@ -2,6 +2,22 @@
 
 class HandSet
   class RankEvaluater
+    NUMBER_TO_VALUE = {
+      'A' => 14,
+      'K' => 13,
+      'Q' => 12,
+      'J' => 11,
+      '10' => 10,
+      '9' => 9,
+      '8' => 8,
+      '7' => 7,
+      '6' => 6,
+      '5' => 5,
+      '4' => 4,
+      '3' => 3,
+      '2' => 2
+    }.freeze
+
     def self.call(cards)
       new(cards).call
     end
@@ -23,7 +39,8 @@ class HandSet
     attr_reader :cards
 
     def royal_flush?
-      flush? && ranks.sort == %w[10 A J K Q]
+      flush? &&
+        ranks.map { |n| NUMBER_TO_VALUE[n] }.sort == [10, 11, 12, 13, 14]
     end
 
     def straight_flush?
@@ -39,8 +56,11 @@ class HandSet
     end
 
     def straight?
-      sorted_ranks = ranks.map(&:to_i).sort
-      sorted_ranks.each_cons(2).all? { |a, b| b - a == 1 }
+      values = ranks.map { |n| NUMBER_TO_VALUE[n] }.sort
+      is_wheel = values == [2, 3, 4, 5, 14]
+      return true if is_wheel
+
+      values.each_cons(2).all? { |a, b| b - a == 1 }
     end
 
     delegate :three_of_a_kind?, to: :rank_combinations
@@ -83,7 +103,7 @@ class HandSet
     end
 
     def ranks
-      cards.map(&:rank)
+      cards.map(&:number)
     end
 
     def valid_hand?(cards)

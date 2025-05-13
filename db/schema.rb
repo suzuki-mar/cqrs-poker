@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_12_233606) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_13_090042) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,7 +51,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_12_233606) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "trashes", force: :cascade do |t|
+  create_table "trash_states", force: :cascade do |t|
     t.jsonb "discarded_cards", null: false
     t.integer "current_turn", null: false
     t.datetime "created_at", null: false

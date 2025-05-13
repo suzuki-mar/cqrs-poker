@@ -43,9 +43,9 @@ module Aggregates
     end
 
     def generate_initial_cards
-      suit_rank_pairs = HandSet::Card::VALID_SUITS.product(HandSet::Card::VALID_RANKS)
-      suit_rank_pairs.map do |suit, rank|
-        HandSet.build_card_for_command("#{suit}#{rank}")
+      suit_number_pairs = HandSet::Card::VALID_SUITS.product(HandSet::Card::VALID_NUMBERS)
+      suit_number_pairs.map do |suit, number|
+        HandSet.build_card_for_command("#{suit}#{number}")
       end
     end
   end

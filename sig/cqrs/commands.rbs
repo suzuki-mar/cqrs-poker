@@ -126,12 +126,13 @@ end
 module Aggregates
   class Store
     private
-    def build_event_from_store: (Event) -> _Event
+    def build_event_from_event: (Event event_record) -> _Event
     def build_failer_if_conflict: (_Event, Integer) -> CommandErrors::VersionConflict?
     def add_event_to_store_may_raise_version_conflict!: (_Event, Integer) -> Event
     def version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
     def build_version_conflict_event: (_Event, Integer) -> CommandErrors::VersionConflict
-    def create_event!: (_Event) -> Event
+    def create_event!: (_Event) -> _Event
+    def raise_if_invalid_event_record: (Event event_record, Hash[String, untyped] maps) -> void
   end
 
   class BoardAggregate

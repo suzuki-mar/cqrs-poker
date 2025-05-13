@@ -34,4 +34,10 @@ class GameEndedEvent
 
     @event_id ||= value
   end
+
+  def self.from_event_data(_event_data, id)
+    event = new
+    event.event_id = EventId.new(id)
+    event
+  end
 end

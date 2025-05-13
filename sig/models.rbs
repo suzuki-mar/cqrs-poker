@@ -28,10 +28,11 @@ module Query
     attr_accessor ended_at: Time
   end
 
-  class Trash < ApplicationRecord
+  class TrashState < ApplicationRecord
     include _HasLastEventId
     attr_accessor discarded_cards: Array[String]
     attr_accessor current_turn: Integer
+    def self.current_game: () -> TrashState?
   end
 
   class ProjectionVersion < ApplicationRecord
@@ -100,10 +101,11 @@ class HandSet::Card
   include _CardForCommand
   include _CardForQuery
   VALID_SUITS: ::Array[String]
-  VALID_RANKS: ::Array[String]
+  VALID_NUMBERS: ::Array[String]
 
   def self.generate_available: (?Array[HandSet::Card]) -> Array[HandSet::Card]
   def initialize: (String) -> void
+  def same_number?: (_CardForQuery) -> bool
 end
 
 class HandSet::Evaluate

@@ -12,6 +12,7 @@ end
 interface _EventClass
   def from_store: (Event) -> _Event
   def event_type: () -> String
+  def from_event_data: (Hash[Symbol, untyped], Integer) -> _Event
 end
 
 class GameStartedEvent

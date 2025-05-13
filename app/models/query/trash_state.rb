@@ -1,14 +1,14 @@
 module Query
-  class Trash < ApplicationRecord
+  class TrashState < ApplicationRecord
     include DefineCurrentTurnColumn
     include DefineLastEventIdColumn
 
     validates :discarded_cards, presence: true
     validate :validate_discarded_cards_format
 
-    scope :latest, -> { order(current_turn: :desc).limit(1) }
-
-    attr_accessor :last_event_id
+    def self.current_game
+      first
+    end
 
     private
 

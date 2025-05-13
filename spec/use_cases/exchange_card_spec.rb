@@ -63,6 +63,19 @@ RSpec.describe 'カード交換をするユースケース' do
                                                                                                   discarded_card2])
       end
 
+      it '捨て札が正しく更新されていること' do
+        subject
+
+        trash_state = ReadModels::TrashState.load
+        expect(trash_state.number?(discarded_card)).to be true
+
+        expected_turn = Query::PlayerHandState.find_current_session.current_turn
+        expected_event_id = Aggregates::Store.new.latest_event.event_id
+
+        expect(trash_state.current_turn).to eq(expected_turn)
+        expect(trash_state.last_event_id).to eq(expected_event_id)
+      end
+
       it 'カード交換時にinfoログが出力されること' do
         subject
 
@@ -105,7 +118,7 @@ RSpec.describe 'カード交換をするユースケース' do
       before do
         # デッキが空の状態を事前に作るためのセットアップ
         # これにより、「デッキが空のときに交換しようとした場合のエラーやログ出力をテストする
-        deck_size = HandSet::Card::VALID_SUITS.size * HandSet::Card::VALID_RANKS.size
+        deck_size = HandSet::Card::VALID_SUITS.size * HandSet::Card::VALID_NUMBERS.size
         hand_size = GameSetting::MAX_HAND_SIZE
         exchange_count = deck_size - hand_size
         exchange_count.times do

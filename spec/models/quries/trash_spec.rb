@@ -1,9 +1,9 @@
 require 'rails_helper'
 
-RSpec.describe Query::Trash, type: :model do
+RSpec.describe Query::TrashState, type: :model do
   describe 'バリデーション' do
     describe 'discarded_cards' do
-      subject { build_stubbed(:trash, discarded_cards: discarded_cards_value, last_event_id: 1) }
+      subject { build_stubbed(:trash_state, discarded_cards: discarded_cards_value, last_event_id: 1) }
 
       context '正常な値の場合' do
         let(:discarded_cards_value) { Array.new(2) { Faker::Card.valid_card.to_s } }
@@ -35,7 +35,7 @@ RSpec.describe Query::Trash, type: :model do
       it { should validate_presence_of(:current_turn) }
 
       describe '不正な値' do
-        subject { build(:trash, current_turn: invalid_value) }
+        subject { build(:trash_state, current_turn: invalid_value) }
 
         context '0以下の値の場合' do
           let(:invalid_value) { 0 }
@@ -52,7 +52,7 @@ RSpec.describe Query::Trash, type: :model do
 
   describe 'last_event_id' do
     it 'last_event_idを設定・取得できること' do
-      trash = build(:trash, last_event_id: 99)
+      trash = build(:trash_state, last_event_id: 99)
       expect(trash.last_event_id).to eq 99
     end
   end

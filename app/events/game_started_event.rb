@@ -35,6 +35,23 @@ class GameStartedEvent
     new(hand_set)
   end
 
+  def self.from_event(event_record)
+    event_data = JSON.parse(event_record.event_data, symbolize_names: true)
+    initial_hand = event_data[:initial_hand]
+    event = new(initial_hand)
+    event.event_id = EventId.new(event_record.id) if event_record.respond_to?(:id) && event_record.id
+    event
+  end
+
+  def self.from_event_data(event_data, id)
+    hand_data = event_data[:initial_hand]
+    hand_cards = hand_data.map { |c| HandSet.build_card_for_query(c) }
+    hand_set = HandSet.build(hand_cards)
+    event = new(hand_set)
+    event.event_id = EventId.new(id)
+    event
+  end
+
   def event_id
     @event_id || (raise 'event_idが未設定です')
   end

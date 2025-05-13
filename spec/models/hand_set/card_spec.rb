@@ -7,12 +7,12 @@ RSpec.describe HandSet::Card do
     context '正常な値の場合' do
       context 'スートとランクが正しい場合' do
         context '数字の場合' do
-          let(:card) { Faker::Card.card_with_rank(Faker::Card.number_rank) }
+          let(:card) { Faker::Card.card_with_number(Faker::Card.number_rank) }
           it { expect(card.valid?).to be true }
         end
 
         context '絵札の場合' do
-          let(:card) { Faker::Card.card_with_rank(Faker::Card.face_rank) }
+          let(:card) { Faker::Card.card_with_number(Faker::Card.face_number) }
           it { expect(card.valid?).to be true }
         end
       end

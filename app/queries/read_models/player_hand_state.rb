@@ -55,6 +55,10 @@ module ReadModels
       player_hand_state.save!
     end
 
+    delegate :current_turn, to: :player_hand_state
+
+    delegate :last_event_id, to: :player_hand_state
+
     private
 
     attr_reader :player_hand_state

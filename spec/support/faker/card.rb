@@ -6,16 +6,16 @@ module Faker
       ::HandSet::Card::VALID_SUITS.sample
     end
 
-    def rank
-      ::HandSet::Card::VALID_RANKS.sample
+    def number
+      ::HandSet::Card::VALID_NUMBERS.sample
     end
 
     def number_rank
-      ::HandSet::Card::VALID_RANKS.grep(/\d+/).sample
+      ::HandSet::Card::VALID_NUMBERS.grep(/\d+/).sample
     end
 
-    def face_rank
-      (::HandSet::Card::VALID_RANKS - ::HandSet::Card::VALID_RANKS.grep(/\d+/)).sample
+    def face_number
+      (::HandSet::Card::VALID_NUMBERS - ::HandSet::Card::VALID_NUMBERS.grep(/\d+/)).sample
     end
 
     def valid_card
@@ -27,15 +27,15 @@ module Faker
     end
 
     def card_with_suit(suit_value)
-      HandSet.build_card_for_command("#{suit_value}#{rank}")
+      HandSet.build_card_for_command("#{suit_value}#{number}")
     end
 
-    def card_with_rank(rank_value)
-      HandSet.build_card_for_command("#{suit}#{rank_value}")
+    def card_with_number(number_value)
+      HandSet.build_card_for_command("#{suit}#{number_value}")
     end
 
     def card_str
-      "#{suit}#{rank}"
+      "#{suit}#{number}"
     end
 
     private_class_method :card_str

@@ -6,8 +6,6 @@ class Projection
   include _EventSubscriber
 
   def initialize: () -> void
-  private
-  def apply_to_player_hand_state: (ReadModels::PlayerHandState player_hand_state, _Event event) -> void
 end
 
 module ReadModels
@@ -31,6 +29,8 @@ module ReadModels
     include _HasLastEventId
     include _EventSubscriber
 
+    attr_reader player_hand_state: Query::PlayerHandState
+
     def initialize: () -> void
     def start_new_game!: (GameStartedEvent) -> void
     def exchange_card!: (CardExchangedEvent) -> void
@@ -38,12 +38,34 @@ module ReadModels
     def current_state_for_display: () -> { status: String, hand: String, current_rank: String, rank_name: String, turn: Integer }
     def hand_set: () -> HandSet
     def refreshed_hand_set: () -> HandSet    
+    def current_turn: () -> Integer
+
+    private
+    def format_hand: () -> String
+    def build_exchanged_hand_set: (_Card discarded_card, _Card new_card) -> HandSet
+  end
+
+  class TrashState
+    def self.load: () -> ReadModels::TrashState
+    def has_number?: (_CardForQuery card) -> bool
+    def accept!: (_CardForQuery card, Integer current_turn, Integer last_event_id) -> void
+    def empty?: () -> bool
+    def initialize: (Query::TrashState?) -> void
+    attr_reader trash_state: Query::TrashState?
+  end
+
+  class TrashList
+    def self.load: () -> ReadModels::TrashList
+    def has_rank: (String) -> bool
+    def initialize: (Array[Query::TrashState]) -> void
+    def accept!: (untyped card, Integer current_turn, Integer last_event_id) -> void
   end
 
   class Histories
     def self.load: (?limit: Integer) -> Array[Query::History]
     def self.add: (HandSet hand_set, Integer event_id) -> Query::History
   end
+  
 end
 
 interface _CardForQuery
@@ -55,10 +77,10 @@ class EventPublisher
   def subscribe: (Projection | LogEventListener) -> void
   def broadcast: (String, _Event) -> void
   attr_reader published_events: Array[_Event] 
-  private
-  attr_reader projection: Projection
-  attr_reader event_listener: LogEventListener
-end 
+end
+
+
+
 
 ####################
 # privateメソッド定義
@@ -68,6 +90,10 @@ class LogEventListener
   include _EventSubscriber
 
   def initialize: (Logger) -> void
+end
+
+# privateメソッドだけを定義する
+class LogEventListener
   private
   def broadcast: (String, _Event) -> void
   def format_event_message: ((String | nil), ?String) -> String
@@ -77,20 +103,33 @@ class LogEventListener
   def build_warning_message_if_needed: (_Event event) -> String?
 end 
 
-module ReadModels
-  class PlayerHandState
-    private
-    attr_reader player_hand_state: Query::PlayerHandState
-    def format_hand: () -> String
-    def build_exchanged_hand_set: (_Card discarded_card, _Card new_card) -> HandSet
-  end
 
-  class Histories
-    private
-    # privateメソッドはここに定義する
-  end
+class Projection
+  private
+  def apply_to_player_hand_state: (ReadModels::PlayerHandState player_hand_state, _Event event) -> void
+  def accept_to_trash_state_if_exchanged: (_Event event, ReadModels::PlayerHandState player_hand_state) -> void
 end
 
+class Histories
+  private
+  # privateメソッドはここに定義する
+end
 
+class EventPublisher
+  private
+  attr_reader projection: Projection
+  attr_reader event_listener: LogEventListener
+end
 
+class TrashList
+  private
+  attr_reader trashes: Array[Query::TrashState]
+end
+
+class TrashState
+  private
+  attr_reader trash_state: Query::TrashState
+  def initialize: (Query::TrashState) -> void
+  def empty?: () -> bool
+end
 
