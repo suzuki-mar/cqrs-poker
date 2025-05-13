@@ -4,5 +4,6 @@ FactoryBot.define do
     current_rank { HandSet::Rank::HIGH_CARD }
     current_turn { 1 }
     status { :initial }
+    last_event_id { 1 }
   end
 end

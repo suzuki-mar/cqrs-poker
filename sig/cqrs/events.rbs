@@ -1,6 +1,8 @@
 interface _Event
   def event_type: () -> String
-  def to_event_data: () -> Hash[Symbol, untyped]
+  def event_id: () -> EventId
+  def event_id=: (EventId) -> void
+  def to_event_data: () -> Hash[Symbol, untyped] # event_id: EventId を必ず含むこと
   def to_serialized_hash: () -> Hash[Symbol, untyped]
   def class: () -> Class
   def is_a?: (Class) -> bool

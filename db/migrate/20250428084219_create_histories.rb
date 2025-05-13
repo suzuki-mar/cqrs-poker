@@ -4,6 +4,7 @@ class CreateHistories < ActiveRecord::Migration[8.0]
       t.jsonb :hand_set
       t.integer :rank
       t.datetime :ended_at
+      t.integer :last_event_id, null: false
 
       t.timestamps
     end

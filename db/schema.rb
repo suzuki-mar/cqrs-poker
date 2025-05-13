@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_10_014106) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_12_233606) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -30,6 +30,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_10_014106) do
     t.datetime "ended_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "last_event_id", null: false
     t.index ["ended_at"], name: "index_histories_on_ended_at"
   end
 
@@ -40,6 +41,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_10_014106) do
     t.integer "status", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "last_event_id", null: false
+  end
+
+  create_table "projection_versions", force: :cascade do |t|
+    t.integer "event_id", null: false
+    t.string "projection_name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "trashes", force: :cascade do |t|
@@ -47,5 +56,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_10_014106) do
     t.integer "current_turn", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "last_event_id", null: false
   end
 end

@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class GameEndedEvent
+  def initialize
+    @event_id = nil
+  end
+
   def self.event_type
     'game_ended'
   end
@@ -16,7 +20,18 @@ class GameEndedEvent
     {}
   end
 
-  def self.from_store(_store)
+  def self.from_store(store)
+    JSON.parse(store.event_data, symbolize_names: true)
     new
+  end
+
+  def event_id
+    @event_id || (raise 'event_idが未設定です')
+  end
+
+  def event_id=(value)
+    raise 'event_idは一度しか設定できません' if !@event_id.nil? && @event_id != value
+
+    @event_id ||= value
   end
 end

@@ -10,7 +10,6 @@ class EventBus
     return if event.nil?
 
     Rails.logger.info "Event published: #{event.class.name}"
-    @event_store_holder.append_event(event)
     @event_publisher.broadcast(:handle_event, event)
   end
 

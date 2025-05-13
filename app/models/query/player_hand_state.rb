@@ -1,6 +1,7 @@
 module Query
   class PlayerHandState < ApplicationRecord
     include DefineCurrentTurnColumn
+    include DefineLastEventIdColumn
 
     enum :status, { initial: 0, started: 1, ended: 2 }
 

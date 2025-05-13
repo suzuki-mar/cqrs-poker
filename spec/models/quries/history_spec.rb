@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Query::History, type: :model do
   describe 'バリデーション' do
-    subject { described_class.new(hand_set: hand_set, rank: rank, ended_at: ended_at) }
+    subject { described_class.new(hand_set: hand_set, rank: rank, ended_at: ended_at, last_event_id: 1) }
 
     let(:hand_set) { ['♠A', '♥K', '♦Q', '♣J', '♠10'] }
     let(:rank) { 1 }
@@ -34,6 +34,13 @@ RSpec.describe Query::History, type: :model do
         subject.valid?
         expect(subject.errors[:ended_at]).to include('は未来の日時にできません')
       end
+    end
+  end
+
+  describe 'last_event_id' do
+    it 'last_event_idを設定・取得できること' do
+      history = build(:history, last_event_id: 7)
+      expect(history.last_event_id).to eq 7
     end
   end
 end

@@ -8,7 +8,7 @@ class Projection
 
     apply_to_player_hand_state(player_hand_state, event)
 
-    ReadModels::Histories.add(player_hand_state.hand_set) if event.is_a?(GameEndedEvent)
+    ReadModels::Histories.add(player_hand_state.hand_set, event.event_id.value) if event.is_a?(GameEndedEvent)
 
     player_hand_state
   end

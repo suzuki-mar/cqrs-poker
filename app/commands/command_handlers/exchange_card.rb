@@ -8,7 +8,6 @@ module CommandHandlers
     end
 
     # すでにメソッド内が整理されているため、メソッドを分割するほうが見通しがわるくなるのでignoreにしている
-    # rubocop:disable Metrics/MethodLength
     def handle(command, context)
       @command = command
       @discarded_card = context.discarded_card
@@ -19,18 +18,12 @@ module CommandHandlers
       error = build_game_state_error_result_if_needed || build_board_error_result_if_needed
       return error unless error.nil?
 
-      # バージョン競合チェックを実行直前に行う
-      new_card = command.execute_for_exchange_card(@board)
-      event = CardExchangedEvent.new(@discarded_card, new_card)
-
-      # バージョン競合チェックと保存を一連の操作として実行
-      result = aggregate_store.append_event(event)
+      result = append_event_to_store!
       return result if result.error
 
       event_bus.publish(result.event)
       result
     end
-    # rubocop:enable Metrics/MethodLength
 
     private
 

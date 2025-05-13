@@ -11,7 +11,26 @@ class Projection
 end
 
 module ReadModels
+  class ProjectionVersions
+    class VersionInfo < ::Struct[untyped]
+      attr_reader projection_name: String
+      attr_reader last_event_id: EventId
+    end
+
+    def self.load: () -> Array[VersionInfo]
+    def self.update_all: (EventId) -> void
+    def self.update_by_name: (String, EventId) -> void
+  end
+  
+  interface _HasLastEventId
+    def last_event_id: () -> Integer
+    def last_event_id=: (Integer) -> Integer
+  end
+
   class PlayerHandState
+    include _HasLastEventId
+    include _EventSubscriber
+
     def initialize: () -> void
     def start_new_game!: (GameStartedEvent) -> void
     def exchange_card!: (CardExchangedEvent) -> void
@@ -23,7 +42,7 @@ module ReadModels
 
   class Histories
     def self.load: (?limit: Integer) -> Array[Query::History]
-    def self.add: (HandSet hand_set) -> Query::History
+    def self.add: (HandSet hand_set, Integer event_id) -> Query::History
   end
 end
 
@@ -71,6 +90,7 @@ module ReadModels
     # privateメソッドはここに定義する
   end
 end
+
 
 
 

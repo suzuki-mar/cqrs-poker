@@ -3,6 +3,7 @@
 class GameStartedEvent
   def initialize(initial_hand)
     @initial_hand = initial_hand
+    @event_id = nil
   end
 
   def self.event_type
@@ -32,6 +33,16 @@ class GameStartedEvent
     hand_cards = hand_data.map { |c| HandSet.build_card_for_query(c) }
     hand_set = HandSet.build(hand_cards)
     new(hand_set)
+  end
+
+  def event_id
+    @event_id || (raise 'event_idが未設定です')
+  end
+
+  def event_id=(value)
+    raise 'event_idは一度しか設定できません' if !@event_id.nil? && @event_id != value
+
+    @event_id ||= value
   end
 
   private

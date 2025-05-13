@@ -3,8 +3,15 @@ class ApplicationRecord < ActiveRecord::Base
   extend _ActiveRecordClass
 end
 
+interface _HasLastEventId
+  def last_event_id: () -> Integer
+  def last_event_id=: (Integer) -> Integer
+  def to_event_id: () -> EventId
+end
+
 module Query
   class PlayerHandState < ApplicationRecord
+    include _HasLastEventId
     MAX_HAND_SIZE: Integer
     attr_accessor status: String
     attr_accessor current_rank: String
@@ -15,14 +22,21 @@ module Query
   end
 
   class History < ApplicationRecord
+    include _HasLastEventId
     attr_accessor hand_set: Array[String]
     attr_accessor rank: Integer
     attr_accessor ended_at: Time
   end
 
   class Trash < ApplicationRecord
+    include _HasLastEventId
     attr_accessor discarded_cards: Array[String]
     attr_accessor current_turn: Integer
+  end
+
+  class ProjectionVersion < ApplicationRecord
+    attr_accessor event_id: Integer
+    attr_accessor projection_name: String
   end
 end
 
@@ -31,6 +45,12 @@ class Event < ApplicationRecord
   attr_reader event_data: String
   attr_reader occurred_at: Time
   attr_reader version: Integer
+  def to_event_id: () -> EventId
+end
+
+class EventId
+  attr_reader value: Integer
+  def initialize: (Integer) -> void
 end
 
 class GameSetting
@@ -134,4 +154,4 @@ class HandSet::Evaluate
     def four_of_a_kind?: () -> bool
     def full_house?: () -> bool
   end
-end 
+end

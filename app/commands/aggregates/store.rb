@@ -40,12 +40,14 @@ module Aggregates
     def create_event!(event)
       version = event.is_a?(GameStartedEvent) ? 1 : current_version + 1
 
-      Event.create!(
+      event_record = Event.create!(
         event_type: event.event_type,
         event_data: event.to_serialized_hash.to_json,
         occurred_at: Time.current,
         version: version
       )
+      event.event_id = EventId.new(event_record.id)
+      event_record
     end
 
     def current_version

@@ -5,11 +5,14 @@ module ReadModels
     end
 
     def start_new_game!(event)
-      @player_hand_state = Query::PlayerHandState.new
-      player_hand_state.status = 'started'
-      player_hand_state.current_rank = event.to_event_data[:evaluate]
-      player_hand_state.current_turn = 1
-      player_hand_state.hand_set = event.to_event_data[:initial_hand].map(&:to_s)
+      @player_hand_state = Query::PlayerHandState.new(
+        status: 'started',
+        current_rank: event.to_event_data[:evaluate],
+        current_turn: 1,
+        hand_set: event.to_event_data[:initial_hand].map(&:to_s),
+        last_event_id: event.event_id.value
+      )
+
       player_hand_state.save!
     end
 
