@@ -77,3 +77,5 @@ group :development do
   gem 'rubocop-performance', require: false
   gem 'rubocop-rails', require: false
 end
+
+gem 'faker', '~> 3.5'

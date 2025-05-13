@@ -2,7 +2,7 @@ require 'rails_helper'
 
 describe Aggregates::Store do
   describe '#append_event' do
-    let(:initial_hand) { Faker.high_card_hand }
+    let(:initial_hand) { CustomFaker.high_card_hand }
     let(:event) { GameStartedEvent.new(initial_hand) }
     let(:aggregate_store) { described_class.new }
 
@@ -29,7 +29,7 @@ describe Aggregates::Store do
     let(:aggregate_store) { described_class.new }
 
     it 'versionが1から始まり、連番で保存されること' do
-      event1 = GameStartedEvent.new(Faker.high_card_hand)
+      event1 = GameStartedEvent.new(CustomFaker.high_card_hand)
       event2 = CardExchangedEvent.new(HandSet::Card.new('♠A'), HandSet::Card.new('♣2'))
       aggregate_store.append_event(event1)
       aggregate_store.append_event(event2)
@@ -38,7 +38,7 @@ describe Aggregates::Store do
     end
 
     it 'version競合時はCommandErrors::VersionConflictを返すこと' do
-      event1 = GameStartedEvent.new(Faker.high_card_hand)
+      event1 = GameStartedEvent.new(CustomFaker.high_card_hand)
       aggregate_store.append_event(event1)
       # 同じバージョンで再度append
       result = aggregate_store.append_event(event1)
@@ -49,7 +49,7 @@ describe Aggregates::Store do
 
     it '並行保存時のversion競合（簡易シミュレーション）' do
       aggregate_store = Aggregates::Store.new
-      event1 = GameStartedEvent.new(Faker.high_card_hand)
+      event1 = GameStartedEvent.new(CustomFaker.high_card_hand)
       aggregate_store.append_event(event1)
       # v2を2回同時に保存しようとする
       result = aggregate_store.append_event(event1)

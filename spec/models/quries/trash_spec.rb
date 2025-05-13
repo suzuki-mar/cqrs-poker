@@ -6,7 +6,7 @@ RSpec.describe Query::TrashState, type: :model do
       subject { build_stubbed(:trash_state, discarded_cards: discarded_cards_value, last_event_id: 1) }
 
       context '正常な値の場合' do
-        let(:discarded_cards_value) { Array.new(2) { Faker::Card.valid_card.to_s } }
+        let(:discarded_cards_value) { Array.new(2) { CustomFaker.valid_card.to_s } }
         it { should be_valid }
       end
 
@@ -26,7 +26,7 @@ RSpec.describe Query::TrashState, type: :model do
       end
 
       context '配列内にnilを含む場合' do
-        let(:discarded_cards_value) { [nil, Faker::Card.valid_card.to_s] }
+        let(:discarded_cards_value) { [nil, CustomFaker.valid_card.to_s] }
         it { should be_valid }
       end
     end

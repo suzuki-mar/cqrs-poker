@@ -6,17 +6,17 @@ RSpec.describe Query::PlayerHandState, type: :model do
       subject { build_stubbed(:player_hand_state, hand_set: hand_set_value, last_event_id: 1) }
 
       context '正常な値の場合' do
-        let(:hand_set_value) { Array.new(5) { Faker::Card.valid_card.to_s } }
+        let(:hand_set_value) { Array.new(5) { CustomFaker.valid_card.to_s } }
         it { should be_valid }
       end
 
       context '5枚未満の場合' do
-        let(:hand_set_value) { Array.new(4) { Faker::Card.valid_card.to_s } }
+        let(:hand_set_value) { Array.new(4) { CustomFaker.valid_card.to_s } }
         it { should be_invalid }
       end
 
       context '5枚より多い場合' do
-        let(:hand_set_value) { Array.new(6) { Faker::Card.valid_card.to_s } }
+        let(:hand_set_value) { Array.new(6) { CustomFaker.valid_card.to_s } }
         it { should be_invalid }
       end
 
@@ -26,7 +26,7 @@ RSpec.describe Query::PlayerHandState, type: :model do
       end
 
       context 'nilを含む場合' do
-        let(:hand_set_value) { [nil, *Array.new(4) { Faker::Card.valid_card.to_s }] }
+        let(:hand_set_value) { [nil, *Array.new(4) { CustomFaker.valid_card.to_s }] }
         it { should be_invalid }
       end
 

@@ -1,4 +1,4 @@
-module Faker
+module CustomFaker
   module Card
     module_function
 

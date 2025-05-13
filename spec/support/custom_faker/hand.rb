@@ -1,5 +1,5 @@
-module Faker
-  class Hand
+module CustomFaker
+  module Hand
     class << self
       def high_card_hand
         create_hand([

@@ -97,7 +97,7 @@ RSpec.describe 'カード交換をするユースケース' do
 
   context '異常系' do
     context '手札に存在しないカードを交換した場合' do
-      let(:card) { Faker::Hand.not_in_hand_card(player_hand_state.refreshed_hand_set) }
+      let(:card) { CustomFaker.not_in_hand_card(player_hand_state.refreshed_hand_set) }
       it '警告ログが正しく出力されること' do
         subject
         expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: 交換対象のカードが手札に存在しません/)

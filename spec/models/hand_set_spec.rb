@@ -1,5 +1,6 @@
 require 'rails_helper'
 require 'rspec-parameterized'
+require 'support/custom_faker'
 
 RSpec.describe HandSet do
   let(:cards) { Array.new(5) { instance_double(HandSet::Card, valid?: true) } }
@@ -19,16 +20,16 @@ RSpec.describe HandSet do
   describe '#evaluate' do
     where(:faker, :expected_rank, :skip) do
       [
-        [-> { Faker.high_card_hand.cards },      HandSet::Rank::HIGH_CARD,      false],
-        [-> { Faker.one_pair_hand.cards },       HandSet::Rank::ONE_PAIR,       false],
-        [-> { Faker.two_pair_hand.cards },       HandSet::Rank::TWO_PAIR,       false],
-        [-> { Faker.three_of_a_kind_hand.cards }, HandSet::Rank::THREE_OF_A_KIND, false],
-        [-> { Faker.straight_hand.cards },       HandSet::Rank::STRAIGHT,       false],
-        [-> { Faker.flush_hand.cards },          HandSet::Rank::FLUSH,          false],
-        [-> { Faker.full_house_hand.cards },     HandSet::Rank::FULL_HOUSE,     false],
-        [-> { Faker.four_of_a_kind_hand.cards }, HandSet::Rank::FOUR_OF_A_KIND, false],
-        [-> { Faker.straight_flush_hand.cards }, HandSet::Rank::STRAIGHT_FLUSH, false],
-        [-> { Faker.royal_flush_hand.cards }, HandSet::Rank::ROYAL_FLUSH, true]
+        [-> { CustomFaker.high_card_hand.cards },      HandSet::Rank::HIGH_CARD,      false],
+        [-> { CustomFaker.one_pair_hand.cards },       HandSet::Rank::ONE_PAIR,       false],
+        [-> { CustomFaker.two_pair_hand.cards },       HandSet::Rank::TWO_PAIR,       false],
+        [-> { CustomFaker.three_of_a_kind_hand.cards }, HandSet::Rank::THREE_OF_A_KIND, false],
+        [-> { CustomFaker.straight_hand.cards },       HandSet::Rank::STRAIGHT,       false],
+        [-> { CustomFaker.flush_hand.cards },          HandSet::Rank::FLUSH,          false],
+        [-> { CustomFaker.full_house_hand.cards },     HandSet::Rank::FULL_HOUSE,     false],
+        [-> { CustomFaker.four_of_a_kind_hand.cards }, HandSet::Rank::FOUR_OF_A_KIND, false],
+        [-> { CustomFaker.straight_flush_hand.cards }, HandSet::Rank::STRAIGHT_FLUSH, false],
+        [-> { CustomFaker.royal_flush_hand.cards }, HandSet::Rank::ROYAL_FLUSH, true]
       ]
     end
 
