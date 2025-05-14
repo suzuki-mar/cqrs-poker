@@ -1,6 +1,7 @@
 module Query
   class History < ApplicationRecord
     include DefineLastEventIdColumn
+    include DefineGameNumberColumn
     validates :hand_set, presence: true
     validates :rank, presence: true
     validates :ended_at, presence: true

@@ -32,7 +32,7 @@ module Query
     include _HasLastEventId
     attr_accessor discarded_cards: Array[String]
     attr_accessor current_turn: Integer
-    def self.current_game: () -> TrashState?
+    def self.current_game: (GameNumber) -> TrashState?
   end
 
   class ProjectionVersion < ApplicationRecord
@@ -48,6 +48,7 @@ class Event < ApplicationRecord
   attr_reader event_data: String
   attr_reader occurred_at: Time
   attr_reader version: Integer
+  attr_reader game_number: Integer
   def to_event_id: () -> EventId
 end
 
@@ -158,4 +159,16 @@ class HandSet::Evaluate
     def four_of_a_kind?: () -> bool
     def full_house?: () -> bool
   end
+end
+
+class GameId
+  attr_reader value: Integer
+  def initialize: (Integer) -> void
+end
+
+class GameNumber
+  attr_reader value: Integer
+  def initialize: (Integer) -> void
+  def to_s: () -> String
+  def self.build: () -> GameNumber
 end

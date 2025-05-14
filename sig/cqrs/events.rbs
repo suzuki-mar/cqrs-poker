@@ -1,18 +1,19 @@
 interface _Event
   def event_type: () -> String
   def event_id: () -> EventId
-  def event_id=: (EventId) -> void
   def to_event_data: () -> Hash[Symbol, untyped] # event_id: EventId を必ず含むこと
   def to_serialized_hash: () -> Hash[Symbol, untyped]
   def class: () -> Class
   def is_a?: (Class) -> bool
   def nil?: () -> bool
+  def assign_ids: (event_id: EventId, game_number: GameNumber) -> void
+  def game_number: () -> GameNumber
 end
 
 interface _EventClass
   def from_store: (Event) -> _Event
   def event_type: () -> String
-  def from_event_data: (Hash[Symbol, untyped], Integer) -> _Event
+  def from_event_data: (Hash[Symbol, untyped], EventId, GameNumber) -> _Event
 end
 
 class GameStartedEvent
@@ -60,4 +61,10 @@ end
 class GameEndedEvent
   private
   # privateメソッドはここに定義する
+end
+
+module AssignableIds
+  def assign_ids: (event_id: untyped, game_number: untyped) -> void
+  def event_id: () -> untyped
+  def game_number: () -> untyped
 end

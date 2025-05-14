@@ -61,6 +61,13 @@ RSpec.describe 'ゲーム開始' do
         expect(version_ids).to all(eq(latest_event.event_id))
       end
 
+      it '捨て札が用意されていること' do
+        subject
+        game_number = Aggregates::Store.new.latest_event.game_number
+        trash_state = ReadModels::TrashState.load(game_number)
+        expect(trash_state.empty?).to be_falsey
+      end
+
       it 'ゲーム終了記録が作成されていないこと' do
         subject
         expect(ReadModels::Histories.load.size).to eq(0)
@@ -68,7 +75,9 @@ RSpec.describe 'ゲーム開始' do
 
       it '捨て札が空であること' do
         subject
-        expect(ReadModels::TrashState.load.empty?).to be_truthy
+        game_number = Aggregates::Store.new.latest_event.game_number
+        trash_state = ReadModels::TrashState.load(game_number)
+        expect(trash_state.empty?).to be_falsey
       end
     end
   end

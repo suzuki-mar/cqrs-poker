@@ -10,7 +10,8 @@ module ReadModels
         current_rank: event.to_event_data[:evaluate],
         current_turn: 1,
         hand_set: event.to_event_data[:initial_hand].map(&:to_s),
-        last_event_id: event.event_id.value
+        last_event_id: event.event_id.value,
+        game_number: event.game_number.value
       )
 
       player_hand_state.save!

@@ -2,12 +2,12 @@ module Query
   class TrashState < ApplicationRecord
     include DefineCurrentTurnColumn
     include DefineLastEventIdColumn
+    include DefineGameNumberColumn
 
-    validates :discarded_cards, presence: true
     validate :validate_discarded_cards_format
 
-    def self.current_game
-      first
+    def self.current_game(game_number)
+      find_by(game_number: game_number.value)
     end
 
     private

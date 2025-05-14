@@ -39,5 +39,9 @@ RSpec.describe Event, type: :model do
         expect(event.errors[:version]).to include('has already been taken')
       end
     end
+
+    describe 'game_number' do
+      it_behaves_like 'game_number column examples'
+    end
   end
 end

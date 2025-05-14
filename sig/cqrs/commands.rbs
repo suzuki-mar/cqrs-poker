@@ -49,12 +49,13 @@ class CommandContext
     EXCHANGE_CARD: Symbol
     END_GAME: Symbol
   end
-  def initialize: (Symbol, ?HandSet::Card) -> void
+  def initialize: (type: Symbol, discarded_card: HandSet::Card?, game_number: GameNumber?) -> void
   attr_reader type: Symbol
   attr_reader discarded_card: HandSet::Card?
+  attr_reader game_number: GameNumber?
   def self.build_for_game_start: () -> CommandContext
-  def self.build_for_exchange: (HandSet::Card) -> CommandContext
-  def self.build_for_end_game: () -> CommandContext
+  def self.build_for_exchange: (discarded_card: HandSet::Card, game_number: GameNumber) -> CommandContext
+  def self.build_for_end_game: (game_number: GameNumber) -> CommandContext
 end
 
 module Aggregates
@@ -88,12 +89,13 @@ module Aggregates
 
   class Store
     def current_version: () -> Integer
-    def append_event: (_Event) -> CommandResult    
+    def append_event: (_Event, GameNumber) -> CommandResult
     def load_all_events_in_order: () -> Array[_Event]
     def latest_event: () -> _Event?
     def game_in_progress?: () -> bool
     def build_validation_error: (ActiveRecord::RecordInvalid, Command) -> CommandErrors::InvalidCommand
     def valid_event_type?: (_Event | CommandErrors::InvalidCommand | CommandErrors::VersionConflict) -> bool
+    def append_initial_event: (_Event, GameNumber) -> CommandResult
   end
 end
 
@@ -127,12 +129,13 @@ module Aggregates
   class Store
     private
     def build_event_from_event: (Event event_record) -> _Event
-    def build_failer_if_conflict: (_Event, Integer) -> CommandErrors::VersionConflict?
-    def add_event_to_store_may_raise_version_conflict!: (_Event, Integer) -> Event
+    def build_failer_if_conflict: (_Event, GameNumber) -> CommandErrors::VersionConflict?
+    def add_event_to_store_may_raise_version_conflict!: (_Event, GameNumber) -> Event
     def version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
     def build_version_conflict_event: (_Event, Integer) -> CommandErrors::VersionConflict
-    def create_event!: (_Event) -> _Event
+    def create_event!: (_Event, GameNumber) -> _Event
     def raise_if_invalid_event_record: (Event event_record, Hash[String, untyped] maps) -> void
+                                     
   end
 
   class BoardAggregate
@@ -166,12 +169,12 @@ module CommandHandlers
 
   class ExchangeCard    
     private
+    def append_event_to_store!: (GameNumber) -> CommandResult
     def rebuild_hand_from_event: (Array[_CardForCommand], _Event) -> Array[_CardForCommand]
     def build_cards_from_exchanged_event: (Array[_CardForCommand], CardExchangedEvent) -> Array[_CardForCommand]
     def build_board_error_result_if_needed: () -> CommandResult?
     def build_game_state_error_result_if_needed: () -> CommandResult?
     def raise_if_invalid_context: (CommandContext) -> void
-    def append_event_to_store!: () -> CommandResult
     attr_reader board: Aggregates::BoardAggregate
     attr_reader command: Command
   end
@@ -180,7 +183,7 @@ module CommandHandlers
     private
     def validate_game_state: (Command) -> CommandResult?
     def process_end_game: (Command) -> CommandResult
-    def append_event_to_store!: (Command) -> CommandResult
+    def append_event_to_store!: (Command, GameNumber) -> CommandResult
   end
 end
 

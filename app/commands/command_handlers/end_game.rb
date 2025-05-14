@@ -8,7 +8,10 @@ module CommandHandlers
     end
 
     def handle(command, context)
-      raise ArgumentError, 'このハンドラーはEND_GAME専用です' unless context.type == CommandContext::Types::END_GAME
+      raise ArgumentError, 'game_numberがnilです' if context.game_number.nil?
+
+      # @type var game_number: GameNumber
+      game_number = context.game_number
 
       unless aggregate_store.game_in_progress?
         return CommandResult.new(
@@ -16,7 +19,7 @@ module CommandHandlers
         )
       end
 
-      result = append_event_to_store!(command)
+      result = append_event_to_store!(command, game_number)
       return result if result.error
 
       event_bus.publish(result.event)
@@ -27,12 +30,12 @@ module CommandHandlers
 
     attr_reader :event_bus, :aggregate_store
 
-    def append_event_to_store!(command)
+    def append_event_to_store!(command, game_number)
       board = Aggregates::BoardAggregate.load_for_current_state
       command.execute_for_end_game(board)
       event = GameEndedEvent.new
 
-      aggregate_store.append_event(event)
+      aggregate_store.append_event(event, game_number)
     end
   end
 end

@@ -4,12 +4,13 @@ module ReadModels
       Query::History.order(ended_at: :desc).limit(limit)
     end
 
-    def self.add(hand_set, event_id)
+    def self.add(hand_set, event)
       Query::History.create!(
         hand_set: hand_set.cards.map(&:to_s),
         rank: HandSet::Rank::ALL.index(hand_set.evaluate),
         ended_at: Time.current,
-        last_event_id: event_id
+        last_event_id: event.event_id.value,
+        game_number: event.game_number.value
       )
     end
   end

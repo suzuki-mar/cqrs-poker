@@ -24,4 +24,8 @@ RSpec.describe Query::ProjectionVersion, type: :model do
       end
     end
   end
+
+  describe 'game_number' do
+    it_behaves_like 'game_number column examples'
+  end
 end

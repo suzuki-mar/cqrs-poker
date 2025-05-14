@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
+require_relative 'assignable_ids'
+
 class GameStartedEvent
+  include AssignableIds
+
   def initialize(initial_hand)
     @initial_hand = initial_hand
-    @event_id = nil
   end
 
   def self.event_type
@@ -39,27 +42,35 @@ class GameStartedEvent
     event_data = JSON.parse(event_record.event_data, symbolize_names: true)
     initial_hand = event_data[:initial_hand]
     event = new(initial_hand)
-    event.event_id = EventId.new(event_record.id) if event_record.respond_to?(:id) && event_record.id
+    if event_record.respond_to?(:id) && event_record.id && event_record.respond_to?(:game_number) && event_record.game_number
+      event.assign_ids(event_id: EventId.new(event_record.id), game_number: GameNumber.new(event_record.game_number))
+    end
     event
   end
 
-  def self.from_event_data(event_data, id)
+  def self.from_event_data(event_data, event_id, game_number)
     hand_data = event_data[:initial_hand]
     hand_cards = hand_data.map { |c| HandSet.build_card_for_query(c) }
     hand_set = HandSet.build(hand_cards)
     event = new(hand_set)
-    event.event_id = EventId.new(id)
+    event.assign_ids(event_id: event_id, game_number: game_number)
     event
+  end
+
+  def assign_ids(event_id:, game_number:)
+    raise 'event_idは一度しか設定できません' if @event_id
+    raise 'game_numberは一度しか設定できません' if @game_number
+
+    @event_id = event_id
+    @game_number = game_number
   end
 
   def event_id
     @event_id || (raise 'event_idが未設定です')
   end
 
-  def event_id=(value)
-    raise 'event_idは一度しか設定できません' if !@event_id.nil? && @event_id != value
-
-    @event_id ||= value
+  def game_number
+    @game_number || (raise 'game_numberが未設定です')
   end
 
   private

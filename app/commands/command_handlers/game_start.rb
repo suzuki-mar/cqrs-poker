@@ -41,8 +41,9 @@ module CommandHandlers
       board = Aggregates::BoardAggregate.load_for_current_state
       initial_hand = command.execute_for_game_start(board)
       event = GameStartedEvent.new(initial_hand)
+      game_number = GameNumber.build
 
-      aggregate_store.append_event(event)
+      aggregate_store.append_initial_event(event, game_number)
     end
   end
 end

@@ -75,4 +75,8 @@ RSpec.describe Query::PlayerHandState, type: :model do
       expect(player_hand_state.last_event_id).to eq 42
     end
   end
+
+  describe 'game_number' do
+    it_behaves_like 'game_number column examples'
+  end
 end

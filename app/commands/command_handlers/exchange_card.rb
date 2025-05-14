@@ -14,11 +14,15 @@ module CommandHandlers
       @board = Aggregates::BoardAggregate.load_for_current_state
 
       raise_if_invalid_context(context)
+      raise '[BUG] game_numberがnilです' if context.game_number.nil?
+
+      # @type var game_number: GameNumber
+      game_number = context.game_number
 
       error = build_game_state_error_result_if_needed || build_board_error_result_if_needed
       return error unless error.nil?
 
-      result = append_event_to_store!
+      result = append_event_to_store!(game_number)
       return result if result.error
 
       event_bus.publish(result.event)
@@ -34,10 +38,10 @@ module CommandHandlers
       raise ArgumentError, 'discarded_cardがnilです' if context.discarded_card.nil?
     end
 
-    def append_event_to_store!
+    def append_event_to_store!(game_number)
       new_card = command.execute_for_exchange_card(@board)
       event = CardExchangedEvent.new(@discarded_card, new_card)
-      aggregate_store.append_event(event)
+      aggregate_store.append_event(event, game_number)
     end
 
     def build_board_error_result_if_needed

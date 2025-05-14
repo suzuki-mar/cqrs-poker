@@ -2,14 +2,21 @@
 
 module Aggregates
   class Store
-    def append_event(event)
-      event_with_id = create_event!(event)
-      CommandResult.new(event: event_with_id)
+    def append_event(event, game_number)
+      event = create_event!(event, game_number)
+      CommandResult.new(event: event)
     rescue ActiveRecord::RecordInvalid => e
       if version_conflict_error?(e)
         error = build_version_conflict_event(event, current_version)
         return CommandResult.new(error: error)
       end
+      raise "イベントの保存に失敗しました: #{e.record.errors.full_messages.join(', ')}"
+    end
+
+    def append_initial_event(event, game_number)
+      event = create_event!(event, game_number)
+      CommandResult.new(event: event)
+    rescue ActiveRecord::RecordInvalid => e
       raise "イベントの保存に失敗しました: #{e.record.errors.full_messages.join(', ')}"
     end
 
@@ -37,16 +44,17 @@ module Aggregates
 
     private
 
-    def create_event!(event)
+    def create_event!(event, game_number)
       version = event.is_a?(GameStartedEvent) ? 1 : current_version + 1
 
       event_record = Event.create!(
         event_type: event.event_type,
         event_data: event.to_serialized_hash.to_json,
         occurred_at: Time.current,
-        version: version
+        version: version,
+        game_number: game_number.value
       )
-      event.event_id = EventId.new(event_record.id)
+      event.assign_ids(event_id: EventId.new(event_record.id), game_number: game_number)
       event
     end
 
@@ -71,7 +79,7 @@ module Aggregates
 
       event_class = maps[event_record.event_type]
       event_data = JSON.parse(event_record.event_data, symbolize_names: true)
-      event_class.from_event_data(event_data, event_record.id)
+      event_class.from_event_data(event_data, EventId.new(event_record.id), GameNumber.new(event_record.game_number))
     end
 
     def raise_if_invalid_event_record(event_record, maps)
@@ -79,7 +87,8 @@ module Aggregates
 
       event_class = maps[event_record.event_type]
       event_data = JSON.parse(event_record.event_data, symbolize_names: true)
-      event = event_class.from_event_data(event_data, event_record.id)
+      event = event_class.from_event_data(event_data, EventId.new(event_record.id),
+                                          GameNumber.new(event_record.game_number))
       raise "イベントの復元に失敗しました: #{event_record.event_type}" if event.nil?
       raise "[BUG] build_event_from_event: eventが_Event型でない: #{event}" unless valid_event_type?(event)
     end

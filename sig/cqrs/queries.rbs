@@ -19,7 +19,7 @@ module ReadModels
     def self.load: () -> ReadModels::ProjectionVersions
     def initialize: (Array[VersionInfo]) -> void
     def fetch_all_versions: () -> Array[VersionInfo]
-    def self.update_all_versions: (EventId) -> void
+    def self.update_all_versions: (_Event) -> void
     def self.update_by_name: (String, EventId) -> void
   end
   
@@ -49,12 +49,15 @@ module ReadModels
   end
 
   class TrashState
-    def self.load: () -> ReadModels::TrashState
+    def self.load: (GameNumber game_number) -> ReadModels::TrashState
+    def self.new: (Query::TrashState?) -> ReadModels::TrashState
     def has_number?: (_CardForQuery card) -> bool
-    def accept!: (_CardForQuery card, Integer current_turn, Integer last_event_id) -> void
+    def accept!: (_CardForQuery card, Integer current_turn, Integer last_event_id, GameNumber game_number) -> void
+    def prepare!: (GameNumber game_number) -> void
     def empty?: () -> bool
-    def initialize: (Query::TrashState?) -> void
+    def initialize: (untyped) -> void
     attr_reader trash_state: Query::TrashState?
+    def self.current_game: (untyped game_number) -> untyped
   end
 
   class TrashList
@@ -66,7 +69,7 @@ module ReadModels
 
   class Histories
     def self.load: (?limit: Integer) -> Array[Query::History]
-    def self.add: (HandSet hand_set, Integer event_id) -> Query::History
+    def self.add: (HandSet hand_set, _Event event) -> Query::History
   end
   
 end

@@ -1,30 +1,31 @@
 module ReadModels
   class TrashState
-    def self.load
-      new(Query::TrashState.current_game)
+    def self.load(game_number)
+      record = Query::TrashState.current_game(game_number)
+      new(record)
     end
 
-    # def has_number?(card)
-    #   raise 'trash_state is nil' if empty?
-    #
-    #   # @type var trash_state: Query::TrashState
-    #   trash_state = @trash_state
-    #   trash_state.discarded_cards.any? { |c| HandSet::Card.new(c).same_number?(card) }
-    # end
+    def self.prepare!(game_number, first_event_id)
+      # @type var discarded_cards: Array[String]
+      discarded_cards = []
+      record = Query::TrashState.create!(
+        discarded_cards: discarded_cards,
+        current_turn: 1,
+        last_event_id: first_event_id.value,
+        game_number: game_number.value
+      )
+      new(record)
+    end
 
-    def accept!(card, current_turn, last_event_id)
-      if empty?
-        @trash_state = Query::TrashState.create!(
-          discarded_cards: [card.to_s],
-          current_turn: current_turn,
-          last_event_id: last_event_id
-        )
-      else
-        # @type var trash_state: Query::TrashState
-        trash_state = @trash_state
-        trash_state.discarded_cards << card.to_s
-        trash_state.save!
-      end
+    def accept!(card, current_turn, last_event_id, game_number)
+      return if @trash_state.nil?
+
+      trash_state = @trash_state
+      # @type var trash_state: Query::TrashState
+      trash_state.discarded_cards << card.to_s
+      trash_state.current_turn = current_turn
+      trash_state.last_event_id = last_event_id
+      trash_state.save!
     end
 
     def current_turn
@@ -53,6 +54,14 @@ module ReadModels
 
     def empty?
       @trash_state.nil?
+    end
+
+    def cards
+      return [] if empty?
+
+      trash_state = @trash_state
+      # @type var trash_state: Query::TrashState
+      trash_state.discarded_cards
     end
 
     private

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_13_090042) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_14_125205) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -21,6 +21,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_13_090042) do
     t.integer "version", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "game_number", null: false
+    t.index ["game_number"], name: "index_events_on_game_number"
     t.index ["version"], name: "index_events_on_version", unique: true
   end
 
@@ -28,10 +30,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_13_090042) do
     t.jsonb "hand_set"
     t.integer "rank"
     t.datetime "ended_at"
+    t.integer "last_event_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "last_event_id", null: false
+    t.integer "game_number", null: false
     t.index ["ended_at"], name: "index_histories_on_ended_at"
+    t.index ["game_number"], name: "index_histories_on_game_number"
   end
 
   create_table "player_hand_states", force: :cascade do |t|
@@ -39,9 +43,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_13_090042) do
     t.string "current_rank", null: false
     t.integer "current_turn", null: false
     t.integer "status", null: false
+    t.integer "last_event_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "last_event_id", null: false
+    t.integer "game_number", null: false
+    t.index ["game_number"], name: "index_player_hand_states_on_game_number"
   end
 
   create_table "projection_versions", force: :cascade do |t|
@@ -49,13 +55,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_13_090042) do
     t.string "projection_name", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "game_number", null: false
+    t.index ["game_number"], name: "index_projection_versions_on_game_number"
   end
 
   create_table "trash_states", force: :cascade do |t|
     t.jsonb "discarded_cards", null: false
     t.integer "current_turn", null: false
+    t.integer "last_event_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "last_event_id", null: false
+    t.integer "game_number", null: false
+    t.index ["game_number"], name: "index_trash_states_on_game_number"
   end
 end

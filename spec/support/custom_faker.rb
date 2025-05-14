@@ -34,7 +34,7 @@ module CustomFaker
     end
 
     def event_id
-      rand(1..1000)
+      Faker::Number.unique.number(digits: 5)
     end
 
     delegate :card_with_number, to: :'CustomFaker::Card'
@@ -58,6 +58,10 @@ module CustomFaker
 
     def turn
       rand(1..100)
+    end
+
+    def game_number
+      Faker::Number.unique.between(from: 10_000, to: 90_000)
     end
   end
 end

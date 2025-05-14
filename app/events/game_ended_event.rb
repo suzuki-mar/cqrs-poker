@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
 class GameEndedEvent
-  def initialize
-    @event_id = nil
-  end
+  include AssignableIds
 
   def self.event_type
     'game_ended'
@@ -20,24 +18,18 @@ class GameEndedEvent
     {}
   end
 
-  def self.from_store(store)
-    JSON.parse(store.event_data, symbolize_names: true)
-    new
-  end
-
-  def event_id
-    @event_id || (raise 'event_idが未設定です')
-  end
-
-  def event_id=(value)
-    raise 'event_idは一度しか設定できません' if !@event_id.nil? && @event_id != value
-
-    @event_id ||= value
-  end
-
-  def self.from_event_data(_event_data, id)
+  def self.from_event(event_record)
+    event_data = JSON.parse(event_record.event_data, symbolize_names: true)
     event = new
-    event.event_id = EventId.new(id)
+    if event_record.respond_to?(:id) && event_record.id && event_record.respond_to?(:game_number) && event_record.game_number
+      event.assign_ids(event_id: EventId.new(event_record.id), game_number: GameNumber.new(event_record.game_number))
+    end
+    event
+  end
+
+  def self.from_event_data(event_data, event_id, game_number)
+    event = new
+    event.assign_ids(event_id: event_id, game_number: game_number)
     event
   end
 end

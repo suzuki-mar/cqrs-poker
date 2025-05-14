@@ -9,6 +9,9 @@ class EventBus
   def publish(event)
     return if event.nil?
 
+    # game_number未設定チェックのみ
+    raise '[BUG] event.game_number未設定' if event.game_number.nil?
+
     Rails.logger.info "Event published: #{event.class.name}"
     @event_publisher.broadcast(:handle_event, event)
   end

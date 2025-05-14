@@ -56,4 +56,8 @@ RSpec.describe Query::TrashState, type: :model do
       expect(trash.last_event_id).to eq 99
     end
   end
+
+  describe 'game_number' do
+    it_behaves_like 'game_number column examples'
+  end
 end

@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
+require_relative 'assignable_ids'
+
 class CardExchangedEvent
+  include AssignableIds
+
   def initialize(discarded_card, new_card)
     @discarded_card = discarded_card
     @new_card = new_card
-    @event_id = nil
   end
 
   def self.event_type
@@ -33,26 +36,18 @@ class CardExchangedEvent
     discarded = HandSet.build_card_for_command(event_data[:discarded_card])
     new_c = HandSet.build_card_for_command(event_data[:new_card])
     event = new(discarded, new_c)
-    event.event_id = EventId.new(store.id) if store.respond_to?(:id) && store.id
+    if store.respond_to?(:id) && store.id && store.respond_to?(:game_number) && store.game_number
+      event.assign_ids(event_id: EventId.new(store.id), game_number: GameNumber.new(store.game_number))
+    end
     event
   end
 
-  def self.from_event_data(event_data, id)
+  def self.from_event_data(event_data, event_id, game_number)
     discarded = HandSet.build_card_for_command(event_data[:discarded_card])
     new_c = HandSet.build_card_for_command(event_data[:new_card])
     event = new(discarded, new_c)
-    event.event_id = EventId.new(id)
+    event.assign_ids(event_id: event_id, game_number: game_number)
     event
-  end
-
-  def event_id
-    @event_id || (raise 'event_idが未設定です')
-  end
-
-  def event_id=(value)
-    raise 'event_idは一度しか設定できません' if !@event_id.nil? && @event_id != value
-
-    @event_id ||= value
   end
 
   private

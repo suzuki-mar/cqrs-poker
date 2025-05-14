@@ -2,6 +2,8 @@
 # イベントオブジェクトの生成・復元はAggregates::Storeで行います。
 
 class Event < ApplicationRecord
+  include DefineGameNumberColumn
+
   EVENT_TYPES = %w[game_started card_exchanged invalid_command_event].freeze
 
   validates :event_type, presence: true
