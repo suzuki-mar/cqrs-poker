@@ -5,7 +5,7 @@ require 'rails_helper'
 RSpec.describe 'ゲーム開始' do
   let(:logger) { TestLogger.new }
   let(:command_bus) { UseCaseHelper.build_command_bus(logger) }
-  let(:context) { CommandContext.build_for_game_start }
+  let(:main_command_context) { CommandContext.build_for_game_start }
   let(:read_model) { ReadModels::PlayerHandState.new }
   let(:event_publisher) { EventPublisher.new(projection: Projection.new, event_listener: LogEventListener.new(logger)) }
   let(:event_bus) { EventBus.new(event_publisher) }
@@ -14,21 +14,25 @@ RSpec.describe 'ゲーム開始' do
     describe 'ゲームが正しく開始されること' do
       let(:command) { Command.new }
 
-      before do
-        command_bus.execute(command, context)
-      end
+      subject { command_bus.execute(Command.new, main_command_context) }
 
       it 'イベントが正しく発行されること' do
+        subject
+
         event_store_holder = Aggregates::Store.new
         event = event_store_holder.latest_event
         expect(event.event_type).to eq(GameStartedEvent.event_type)
       end
 
       it 'ログが正しく出力されること' do
+        subject
+
         expect(logger.messages_for_level(:info)).to include(/イベント受信: ゲーム開始/)
       end
 
       it 'ゲーム状態が正しく更新されること' do
+        subject
+
         display_data = read_model.current_state_for_display
         aggregate_failures do
           expect(display_data[:status]).to eq('started')
@@ -38,6 +42,8 @@ RSpec.describe 'ゲーム開始' do
       end
 
       it '表示用のデータが正しく整形されること' do
+        subject
+
         display_data = read_model.current_state_for_display
 
         aggregate_failures do
@@ -47,20 +53,33 @@ RSpec.describe 'ゲーム開始' do
         end
       end
 
-      it 'ゲーム開始直後はHistoryが作成されていないこと' do
-        command_bus.execute(Command.new, context)
-        expect(Query::History.count).to eq(0)
+      it 'バージョン履歴を作成していること' do
+        subject
+        latest_event = Aggregates::Store.new.latest_event
+        version_info = ReadModels::ProjectionVersions.load
+        version_ids = version_info.fetch_all_versions.map(&:last_event_id)
+        expect(version_ids).to all(eq(latest_event.event_id))
+      end
+
+      it 'ゲーム終了記録が作成されていないこと' do
+        subject
+        expect(ReadModels::Histories.load.size).to eq(0)
+      end
+
+      it '捨て札が空であること' do
+        subject
+        expect(ReadModels::TrashState.load.empty?).to be_truthy
       end
     end
   end
 
   context '異常系' do
     context 'ゲームがすでに開始されている場合' do
-      subject { command_bus.execute(Command.new, context) }
+      subject { command_bus.execute(Command.new, main_command_context) }
 
       before do
         # 最初のゲーム開始
-        command_bus.execute(Command.new, context)
+        command_bus.execute(Command.new, main_command_context)
       end
 
       it 'InvalidCommandが返るがEventStoreには保存されないこと' do
@@ -85,8 +104,7 @@ RSpec.describe 'ゲーム開始' do
       end
 
       it 'PlayerHandStateが変更されないこと' do
-        # TODO: ARのクラスを使用しないようにする
-        original_player_game_state = Query::PlayerHandState.find_current_session.attributes
+        original_state = ReadModels::PlayerHandState.new.current_state_for_display
 
         begin
           subject
@@ -94,7 +112,7 @@ RSpec.describe 'ゲーム開始' do
           nil
         end
 
-        expect(Query::PlayerHandState.find_current_session.attributes).to eq(original_player_game_state)
+        expect(ReadModels::PlayerHandState.new.current_state_for_display).to eq(original_state)
       end
     end
   end

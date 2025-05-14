@@ -6,6 +6,8 @@ class Projection
       return player_hand_state
     end
 
+    ReadModels::ProjectionVersions.update_all_versions(event.event_id)
+
     apply_to_player_hand_state(player_hand_state, event)
     accept_to_trash_state_if_exchanged(event, player_hand_state)
     ReadModels::Histories.add(player_hand_state.hand_set, event.event_id.value) if event.is_a?(GameEndedEvent)

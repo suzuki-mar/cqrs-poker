@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
+require 'support/use_case_shared'
 
 RSpec.describe 'ゲーム終了ユースケース' do
   let(:logger) { TestLogger.new }
   let!(:command_bus) { UseCaseHelper.build_command_bus(logger) }
   let(:read_model) { ReadModels::PlayerHandState.new }
-  let(:context) { CommandContext.build_for_end_game }
+  let(:main_command_context) { CommandContext.build_for_end_game }
 
   context '正常系' do
     before do
@@ -14,7 +15,7 @@ RSpec.describe 'ゲーム終了ユースケース' do
       command_bus.execute(Command.new, CommandContext.build_for_game_start)
     end
 
-    subject { command_bus.execute(Command.new, context) }
+    subject { command_bus.execute(Command.new, main_command_context) }
 
     it 'GameEndedEventがEventStoreに記録されること' do
       subject
@@ -43,11 +44,13 @@ RSpec.describe 'ゲーム終了ユースケース' do
       expect(history.hand_set).to eq(read_model.hand_set.cards.map(&:to_s))
       expect(history.rank).to eq(HandSet::Rank::ALL.index(read_model.hand_set.evaluate))
     end
+
+    it_behaves_like 'version history update examples' # from support/use_case_shared
   end
 
   context '異常系' do
     it 'ゲームが開始されていない状態で終了しようとするとInvalidCommandEventが発行されること' do
-      result = command_bus.execute(Command.new, context)
+      result = command_bus.execute(Command.new, main_command_context)
       expect(result.error).to be_a(CommandErrors::InvalidCommand)
       expect(result.error.reason).to eq('ゲームが進行中ではありません')
     end

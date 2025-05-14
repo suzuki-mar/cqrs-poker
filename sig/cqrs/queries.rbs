@@ -10,13 +10,16 @@ end
 
 module ReadModels
   class ProjectionVersions
-    class VersionInfo < ::Struct[untyped]
+    class VersionInfo
       attr_reader projection_name: String
       attr_reader last_event_id: EventId
+      def initialize: (String, EventId) -> void
     end
 
-    def self.load: () -> Array[VersionInfo]
-    def self.update_all: (EventId) -> void
+    def self.load: () -> ReadModels::ProjectionVersions
+    def initialize: (Array[VersionInfo]) -> void
+    def fetch_all_versions: () -> Array[VersionInfo]
+    def self.update_all_versions: (EventId) -> void
     def self.update_by_name: (String, EventId) -> void
   end
   

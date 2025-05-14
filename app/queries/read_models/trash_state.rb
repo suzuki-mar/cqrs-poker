@@ -51,16 +51,16 @@ module ReadModels
       trash_state.discarded_cards.any? { |c| HandSet::Card.new(c).same_number?(card) }
     end
 
+    def empty?
+      @trash_state.nil?
+    end
+
     private
 
     attr_reader :trash_state
 
     def initialize(trash_state)
       @trash_state = trash_state
-    end
-
-    def empty?
-      @trash_state.nil?
     end
   end
 end

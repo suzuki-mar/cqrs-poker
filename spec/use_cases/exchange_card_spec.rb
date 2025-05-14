@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
+require 'support/use_case_shared'
 
 RSpec.describe 'カード交換をするユースケース' do
   let(:logger) { TestLogger.new }
@@ -19,14 +20,15 @@ RSpec.describe 'カード交換をするユースケース' do
     command_bus.execute(Command.new, CommandContext.build_for_game_start)
   end
 
-  subject { command_bus.execute(Command.new, CommandContext.build_for_exchange(card)) }
+  let(:card) { discarded_card }
+  let(:main_command_context) { CommandContext.build_for_exchange(card) }
+
+  subject { command_bus.execute(Command.new, main_command_context) }
 
   context '正常系' do
-    let(:card) { discarded_card }
+    let(:original_hand) { player_hand_state.hand_set }
 
     describe '手札のカードを1枚交換できること' do
-      let(:original_hand) { player_hand_state.hand_set }
-
       it 'イベントが正しく発行されること' do
         current_hand = player_hand_state.refreshed_hand_set
         discarded_card = current_hand.fetch_by_number(1)
@@ -88,6 +90,49 @@ RSpec.describe 'カード交換をするユースケース' do
         expect(log).to match(/引いたカード: #{last_event.to_event_data[:new_card]}/)
       end
 
+      context 'バージョン履歴' do
+        context 'バージョン履歴が揃っている場合' do
+          before do
+            command_bus.execute(Command.new, CommandContext.build_for_game_start)
+          end
+
+          it 'バージョン履歴をアップデートをしていること' do
+            start_event = Aggregates::Store.new.latest_event
+
+            command_bus.execute(Command.new, CommandContext.build_for_exchange(discarded_card))
+            exchange_event = Aggregates::Store.new.latest_event
+
+            expect(start_event.event_id).to be < exchange_event.event_id
+
+            version_info = ReadModels::ProjectionVersions.load
+            version_ids = version_info.fetch_all_versions.map(&:last_event_id)
+            expect(version_ids).to all(eq(exchange_event.event_id))
+          end
+        end
+
+        context 'バージョン履歴が揃っていない場合' do
+          before do
+            command_bus.execute(Command.new, CommandContext.build_for_game_start)
+          end
+
+          it 'バージョン履歴をアップデートをしていること' do
+            start_event_id = Aggregates::Store.new.latest_event.event_id
+
+            versions = Query::ProjectionVersion.projection_names.keys
+            Query::ProjectionVersion.find_or_create_by!(projection_name: versions[0])
+                                    .update!(event_id: start_event_id.value)
+
+            subject
+            latest_event = Aggregates::Store.new.latest_event
+
+            # 4. すべてのバージョンが最新イベントIDで揃っていることを検証
+            version_info = ReadModels::ProjectionVersions.load
+            version_ids = version_info.fetch_all_versions.map(&:last_event_id)
+            expect(version_ids).to all(eq(latest_event.event_id))
+          end
+        end
+      end
+
       it 'ゲーム終了前はHistoryが作成されていないこと' do
         subject
         expect(Query::History.count).to eq(0)
@@ -143,4 +188,6 @@ RSpec.describe 'カード交換をするユースケース' do
   end
 
   # バージョン競合が発生した場合は version_conflict_specでテストをしている
+
+  it_behaves_like 'version history update examples' # from support/use_case_shared
 end

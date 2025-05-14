@@ -38,6 +38,8 @@ module Query
   class ProjectionVersion < ApplicationRecord
     attr_accessor event_id: Integer
     attr_accessor projection_name: String
+    def self.for_game: (untyped) -> Array[Query::ProjectionVersion]
+    def self.projection_names: () -> Hash[String, String]
   end
 end
 
