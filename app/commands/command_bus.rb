@@ -28,9 +28,9 @@ class CommandBus
 
   def build_handler_map
     {
-      GameStartCommand => CommandHandlers::GameStart.new(event_bus),
-      EndGameCommand => CommandHandlers::EndGame.new(event_bus),
-      ExchangeCardCommand => CommandHandlers::ExchangeCard.new(event_bus)
+      Commands::GameStart => CommandHandlers::GameStart.new(event_bus),
+      Commands::EndGame => CommandHandlers::EndGame.new(event_bus),
+      Commands::ExchangeCard => CommandHandlers::ExchangeCard.new(event_bus)
     }
   end
 end

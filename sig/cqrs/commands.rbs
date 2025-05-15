@@ -3,22 +3,24 @@ interface _Command
   def nil?: () -> bool
 end
 
-class GameStartCommand
-  include _Command
-  def initialize: () -> void
-end
+module Commands
+  class GameStart
+    include _Command
+    def initialize: () -> void
+  end
 
-class ExchangeCardCommand
-  include _Command
-  attr_reader discarded_card: HandSet::Card
-  attr_reader game_number: GameNumber
-  def initialize: (HandSet::Card, GameNumber) -> void
-end
+  class ExchangeCard
+    include _Command
+    attr_reader discarded_card: HandSet::Card
+    attr_reader game_number: GameNumber
+    def initialize: (HandSet::Card, GameNumber) -> void
+  end
 
-class EndGameCommand
-  include _Command
-  attr_reader game_number: GameNumber
-  def initialize: (GameNumber) -> void
+  class EndGame
+    include _Command
+    attr_reader game_number: GameNumber
+    def initialize: (GameNumber) -> void
+  end
 end
 
 interface _CommandHandler
@@ -45,7 +47,7 @@ end
 module CommandHandlers
   class GameStart
     include _CommandHandler
-    def handle: (GameStartCommand) -> CommandResult
+    def handle: (Commands::GameStart) -> CommandResult
 
     private
     attr_reader command: _Command
@@ -55,11 +57,11 @@ module CommandHandlers
 
   class ExchangeCard
     include _CommandHandler
-    def handle: (ExchangeCardCommand) -> CommandResult
+    def handle: (Commands::ExchangeCard) -> CommandResult
 
     private
     def append_event_to_store!: (HandSet::Card, _CardForCommand, GameNumber) -> CommandResult
-    def rebuild_hand_from_event: (Array[_CardForCommand], _Event) -> Array[_CardForCommand]
+    def rebuild_hand_from_event: (Array[_CardForCommand], _Event, Aggregates::BoardAggregate) -> Array[_CardForCommand]
     def build_cards_from_exchanged_event: (Array[_CardForCommand], CardExchangedEvent) -> Array[_CardForCommand]
     def build_board_error_result_if_needed: (Array[_CardForCommand]) -> CommandResult?
     def build_game_state_error_result_if_needed: () -> CommandResult?
@@ -75,11 +77,19 @@ module CommandHandlers
       attr_reader board: Aggregates::BoardAggregate
       def initialize: (_Command, Aggregates::BoardAggregate) -> void
     end
+
+    class ErrorResultBuilder
+      def self.build_error_if_needed: (HandSet::Card, GameNumber, Aggregates::Store, Aggregates::BoardAggregate) -> CommandResult?
+      def self.build_error_message_of_game_status_if_needed: (Aggregates::Store, GameNumber) -> String?
+      def self.build_error_message_of_hand_state_in_hand_if_needed: (Aggregates::Store, HandSet::Card, Aggregates::BoardAggregate, GameNumber) -> String?
+      def self.rebuild_hand_from_event: (Array[_CardForCommand], _Event, Aggregates::BoardAggregate) -> Array[_CardForCommand]
+      def self.build_cards_from_exchanged_event: (Array[_CardForCommand], CardExchangedEvent) -> Array[_CardForCommand]
+    end
   end
 
   class EndGame
     include _CommandHandler
-    def handle: (EndGameCommand) -> CommandResult
+    def handle: (Commands::EndGame) -> CommandResult
 
     private
     def validate_game_state: (_Command) -> CommandResult?
@@ -92,47 +102,42 @@ end
 
 module Aggregates
   class Store
-    def current_version: () -> Integer
     def append_event: (_Event, GameNumber) -> CommandResult
+    def append_initial_event: (_Event, GameNumber) -> CommandResult
     def load_all_events_in_order: () -> Array[_Event]
     def latest_event: () -> _Event?
     def game_in_progress?: () -> bool
-    def build_validation_error: (ActiveRecord::RecordInvalid, _Command) -> CommandErrors::InvalidCommand
-    def valid_event_type?: (_Event | CommandErrors::InvalidCommand | CommandErrors::VersionConflict) -> bool
-    def append_initial_event: (_Event, GameNumber) -> CommandResult
-    def create_event_record!: (_Event, GameNumber) -> Event
+    def load_board_aggregate_for_current_state: () -> Aggregates::BoardAggregate
 
     private
-    def build_event_from_event: (Event event_record) -> _Event
-    def build_failer_if_conflict: (_Event, GameNumber) -> CommandErrors::VersionConflict?
-    def add_event_to_store_may_raise_version_conflict!: (_Event, GameNumber) -> Event
     def version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
-    def build_version_conflict_event: (_Event, Integer) -> CommandErrors::VersionConflict
-    def create_event!: (_Event, GameNumber) -> _Event
-    def raise_if_invalid_event_record: (Event event_record, Hash[String, untyped] maps) -> void
     def persist_and_finalize_event: (_Event, GameNumber) -> CommandResult
+    def current_version: () -> Integer
+    def valid_event_type?: (_Event | CommandErrors::InvalidCommand | CommandErrors::VersionConflict) -> bool
+    def create_event_record!: (_Event, GameNumber) -> Event
 
     class EventBuilder
       MAPPINGS: Hash[String, untyped]
       def self.execute: (Event event_record) -> _Event
-      def self.build_event_from_record: (Event event_record) -> _Event
 
       private
       def self.raise_if_invalid_event_record: (Event event_record, Hash[String, untyped] maps) -> void
       def self.build_event: (Event event_record, Hash[String, untyped] maps) -> _Event
-      def self.valid_event_type?: (_Event event) -> bool
+      def self.valid_event_type?: (untyped) -> bool
+    end
+
+    class ErrorBuilder
+      def self.version_conflict_result: (Integer) -> CommandResult?
+      def self.validation_error: (ActiveRecord::RecordInvalid, _Command) -> CommandErrors::InvalidCommand
     end
   end
 
   class BoardAggregate
-    def self.load_from_events: (Array[_Event] events) -> BoardAggregate
     def apply: (_Event event) -> void
     def draw_initial_hand: () -> HandSet
     def draw: () -> _CardForCommand
-    def discard_to_trash: (_CardForCommand card) -> void
     def drawable?: () -> bool
     def finish_game: () -> nil
-    def self.load_for_current_state: () -> BoardAggregate
     def build_cards_from_exchanged_event: (Array[_CardForCommand], CardExchangedEvent) -> Array[_CardForCommand]
 
     private
@@ -141,10 +146,6 @@ module Aggregates
     attr_reader game_started: bool
     attr_writer game_started: bool
     def build_cards_from_event: (GameStartedEvent) -> Array[_CardForCommand]
-    def apply_game_started_event_from_cards: (Array[_CardForCommand]) -> void
-    def apply_game_started_event: (_Event event) -> void
-    def apply_card_exchanged_event: (_Event event) -> void
-    def apply_game_ended_event: (_Event event) -> void
   end
 
   class Deck

@@ -14,37 +14,37 @@ RSpec.describe 'ゲーム終了ユースケース' do
   context '正常系' do
     before do
       # まずゲームを開始しておく
-      command_bus.execute(GameStartCommand.new)
+      command_bus.execute(Commands::GameStart.new)
     end
 
     subject do
       game_number = Aggregates::Store.new.latest_event.game_number
-      command_bus.execute(EndGameCommand.new(game_number))
+      command_bus.execute(Commands::EndGame.new(game_number))
     end
 
     it 'GameEndedEventがEventStoreに記録されること' do
       game_number = Aggregates::Store.new.latest_event.game_number
-      command_bus.execute(EndGameCommand.new(game_number))
+      command_bus.execute(Commands::EndGame.new(game_number))
       event = Event.last
       expect(event.event_type).to eq(GameEndedEvent.event_type)
     end
 
     it 'ログにゲーム終了が記録されること' do
       game_number = Aggregates::Store.new.latest_event.game_number
-      command_bus.execute(EndGameCommand.new(game_number))
+      command_bus.execute(Commands::EndGame.new(game_number))
       expect(logger.messages_for_level(:info)).to include(/イベント受信: ゲーム終了/)
     end
 
     it 'PlayerHandStateの状態が終了済みになること' do
       game_number = Aggregates::Store.new.latest_event.game_number
-      command_bus.execute(EndGameCommand.new(game_number))
+      command_bus.execute(Commands::EndGame.new(game_number))
       player_game_state = Query::PlayerHandState.find_current_session
       expect(player_game_state.status).to eq('ended')
     end
 
     it 'Historyクラスが生成され、最終手札とcurrentRankを保持していること' do
       game_number = Aggregates::Store.new.latest_event.game_number
-      command_bus.execute(EndGameCommand.new(game_number))
+      command_bus.execute(Commands::EndGame.new(game_number))
       histories = ReadModels::Histories.load(limit: 1)
       history = histories.first
       read_model = ReadModels::PlayerHandState.new
@@ -75,7 +75,7 @@ RSpec.describe 'ゲーム終了ユースケース' do
         all_versions_before = version_info_before.fetch_all_versions
         trash_before = all_versions_before.find { |vi| vi.projection_name == 'trash' }
 
-        command_bus.execute(EndGameCommand.new(game_number))
+        command_bus.execute(Commands::EndGame.new(game_number))
 
         version_info_after = ReadModels::ProjectionVersions.load(game_number)
         all_versions_after = version_info_after.fetch_all_versions
@@ -89,7 +89,7 @@ RSpec.describe 'ゲーム終了ユースケース' do
     context 'ゲームが開始されていない状態で終了しようとする' do
       it 'ゲームが開始されていない状態で終了しようとするとInvalidCommandEventが発行されること' do
         game_number = GameNumber.new(1) # 適当な値、またはテスト用にセットアップ
-        result = command_bus.execute(EndGameCommand.new(game_number))
+        result = command_bus.execute(Commands::EndGame.new(game_number))
         expect(result.error).to be_a(CommandErrors::InvalidCommand)
         expect(result.error.reason).to eq('ゲームが進行中ではありません')
       end
@@ -98,11 +98,11 @@ RSpec.describe 'ゲーム終了ユースケース' do
 
   context 'ゲームが終了している状態でゲームを終了する' do
     it 'エラーが発生すること' do
-      command_bus.execute(GameStartCommand.new)
+      command_bus.execute(Commands::GameStart.new)
       game_number = Aggregates::Store.new.latest_event.game_number
 
-      command_bus.execute(EndGameCommand.new(game_number))
-      result = command_bus.execute(EndGameCommand.new(game_number))
+      command_bus.execute(Commands::EndGame.new(game_number))
+      result = command_bus.execute(Commands::EndGame.new(game_number))
 
       expect(result.error).to be_a(CommandErrors::InvalidCommand)
       expect(result.error.reason).to eq('すでにゲームが終了しています')

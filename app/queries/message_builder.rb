@@ -1,36 +1,7 @@
 # frozen_string_literal: true
 
-class LogEventListener
-  def initialize(logger = Rails.logger)
-    @logger = logger
-  end
-
-  def handle_event(event)
-    warning_message = build_warning_message_if_needed(event)
-    if warning_message
-      logger.warn warning_message
-      return
-    end
-
-    info_message = build_info_message(event)
-    logger.info info_message
-  end
-
-  private
-
-  attr_reader :logger
-
-  def format_event_message(event_type, details = nil)
-    message = "イベント受信: #{event_type}"
-    message += " | #{details}" if details
-    message
-  end
-
-  def format_cards(cards)
-    "手札: #{cards.map(&:to_s).join(', ')}"
-  end
-
-  def build_info_message(event)
+class MessageBuilder
+  def self.build_info_message(event)
     case event
     when GameStartedEvent
       format_event_message('ゲーム開始', format_cards(event.to_event_data[:initial_hand].map(&:to_s)))
@@ -46,7 +17,7 @@ class LogEventListener
     end
   end
 
-  def build_warning_message_if_needed(event)
+  def self.build_warning_message_if_needed(event)
     case event
     when CommandErrors::InvalidCommand
       format_event_message('不正な選択肢の選択', event.reason)
@@ -56,5 +27,15 @@ class LogEventListener
       details  = "expected: #{expected}, actual: #{actual}"
       format_event_message('バージョン競合', details)
     end
+  end
+
+  def self.format_event_message(event_type, details = nil)
+    message = "イベント受信: #{event_type}"
+    message += " | #{details}" if details
+    message
+  end
+
+  def self.format_cards(cards)
+    "手札: #{cards.map(&:to_s).join(', ')}"
   end
 end

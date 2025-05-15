@@ -38,24 +38,27 @@ RSpec.describe 'バージョン競合ユースケース' do
   let(:logger) { TestLogger.new }
   let!(:command_bus) { UseCaseHelper.build_command_bus(logger) }
   let(:player_hand_state) { ReadModels::PlayerHandState.new }
-  let(:event_publisher) { EventPublisher.new(projection: Projection.new, event_listener: LogEventListener.new(logger)) }
+  let(:event_publisher) do
+    EventPublisher.new(projection: EventListener::Projection.new,
+                       event_listener: EventListener::Log.new(logger))
+  end
   let(:event_bus) { EventBus.new(event_publisher) }
   let(:card) { ReadModels::PlayerHandState.new.refreshed_hand_set.cards.first }
   let(:game_number) { Aggregates::Store.new.latest_event.game_number }
 
   describe 'カード交換時のバージョン競合' do
     before do
-      command_bus.execute(GameStartCommand.new)
+      command_bus.execute(Commands::GameStart.new)
       @game_number = Aggregates::Store.new.latest_event.game_number
       @card = ReadModels::PlayerHandState.new.refreshed_hand_set.cards.first
-      command_bus.execute(ExchangeCardCommand.new(@card, @game_number))
+      command_bus.execute(Commands::ExchangeCard.new(@card, @game_number))
     end
 
     it '警告ログが出力されること' do
       allow(Event).to receive(:next_version_for).and_return(1)
       card2 = ReadModels::PlayerHandState.new.refreshed_hand_set.cards.first
-      command_bus.execute(ExchangeCardCommand.new(card2, @game_number))
-      result = command_bus.execute(ExchangeCardCommand.new(card2, @game_number))
+      command_bus.execute(Commands::ExchangeCard.new(card2, @game_number))
+      result = command_bus.execute(Commands::ExchangeCard.new(card2, @game_number))
       expect(result.error).to be_a(CommandErrors::VersionConflict)
       expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
     end

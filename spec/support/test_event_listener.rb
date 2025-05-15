@@ -3,7 +3,7 @@
 # テスト専用のイベントリスナー
 # - 受信したイベントを配列（received_events）に記録する
 # - テストで「どんなイベントが発行されたか」を明示的に検証したい場合に利用
-# - 本番用リスナー（LogEventListener等）は履歴を持たないため、テストでの履歴検証用途で必要
+# - 本番用リスナー（EventListener::Log等）は履歴を持たないため、テストでの履歴検証用途で必要
 class TestEventListener
   attr_reader :received_events
 

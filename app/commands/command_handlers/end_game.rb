@@ -15,7 +15,7 @@ module CommandHandlers
       error_result = build_error_result_if_needed(command, game_number)
       return error_result if error_result
 
-      board = Aggregates::BoardAggregate.load_for_current_state
+      board = aggregate_store.load_board_aggregate_for_current_state
       board.finish_game
 
       result = append_event_to_store!(command, game_number)

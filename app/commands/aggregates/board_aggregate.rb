@@ -8,30 +8,27 @@ module Aggregates
       @game_started = false
     end
 
-    def self.load_from_events(events)
-      aggregate = new
-      events.each { |event| aggregate.apply(event) }
-      aggregate
-    end
-
-    def self.load_for_current_state
-      events = Aggregates::Store.new.load_all_events_in_order
-      aggregate = new
-      events.each { |event| aggregate.apply(event) }
-      aggregate
-    end
-
+    # rubocop:disable Metrics/MethodLength
     def apply(event)
       case event
       when GameStartedEvent
+
         cards = build_cards_from_event(event)
-        apply_game_started_event_from_cards(cards)
+        @game_started = true
+        cards.each do |card|
+          deck.remove(card) if deck.has?(card)
+        end
+
       when CardExchangedEvent
-        apply_card_exchanged_event(event)
+
+        new_card = event.to_event_data[:new_card]
+        deck.remove(new_card) if deck.has?(new_card)
+
       when GameEndedEvent
-        apply_game_ended_event(event)
+        # 何もしない
       end
     end
+    # rubocop:enable Metrics/MethodLength
 
     def drawable?
       deck.remaining_count.positive?
@@ -39,6 +36,15 @@ module Aggregates
 
     # 現時点ではおこなうことはないがAgreegateの振る舞いとしてはったほうがいいのでメソッドを実装している
     def finish_game; end
+
+    def build_cards_from_exchanged_event(hand, event)
+      idx = hand.find_index { |c| c == event.to_event_data[:discarded_card] }
+      return hand unless idx
+
+      new_hand = hand.dup
+      new_hand[idx] = event.to_event_data[:new_card]
+      new_hand
+    end
 
     private
 
@@ -54,25 +60,6 @@ module Aggregates
           HandSet.build_card_for_command(card)
         end
       end
-    end
-
-    def apply_game_started_event_from_cards(cards)
-      @game_started = true
-      cards.each do |card|
-        deck.remove(card) if deck.has?(card)
-      end
-    end
-
-    def apply_card_exchanged_event(event)
-      new_card = event.to_event_data[:new_card]
-      deck.remove(new_card) if deck.has?(new_card)
-    end
-
-    # 現時点ではおこなうことはないがAgreegateの振る舞いとしてはったほうがいいのでメソッドを実装している
-    def apply_game_ended_event(event); end
-
-    def discard_to_trash(card)
-      trash.accept(card)
     end
   end
 end

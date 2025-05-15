@@ -6,10 +6,13 @@ module Aggregates
       persist_and_finalize_event(event, game_number)
     rescue ActiveRecord::RecordInvalid => e
       if version_conflict_error?(e)
-        error = build_version_conflict_event(event, current_version)
-        return CommandResult.new(error: error)
+        return ErrorBuilder.version_conflict_result(current_version) ||
+               CommandResult.new(
+                 error: CommandErrors::VersionConflict.new(current_version, current_version)
+               )
       end
-      raise "イベントの保存に失敗しました: #{e.record.errors.full_messages.join(', ')}"
+
+      CommandResult.new(error: ErrorBuilder.validation_error(e, event))
     end
 
     def append_initial_event(event, game_number)
@@ -42,6 +45,13 @@ module Aggregates
       started && !ended
     end
 
+    def load_board_aggregate_for_current_state
+      events = load_all_events_in_order
+      aggregate = Aggregates::BoardAggregate.new
+      events.each { |event| aggregate.apply(event) }
+      aggregate
+    end
+
     private
 
     def create_event_record!(event, game_number)
@@ -67,29 +77,6 @@ module Aggregates
 
     def version_conflict_error?(err)
       err.record.errors.details[:version]&.any? { |detail| detail[:error] == :taken }
-    end
-
-    def build_version_conflict_event(_event, expected_current_version)
-      latest_version = Event.maximum(:version)
-      CommandErrors::VersionConflict.new(latest_version + 1, expected_current_version)
-    end
-
-    def build_validation_error(error, command)
-      raise ArgumentError, 'Command parameter is required for build_validation_error' if command.nil?
-
-      CommandErrors::InvalidCommand.new(
-        command: command,
-        reason: error.record.errors.full_messages.join(', ')
-      )
-    end
-
-    def build_version_conflict_result_if_needed(expected_current_version)
-      current_stored_version = current_version
-      return nil if expected_current_version == current_stored_version
-
-      CommandResult.new(
-        error: CommandErrors::VersionConflict.new(current_stored_version, expected_current_version)
-      )
     end
 
     def persist_and_finalize_event(event, game_number)

@@ -10,7 +10,7 @@ module CommandHandlers
     def handle(command)
       @command = command
 
-      board = Aggregates::BoardAggregate.load_for_current_state
+      board = aggregate_store.load_board_aggregate_for_current_state
 
       initial_hand = board.draw_initial_hand
       result = append_event_to_store!(initial_hand)

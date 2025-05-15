@@ -3,7 +3,7 @@
 RSpec.shared_examples 'version history update examples' do
   context 'バージョン履歴が揃っている場合（use_case_shared）' do
     before do
-      command_bus.execute(GameStartCommand.new)
+      command_bus.execute(Commands::GameStart.new)
     end
 
     it 'バージョン履歴をアップデートをしていること' do
@@ -23,7 +23,7 @@ RSpec.shared_examples 'version history update examples' do
 
   context 'バージョン履歴が揃っていない場合' do
     before do
-      command_bus.execute(GameStartCommand.new)
+      command_bus.execute(Commands::GameStart.new)
     end
 
     it 'バージョン履歴をアップデートをしていること' do
