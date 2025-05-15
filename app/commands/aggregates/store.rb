@@ -22,7 +22,7 @@ module Aggregates
 
     def load_all_events_in_order
       Event.order(:occurred_at).map do |event_record|
-        build_event_from_event(event_record)
+        EventBuilder.execute(event_record)
       end
     end
 
@@ -30,7 +30,7 @@ module Aggregates
       event_record = Event.last
       return nil if event_record.nil?
 
-      event = build_event_from_event(event_record)
+      event = EventBuilder.execute(event_record)
       raise "[BUG] latest_event: eventが_Event型でない: \\#{event}" unless valid_event_type?(event)
 
       event
@@ -66,31 +66,6 @@ module Aggregates
       event.is_a?(GameStartedEvent) ||
         event.is_a?(CardExchangedEvent) ||
         event.is_a?(GameEndedEvent)
-    end
-
-    def build_event_from_event(event_record)
-      maps = {
-        GameStartedEvent.event_type => GameStartedEvent,
-        CardExchangedEvent.event_type => CardExchangedEvent,
-        GameEndedEvent.event_type => GameEndedEvent
-      }
-
-      raise_if_invalid_event_record(event_record, maps)
-
-      event_class = maps[event_record.event_type]
-      event_data = JSON.parse(event_record.event_data, symbolize_names: true)
-      event_class.from_event_data(event_data, EventId.new(event_record.id), GameNumber.new(event_record.game_number))
-    end
-
-    def raise_if_invalid_event_record(event_record, maps)
-      raise "未知のイベントタイプです: #{event_record.event_type}" unless maps.key?(event_record.event_type)
-
-      event_class = maps[event_record.event_type]
-      event_data = JSON.parse(event_record.event_data, symbolize_names: true)
-      event = event_class.from_event_data(event_data, EventId.new(event_record.id),
-                                          GameNumber.new(event_record.game_number))
-      raise "イベントの復元に失敗しました: #{event_record.event_type}" if event.nil?
-      raise "[BUG] build_event_from_event: eventが_Event型でない: #{event}" unless valid_event_type?(event)
     end
 
     def version_conflict_error?(err)

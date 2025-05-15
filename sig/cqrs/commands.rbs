@@ -135,7 +135,17 @@ module Aggregates
     def build_version_conflict_event: (_Event, Integer) -> CommandErrors::VersionConflict
     def create_event!: (_Event, GameNumber) -> _Event
     def raise_if_invalid_event_record: (Event event_record, Hash[String, untyped] maps) -> void
-                                     
+     
+    class EventBuilder
+      MAPPINGS: Hash[String, untyped]
+      def self.execute: (Event event_record) -> _Event
+      def self.build_event_from_record: (Event event_record) -> _Event
+                                      
+      private
+      def self.raise_if_invalid_event_record: (Event event_record, Hash[String, untyped] maps) -> void
+      def self.build_event: (Event event_record, Hash[String, untyped] maps) -> _Event
+      def self.valid_event_type?: (_Event event) -> bool
+    end      
   end
 
   class BoardAggregate
@@ -194,3 +204,4 @@ class CommandBus
   def build_handler_map: () -> Hash[Symbol, _CommandHandler]
   def log_error_if_needed: (CommandErrors::InvalidCommand | CommandErrors::VersionConflict | nil) -> void
 end
+

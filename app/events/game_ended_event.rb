@@ -19,15 +19,19 @@ class GameEndedEvent
   end
 
   def self.from_event(event_record)
-    event_data = JSON.parse(event_record.event_data, symbolize_names: true)
+    JSON.parse(event_record.event_data, symbolize_names: true)
     event = new
-    if event_record.respond_to?(:id) && event_record.id && event_record.respond_to?(:game_number) && event_record.game_number
-      event.assign_ids(event_id: EventId.new(event_record.id), game_number: GameNumber.new(event_record.game_number))
+    if event_record.respond_to?(:id) && event_record.id &&
+       event_record.respond_to?(:game_number) && event_record.game_number
+      event.assign_ids(
+        event_id: EventId.new(event_record.id),
+        game_number: GameNumber.new(event_record.game_number)
+      )
     end
     event
   end
 
-  def self.from_event_data(event_data, event_id, game_number)
+  def self.from_event_data(_event_data, event_id, game_number)
     event = new
     event.assign_ids(event_id: event_id, game_number: game_number)
     event

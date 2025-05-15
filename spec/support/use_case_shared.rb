@@ -15,7 +15,7 @@ RSpec.shared_examples 'version history update examples' do
 
       expect(start_event.event_id).to be < main_event.event_id
 
-      version_info = ReadModels::ProjectionVersions.load
+      version_info = ReadModels::ProjectionVersions.load(main_event.game_number)
       version_ids = version_info.fetch_all_versions.map(&:last_event_id)
       expect(version_ids).to all(eq(main_event.event_id))
     end
@@ -35,7 +35,7 @@ RSpec.shared_examples 'version history update examples' do
       subject
       main_event = Aggregates::Store.new.latest_event
 
-      version_info = ReadModels::ProjectionVersions.load
+      version_info = ReadModels::ProjectionVersions.load(main_event.game_number)
       version_ids = version_info.fetch_all_versions.map(&:last_event_id)
       expect(version_ids).to all(eq(main_event.event_id))
     end

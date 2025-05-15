@@ -42,8 +42,12 @@ class GameStartedEvent
     event_data = JSON.parse(event_record.event_data, symbolize_names: true)
     initial_hand = event_data[:initial_hand]
     event = new(initial_hand)
-    if event_record.respond_to?(:id) && event_record.id && event_record.respond_to?(:game_number) && event_record.game_number
-      event.assign_ids(event_id: EventId.new(event_record.id), game_number: GameNumber.new(event_record.game_number))
+    if event_record.respond_to?(:id) && event_record.id &&
+       event_record.respond_to?(:game_number) && event_record.game_number
+      event.assign_ids(
+        event_id: EventId.new(event_record.id),
+        game_number: GameNumber.new(event_record.game_number)
+      )
     end
     event
   end

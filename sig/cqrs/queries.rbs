@@ -16,7 +16,7 @@ module ReadModels
       def initialize: (String, EventId) -> void
     end
 
-    def self.load: () -> ReadModels::ProjectionVersions
+    def self.load: (GameNumber game_number) -> ReadModels::ProjectionVersions
     def initialize: (Array[VersionInfo]) -> void
     def fetch_all_versions: () -> Array[VersionInfo]
     def self.update_all_versions: (_Event) -> void
@@ -53,7 +53,7 @@ module ReadModels
     def self.new: (Query::TrashState?) -> ReadModels::TrashState
     def has_number?: (_CardForQuery card) -> bool
     def accept!: (_CardForQuery card, Integer current_turn, Integer last_event_id, GameNumber game_number) -> void
-    def prepare!: (GameNumber game_number) -> void
+    def self.prepare!: (GameNumber game_number, EventId first_event_id) -> void
     def empty?: () -> bool
     def initialize: (untyped) -> void
     attr_reader trash_state: Query::TrashState?
@@ -114,6 +114,7 @@ class Projection
   private
   def apply_to_player_hand_state: (ReadModels::PlayerHandState player_hand_state, _Event event) -> void
   def accept_to_trash_state_if_exchanged: (_Event event, ReadModels::PlayerHandState player_hand_state) -> void
+  def update_trash_state: (_Event event, ReadModels::PlayerHandState player_hand_state) -> void
 end
 
 class Histories

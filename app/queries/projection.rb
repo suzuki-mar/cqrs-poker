@@ -7,7 +7,7 @@ class Projection
     end
 
     if event.is_a?(GameEndedEvent)
-      trash_name = Query::ProjectionVersion.projection_names[:trash].to_s
+      trash_name = Query::ProjectionVersion.projection_names['trash'].to_s
       versions = Query::ProjectionVersion.where(game_number: event.game_number.value)
                                          .where.not(projection_name: trash_name)
       versions.each do |pv|

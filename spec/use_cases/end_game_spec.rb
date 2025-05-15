@@ -69,13 +69,13 @@ RSpec.describe 'ゲーム終了ユースケース' do
       end
 
       it 'バージョン履歴で捨て札のバージョンだけは上がっていないこと' do
-        version_info_before = ReadModels::ProjectionVersions.load
+        version_info_before = ReadModels::ProjectionVersions.load(game_number)
         all_versions_before = version_info_before.fetch_all_versions
         trash_before = all_versions_before.find { |vi| vi.projection_name == 'trash' }
 
         command_bus.execute(Command.new, CommandContext.build_for_end_game(game_number: game_number))
 
-        version_info_after = ReadModels::ProjectionVersions.load
+        version_info_after = ReadModels::ProjectionVersions.load(game_number)
         all_versions_after = version_info_after.fetch_all_versions
         trash_after = all_versions_after.find { |vi| vi.projection_name == 'trash' }
 

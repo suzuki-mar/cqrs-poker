@@ -38,8 +38,9 @@ module Query
   class ProjectionVersion < ApplicationRecord
     attr_accessor event_id: Integer
     attr_accessor projection_name: String
-    def self.for_game: (untyped) -> Array[Query::ProjectionVersion]
     def self.projection_names: () -> Hash[String, String]
+    def self.find_or_build_all_by_game_number: (GameNumber) -> Array[Query::ProjectionVersion]
+    def self.projection_name_and_event_id_pairs: (GameNumber?) -> Array[[String, EventId]]
   end
 end
 

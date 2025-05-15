@@ -56,7 +56,7 @@ RSpec.describe 'ゲーム開始' do
       it 'バージョン履歴を作成していること' do
         subject
         latest_event = Aggregates::Store.new.latest_event
-        version_info = ReadModels::ProjectionVersions.load
+        version_info = ReadModels::ProjectionVersions.load(latest_event.game_number)
         version_ids = version_info.fetch_all_versions.map(&:last_event_id)
         expect(version_ids).to all(eq(latest_event.event_id))
       end

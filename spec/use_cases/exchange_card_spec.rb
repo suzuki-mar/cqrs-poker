@@ -19,6 +19,7 @@ RSpec.describe 'カード交換をするユースケース' do
   before do
     command_bus.execute(Command.new, CommandContext.build_for_game_start)
     @game_number = Aggregates::Store.new.latest_event.game_number
+    version_info = ReadModels::ProjectionVersions.load(@game_number)
   end
 
   let(:card) { discarded_card }
@@ -107,7 +108,7 @@ RSpec.describe 'カード交換をするユースケース' do
 
             expect(start_event.event_id).to be < exchange_event.event_id
 
-            version_info = ReadModels::ProjectionVersions.load
+            version_info = ReadModels::ProjectionVersions.load(@game_number)
             version_ids = version_info.fetch_all_versions.map(&:last_event_id)
             expect(version_ids).to all(eq(exchange_event.event_id))
           end
@@ -129,7 +130,7 @@ RSpec.describe 'カード交換をするユースケース' do
             latest_event = Aggregates::Store.new.latest_event
 
             # 4. すべてのバージョンが最新イベントIDで揃っていることを検証
-            version_info = ReadModels::ProjectionVersions.load
+            version_info = ReadModels::ProjectionVersions.load(@game_number)
             version_ids = version_info.fetch_all_versions.map(&:last_event_id)
             expect(version_ids).to all(eq(latest_event.event_id))
           end
@@ -155,8 +156,14 @@ RSpec.describe 'カード交換をするユースケース' do
     context '同じカードを2回交換した場合' do
       let(:card) { discarded_card }
       it '2回目で警告ログが正しく出力されること' do
-        command_bus.execute(Command.new, CommandContext.build_for_exchange(discarded_card: card, game_number: @game_number)) # 1回目
-        command_bus.execute(Command.new, CommandContext.build_for_exchange(discarded_card: card, game_number: @game_number)) # 2回目
+        command_bus.execute(
+          Command.new,
+          CommandContext.build_for_exchange(discarded_card: card, game_number: @game_number)
+        ) # 1回目
+        command_bus.execute(
+          Command.new,
+          CommandContext.build_for_exchange(discarded_card: card, game_number: @game_number)
+        ) # 2回目
         expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: 交換対象のカードが手札に存在しません/)
       end
     end
@@ -170,10 +177,13 @@ RSpec.describe 'カード交換をするユースケース' do
         hand_size = GameSetting::MAX_HAND_SIZE
         exchange_count = deck_size - hand_size
         exchange_count.times do
-          command_bus.execute(Command.new,
-                              CommandContext.build_for_exchange(
-                                discarded_card: player_hand_state.refreshed_hand_set.cards.first, game_number: @game_number
-                              ))
+          command_bus.execute(
+            Command.new,
+            CommandContext.build_for_exchange(
+              discarded_card: player_hand_state.refreshed_hand_set.cards.first,
+              game_number: @game_number
+            )
+          )
         end
       end
       it '警告ログが正しく出力されること' do

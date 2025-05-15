@@ -9,9 +9,9 @@ module ReadModels
       end
     end
 
-    def self.load
-      version_infos = Query::ProjectionVersion.for_game(nil).map do |pv|
-        VersionInfo.new(pv.projection_name, EventId.new(pv.event_id))
+    def self.load(game_number)
+      version_infos = Query::ProjectionVersion.projection_name_and_event_id_pairs(game_number).map do |name, event_id|
+        VersionInfo.new(name, event_id)
       end
       new(version_infos)
     end
@@ -20,16 +20,15 @@ module ReadModels
       @version_infos = version_infos
     end
 
+    private_class_method :new
+
     def fetch_all_versions
       @version_infos
     end
 
     def self.update_all_versions(event)
-      versions = Query::ProjectionVersion.for_game(event.game_number.value).index_by(&:projection_name)
-      Query::ProjectionVersion.projection_names.each_key do |name|
-        pv = versions[name] || Query::ProjectionVersion.new(projection_name: name, game_number: event.game_number.value)
+      Query::ProjectionVersion.find_or_build_all_by_game_number(event.game_number).each do |pv|
         pv.event_id = event.event_id.value
-        pv.game_number = event.game_number.value
         pv.save!
       end
     end

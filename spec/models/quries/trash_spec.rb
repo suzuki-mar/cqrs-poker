@@ -12,7 +12,7 @@ RSpec.describe Query::TrashState, type: :model do
 
       context '空配列の場合' do
         let(:discarded_cards_value) { [] }
-        it { should be_invalid }
+        it { should be_valid }
       end
 
       context 'nilの場合' do

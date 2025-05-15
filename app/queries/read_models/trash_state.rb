@@ -17,7 +17,7 @@ module ReadModels
       new(record)
     end
 
-    def accept!(card, current_turn, last_event_id, game_number)
+    def accept!(card, current_turn, last_event_id, _game_number)
       return if @trash_state.nil?
 
       trash_state = @trash_state

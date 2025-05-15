@@ -49,7 +49,8 @@ RSpec.describe 'バージョン競合ユースケース' do
     it '警告ログが出力されること' do
       __force_version_conflict
       card = ReadModels::PlayerHandState.new.refreshed_hand_set.cards.first
-      context = CommandContext.build_for_exchange(card)
+      game_number = Aggregates::Store.new.latest_event.game_number
+      context = CommandContext.build_for_exchange(discarded_card: card, game_number: game_number)
       result = command_bus.execute(Command.new, context)
       expect(result.error).to be_a(CommandErrors::VersionConflict)
       expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
