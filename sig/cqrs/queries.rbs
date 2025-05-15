@@ -6,6 +6,12 @@ class Projection
   include _EventSubscriber
 
   def initialize: () -> void
+
+  private
+  def apply_to_player_hand_state: (ReadModels::PlayerHandState player_hand_state, _Event event) -> void
+  def accept_to_trash_state_if_exchanged: (_Event event, ReadModels::PlayerHandState player_hand_state) -> void
+  def update_trash_state: (_Event event, ReadModels::PlayerHandState player_hand_state) -> void
+  def update_projection_versions: (_Event event) -> void
 end
 
 module ReadModels
@@ -65,11 +71,17 @@ module ReadModels
     def has_rank: (String) -> bool
     def initialize: (Array[Query::TrashState]) -> void
     def accept!: (untyped card, Integer current_turn, Integer last_event_id) -> void
+
+    private
+    attr_reader trashes: Array[Query::TrashState]
   end
 
   class Histories
     def self.load: (?limit: Integer) -> Array[Query::History]
     def self.add: (HandSet hand_set, _Event event) -> Query::History
+
+    private
+    # privateメソッドはここに定義する
   end
   
 end
@@ -82,24 +94,18 @@ class EventPublisher
   def initialize: (projection: Projection, event_listener: LogEventListener) -> void
   def subscribe: (Projection | LogEventListener) -> void
   def broadcast: (String, _Event) -> void
-  attr_reader published_events: Array[_Event] 
+  attr_reader published_events: Array[_Event]
+
+  private
+  attr_reader projection: Projection
+  attr_reader event_listener: LogEventListener
 end
-
-
-
-
-####################
-# privateメソッド定義
-####################
 
 class LogEventListener
   include _EventSubscriber
 
   def initialize: (Logger) -> void
-end
 
-# privateメソッドだけを定義する
-class LogEventListener
   private
   def broadcast: (String, _Event) -> void
   def format_event_message: ((String | nil), ?String) -> String
@@ -107,37 +113,5 @@ class LogEventListener
   def build_info_message: (_Event event) -> String
   def logger: () -> Logger
   def build_warning_message_if_needed: (_Event event) -> String?
-end 
-
-
-class Projection
-  private
-  def apply_to_player_hand_state: (ReadModels::PlayerHandState player_hand_state, _Event event) -> void
-  def accept_to_trash_state_if_exchanged: (_Event event, ReadModels::PlayerHandState player_hand_state) -> void
-  def update_trash_state: (_Event event, ReadModels::PlayerHandState player_hand_state) -> void
-  def update_projection_versions: (_Event event) -> void
-end
-
-class Histories
-  private
-  # privateメソッドはここに定義する
-end
-
-class EventPublisher
-  private
-  attr_reader projection: Projection
-  attr_reader event_listener: LogEventListener
-end
-
-class TrashList
-  private
-  attr_reader trashes: Array[Query::TrashState]
-end
-
-class TrashState
-  private
-  attr_reader trash_state: Query::TrashState
-  def initialize: (Query::TrashState) -> void
-  def empty?: () -> bool
 end
 

@@ -103,6 +103,9 @@ class HandSet
     NAMES: Hash[String, String]
     def self.japanese_name: (String) -> String
   end
+
+  private
+  # HandSetのprivateメソッドがあればここに記述
 end
 
 class HandSet::Card
@@ -114,30 +117,15 @@ class HandSet::Card
   def self.generate_available: (?Array[HandSet::Card]) -> Array[HandSet::Card]
   def initialize: (String) -> void
   def same_number?: (_CardForQuery) -> bool
-end
 
-class HandSet::Evaluate
-  def self.call: (Array[HandSet::Card] cards) -> String
-  def call: (Array[HandSet::Card] cards) -> String
-  
-  
-end
-
-####################
-# privateメソッド定義
-####################
-
-class HandSet
-  private
-  # HandSetのprivateメソッドがあればここに記述
-end
-
-class HandSet::Card
   private
   # HandSet::Cardのprivateメソッドがあればここに記述
 end
 
 class HandSet::Evaluate
+  def self.call: (Array[HandSet::Card] cards) -> String
+  def call: (Array[HandSet::Card] cards) -> String
+
   private  
   def build_rank_checks_map: () -> Hash[String, ::Proc]
   def valid_hand?: (Array[HandSet::Card] cards) -> bool
@@ -150,7 +138,7 @@ class HandSet::Evaluate
   def two_pair?: () -> bool
   def one_pair?: () -> bool
   def royal_flush?: () -> bool
-               
+  
   def rank_combinations: () -> HandSet::Evaluate::RankCombinations
   def rank_counts: () -> Hash[String, Integer]
   def suits: () -> Array[String]

@@ -21,6 +21,9 @@ class GameStartedEvent
   extend _EventClass
 
   def initialize: (HandSet initial_hand) -> void
+
+  private
+  attr_reader initial_hand: HandSet
 end
 
 class CardExchangedEvent
@@ -28,6 +31,10 @@ class CardExchangedEvent
   extend _EventClass
 
   def initialize: (_CardForCommand discarded_card, _CardForCommand new_card) -> void
+
+  private
+  attr_reader discarded_card: _CardForCommand
+  attr_reader new_card: _CardForCommand
 end
 
 class GameEndedEvent
@@ -35,6 +42,8 @@ class GameEndedEvent
   extend _EventClass
 
   def initialize: () -> void
+
+  private  
 end
 
 class EventBus
@@ -43,25 +52,6 @@ class EventBus
 end 
 
 
-
-###################
-# privateメソッド定義
-####################
-class GameStartedEvent
-  private
-  attr_reader initial_hand: HandSet
-end
-
-class CardExchangedEvent
-  private
-  attr_reader discarded_card: _CardForCommand
-  attr_reader new_card: _CardForCommand
-end
-
-class GameEndedEvent
-  private
-  # privateメソッドはここに定義する
-end
 
 module AssignableIds
   def assign_ids: (event_id: untyped, game_number: untyped) -> void
