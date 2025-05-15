@@ -32,5 +32,9 @@ module ReadModels
         pv.save!
       end
     end
+
+    def self.count_group_game_number
+      Query::ProjectionVersion.distinct.count(:game_number)
+    end
   end
 end

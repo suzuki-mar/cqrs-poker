@@ -145,6 +145,17 @@ RSpec.describe 'カード交換をするユースケース' do
   end
 
   context '異常系' do
+    context '存在しないGameNumberを指定した場合' do
+      let(:game_number) { GameNumber.build }
+      let(:main_command_context) do
+        CommandContext.build_for_exchange(discarded_card: discarded_card, game_number: game_number)
+      end
+      it 'InvalidCommandが発行されること' do
+        result = subject
+        expect(result.error).to be_a(CommandErrors::InvalidCommand)
+      end
+    end
+
     context '手札に存在しないカードを交換した場合' do
       let(:card) { CustomFaker.not_in_hand_card(player_hand_state.refreshed_hand_set) }
       it '警告ログが正しく出力されること' do

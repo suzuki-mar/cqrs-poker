@@ -35,4 +35,5 @@ interface _ActiveRecordClass
   def maximum: (*untyped) -> untyped  
   def create!: (*untyped) -> untyped
   def exists?: (*untyped) -> bool
+  def distinct: () -> untyped
 end

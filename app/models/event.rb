@@ -11,7 +11,16 @@ class Event < ApplicationRecord
   validate :validate_event_data_json
   validates :occurred_at, presence: true
   validate :validate_occurred_at_not_future_date
-  validates :version, presence: true, uniqueness: true
+  validates :version, presence: true, uniqueness: { scope: :game_number }
+
+  def self.next_version_for(game_number)
+    where(game_number: game_number.value).maximum(:version).to_i + 1
+  end
+
+  # 指定したgame_numberのゲームが存在するか判定する
+  def self.exists_game?(game_number)
+    exists?(game_number: game_number.value)
+  end
 
   private
 

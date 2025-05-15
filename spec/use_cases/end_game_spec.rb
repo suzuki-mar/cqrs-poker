@@ -84,11 +84,26 @@ RSpec.describe 'ゲーム終了ユースケース' do
     end
   end
   context '異常系' do
-    it 'ゲームが開始されていない状態で終了しようとするとInvalidCommandEventが発行されること' do
-      game_number = 1 # 適当な値、またはテスト用にセットアップ
+    context 'ゲームが開始されていない状態で終了しようとする' do
+      it 'ゲームが開始されていない状態で終了しようとするとInvalidCommandEventが発行されること' do
+        game_number = GameNumber.new(1) # 適当な値、またはテスト用にセットアップ
+        result = command_bus.execute(Command.new, CommandContext.build_for_end_game(game_number: game_number))
+        expect(result.error).to be_a(CommandErrors::InvalidCommand)
+        expect(result.error.reason).to eq('ゲームが進行中ではありません')
+      end
+    end
+  end
+
+  context 'ゲームが終了している状態でゲームを終了する' do
+    it 'エラーが発生すること' do
+      command_bus.execute(Command.new, CommandContext.build_for_game_start)
+      game_number = Aggregates::Store.new.latest_event.game_number
+
+      command_bus.execute(Command.new, CommandContext.build_for_end_game(game_number: game_number))
       result = command_bus.execute(Command.new, CommandContext.build_for_end_game(game_number: game_number))
+
       expect(result.error).to be_a(CommandErrors::InvalidCommand)
-      expect(result.error.reason).to eq('ゲームが進行中ではありません')
+      expect(result.error.reason).to eq('すでにゲームが終了しています')
     end
   end
 end

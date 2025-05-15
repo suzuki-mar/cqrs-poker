@@ -3,8 +3,7 @@
 module Aggregates
   class Store
     def append_event(event, game_number)
-      event = create_event!(event, game_number)
-      CommandResult.new(event: event)
+      persist_and_finalize_event(event, game_number)
     rescue ActiveRecord::RecordInvalid => e
       if version_conflict_error?(e)
         error = build_version_conflict_event(event, current_version)
@@ -14,7 +13,8 @@ module Aggregates
     end
 
     def append_initial_event(event, game_number)
-      event = create_event!(event, game_number)
+      event_record = create_event_record!(event, game_number)
+      event.assign_ids(event_id: EventId.new(event_record.id), game_number: game_number)
       CommandResult.new(event: event)
     rescue ActiveRecord::RecordInvalid => e
       raise "イベントの保存に失敗しました: #{e.record.errors.full_messages.join(', ')}"
@@ -44,18 +44,15 @@ module Aggregates
 
     private
 
-    def create_event!(event, game_number)
-      version = event.is_a?(GameStartedEvent) ? 1 : current_version + 1
-
-      event_record = Event.create!(
+    def create_event_record!(event, game_number)
+      version = Event.next_version_for(game_number)
+      Event.create!(
         event_type: event.event_type,
         event_data: event.to_serialized_hash.to_json,
         occurred_at: Time.current,
         version: version,
         game_number: game_number.value
       )
-      event.assign_ids(event_id: EventId.new(event_record.id), game_number: game_number)
-      event
     end
 
     def current_version
@@ -93,6 +90,12 @@ module Aggregates
       CommandResult.new(
         error: CommandErrors::VersionConflict.new(current_stored_version, expected_current_version)
       )
+    end
+
+    def persist_and_finalize_event(event, game_number)
+      event_record = create_event_record!(event, game_number)
+      event.assign_ids(event_id: EventId.new(event_record.id), game_number: game_number)
+      CommandResult.new(event: event)
     end
   end
 end

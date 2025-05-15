@@ -94,6 +94,7 @@ module Aggregates
     def build_validation_error: (ActiveRecord::RecordInvalid, Command) -> CommandErrors::InvalidCommand
     def valid_event_type?: (_Event | CommandErrors::InvalidCommand | CommandErrors::VersionConflict) -> bool
     def append_initial_event: (_Event, GameNumber) -> CommandResult
+    def create_event_record!: (_Event, GameNumber) -> Event
   end
 end
 
@@ -118,6 +119,7 @@ class CommandResult
   def initialize: (?event: untyped, ?error: untyped) -> void
   def success?: () -> bool
   def failure?: () -> bool
+  def self.invalid_command: (Command, String) -> CommandResult
 end
 
 ###################
@@ -133,7 +135,8 @@ module Aggregates
     def build_version_conflict_event: (_Event, Integer) -> CommandErrors::VersionConflict
     def create_event!: (_Event, GameNumber) -> _Event
     def raise_if_invalid_event_record: (Event event_record, Hash[String, untyped] maps) -> void
-     
+    def persist_and_finalize_event: (_Event, GameNumber) -> CommandResult
+
     class EventBuilder
       MAPPINGS: Hash[String, untyped]
       def self.execute: (Event event_record) -> _Event
@@ -183,6 +186,8 @@ module CommandHandlers
     def build_board_error_result_if_needed: (Array[_CardForCommand]) -> CommandResult?
     def build_game_state_error_result_if_needed: () -> CommandResult?
     def build_error_if_needed: () -> CommandResult?
+    def build_error_message_of_game_status_if_needed: () -> String?
+    def build_error_message_of_hand_state_in_hand_if_needed: () -> String?
     def raise_if_invalid_context: () -> void
     attr_reader params: untyped
 
@@ -200,6 +205,7 @@ module CommandHandlers
     def validate_game_state: (Command) -> CommandResult?
     def process_end_game: (Command) -> CommandResult
     def append_event_to_store!: (Command, GameNumber) -> CommandResult
+    def build_error_result_if_needed: (Command, GameNumber) -> CommandResult?
   end
 end
 

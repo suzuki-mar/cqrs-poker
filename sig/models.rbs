@@ -36,6 +36,7 @@ module Query
   end
 
   class ProjectionVersion < ApplicationRecord
+    extend _ActiveRecordClass
     attr_accessor event_id: Integer
     attr_accessor projection_name: String
     def self.projection_names: () -> Hash[String, String]
@@ -52,6 +53,8 @@ class Event < ApplicationRecord
   attr_reader version: Integer
   attr_reader game_number: Integer
   def to_event_id: () -> EventId
+  def self.next_version_for: (GameNumber) -> Integer
+  def self.exists_game?: (GameNumber) -> bool
 end
 
 class EventId

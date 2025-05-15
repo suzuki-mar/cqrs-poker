@@ -13,7 +13,7 @@ module CommandHandlers
       raise_if_invalid_context
 
       error = build_error_if_needed
-      return error unless error.nil?
+      return error if error
 
       result = append_event_to_store!
       return result if result.error
@@ -22,17 +22,41 @@ module CommandHandlers
       result
     end
 
-    def build_error_if_needed
-      events = aggregate_store.load_all_events_in_order
-      rebuilt_hand = events.reduce([]) { |acc, event| rebuild_hand_from_event(acc, event) }
-
-      build_game_state_error_result_if_needed ||
-        build_board_error_result_if_needed(rebuilt_hand)
-    end
-
     private
 
     attr_reader :event_bus, :aggregate_store, :params
+
+    def build_error_if_needed
+      error_message = build_error_message_of_game_status_if_needed ||
+                      build_error_message_of_hand_state_in_hand_if_needed
+
+      return nil unless error_message
+
+      CommandResult.new(
+        error: CommandErrors::InvalidCommand.new(
+          command: params.command,
+          reason: error_message
+        )
+      )
+    end
+
+    def build_error_message_of_game_status_if_needed
+      error_message = nil
+      error_message ||= '指定されたゲームが存在しません' unless Event.exists_game?(params.context.game_number)
+      error_message ||= 'ゲームが進行中ではありません' unless aggregate_store.game_in_progress?
+      error_message
+    end
+
+    def build_error_message_of_hand_state_in_hand_if_needed
+      return 'デッキの残り枚数が不足しています' unless params.board.drawable?
+
+      events = aggregate_store.load_all_events_in_order
+      rebuilt_hand = events.reduce([]) { |acc, event| rebuild_hand_from_event(acc, event) }
+
+      return '交換対象のカードが手札に存在しません' unless rebuilt_hand.include?(params.discarded_card)
+
+      nil
+    end
 
     def raise_if_invalid_context
       unless params.context.type == CommandContext::Types::EXCHANGE_CARD
@@ -46,22 +70,6 @@ module CommandHandlers
       new_card = params.command.execute_for_exchange_card(params.board)
       event = CardExchangedEvent.new(params.discarded_card, new_card)
       aggregate_store.append_event(event, params.context.game_number)
-    end
-
-    def build_board_error_result_if_needed(rebuilt_hand)
-      unless rebuilt_hand.include?(params.discarded_card)
-        return CommandResult.new(
-          error: CommandErrors::InvalidCommand.new(command: params.command, reason: '交換対象のカードが手札に存在しません')
-        )
-      end
-
-      unless params.board.drawable?
-        return CommandResult.new(
-          error: CommandErrors::InvalidCommand.new(command: params.command, reason: 'デッキの残り枚数が不足しています')
-        )
-      end
-
-      nil
     end
 
     def rebuild_hand_from_event(hand, event)
@@ -84,16 +92,6 @@ module CommandHandlers
       new_hand
     end
 
-    def build_game_state_error_result_if_needed
-      unless aggregate_store.game_in_progress?
-        return CommandResult.new(
-          error: CommandErrors::InvalidCommand.new(command: params.command, reason: 'ゲームが進行中ではありません')
-        )
-      end
-      nil
-    end
-
-    # --- ここから内部クラス ---
     class Params
       attr_reader :command, :discarded_card, :board, :context
 
@@ -105,6 +103,5 @@ module CommandHandlers
       end
     end
     private_constant :Params
-    # --- ここまで ---
   end
 end

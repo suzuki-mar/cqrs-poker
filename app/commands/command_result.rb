@@ -15,4 +15,8 @@ class CommandResult
   def failure?
     !error.nil?
   end
+
+  def self.invalid_command(command, reason)
+    new(error: CommandErrors::InvalidCommand.new(command: command, reason: reason))
+  end
 end

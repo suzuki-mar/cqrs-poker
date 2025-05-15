@@ -80,48 +80,13 @@ RSpec.describe 'ゲーム開始' do
         expect(trash_state.empty?).to be_falsey
       end
     end
-  end
 
-  context '異常系' do
     context 'ゲームがすでに開始されている場合' do
-      subject { command_bus.execute(Command.new, main_command_context) }
-
-      before do
-        # 最初のゲーム開始
+      it '新しいゲームを開始できること' do
         command_bus.execute(Command.new, main_command_context)
-      end
+        command_bus.execute(Command.new, main_command_context)
 
-      it 'InvalidCommandが返るがEventStoreには保存されないこと' do
-        # 1回目のゲーム開始で保存されたイベントを記録
-        first_event = Aggregates::Store.new.latest_event
-        # 2回目のゲーム開始
-        result = subject
-        expect(result.error).to be_a(CommandErrors::InvalidCommand)
-        expect(result.error.reason).to eq('すでにゲームが開始されています')
-
-        event_store_holder = Aggregates::Store.new
-        last_event = event_store_holder.latest_event
-        # 直近のイベントはGameStartedのままで、InvalidCommandは保存されていない
-        expect(last_event).to be_a(GameStartedEvent)
-        # 内容も完全一致していることを検証
-        expect(last_event.to_event_data).to eq(first_event.to_event_data)
-      end
-
-      it '警告のログが発生していること' do
-        subject
-        expect(logger.messages_for_level(:warn)).to include(/コマンド失敗: すでにゲームが開始されています/)
-      end
-
-      it 'PlayerHandStateが変更されないこと' do
-        original_state = ReadModels::PlayerHandState.new.current_state_for_display
-
-        begin
-          subject
-        rescue StandardError
-          nil
-        end
-
-        expect(ReadModels::PlayerHandState.new.current_state_for_display).to eq(original_state)
+        expect(ReadModels::ProjectionVersions.count_group_game_number).to eq(2)
       end
     end
   end

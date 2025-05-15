@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_14_125205) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_15_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -22,8 +22,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_14_125205) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "game_number", null: false
+    t.index ["game_number", "version"], name: "index_events_on_game_number_and_version", unique: true
     t.index ["game_number"], name: "index_events_on_game_number"
-    t.index ["version"], name: "index_events_on_version", unique: true
   end
 
   create_table "histories", force: :cascade do |t|

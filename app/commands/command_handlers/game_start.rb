@@ -12,9 +12,6 @@ module CommandHandlers
 
       raise ArgumentError, 'このハンドラーはGAME_START専用です' unless context.type == CommandContext::Types::GAME_START
 
-      error_result = build_already_started_error_result
-      return error_result if error_result
-
       result = append_event_to_store!
       return result if result.error
 
@@ -25,17 +22,6 @@ module CommandHandlers
     private
 
     attr_reader :event_bus, :aggregate_store, :command
-
-    def build_already_started_error_result
-      return unless aggregate_store.game_in_progress?
-
-      CommandResult.new(
-        error: CommandErrors::InvalidCommand.new(
-          command: command,
-          reason: 'すでにゲームが開始されています'
-        )
-      )
-    end
 
     def append_event_to_store!
       board = Aggregates::BoardAggregate.load_for_current_state
