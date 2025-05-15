@@ -19,7 +19,7 @@ RSpec.describe 'カード交換をするユースケース' do
   before do
     command_bus.execute(Command.new, CommandContext.build_for_game_start)
     @game_number = Aggregates::Store.new.latest_event.game_number
-    version_info = ReadModels::ProjectionVersions.load(@game_number)
+    ReadModels::ProjectionVersions.load(@game_number)
   end
 
   let(:card) { discarded_card }

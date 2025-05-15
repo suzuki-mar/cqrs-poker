@@ -1,7 +1,7 @@
 ---
-description: 
+description: RBSについて言及しているとき
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 # RBSについて
 ## 型定義優先読解ルール
@@ -38,7 +38,13 @@ class Baz
   def baz_public: (String) -> Integer
 end
 
-# privateメソッドだけを定義する
+# privateメソッドだけを定義する　ここの記述はprivateメソッドだけを定義しているブロック内で記述してください
+
+そのブロック内はいかの記述をしています
+###################
+# privateメソッド定義
+####################
+
 class Foo
   private
   def foo_private: () -> void

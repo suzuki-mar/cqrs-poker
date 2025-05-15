@@ -115,6 +115,7 @@ class Projection
   def apply_to_player_hand_state: (ReadModels::PlayerHandState player_hand_state, _Event event) -> void
   def accept_to_trash_state_if_exchanged: (_Event event, ReadModels::PlayerHandState player_hand_state) -> void
   def update_trash_state: (_Event event, ReadModels::PlayerHandState player_hand_state) -> void
+  def update_projection_versions: (_Event event) -> void
 end
 
 class Histories

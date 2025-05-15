@@ -41,6 +41,7 @@ module Query
     def self.projection_names: () -> Hash[String, String]
     def self.find_or_build_all_by_game_number: (GameNumber) -> Array[Query::ProjectionVersion]
     def self.projection_name_and_event_id_pairs: (GameNumber?) -> Array[[String, EventId]]
+    def self.find_all_excluding_projection_name: (GameNumber, String) -> untyped
   end
 end
 

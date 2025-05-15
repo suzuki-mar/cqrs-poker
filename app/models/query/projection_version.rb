@@ -18,5 +18,10 @@ module Query
         [pv.projection_name, EventId.new(pv.event_id)]
       end
     end
+
+    def self.find_all_excluding_projection_name(game_number, exclude_name)
+      exclude_value = projection_names[exclude_name]
+      where(game_number: game_number.value).where.not(projection_name: exclude_value)
+    end
   end
 end

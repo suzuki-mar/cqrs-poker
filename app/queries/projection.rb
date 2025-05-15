@@ -6,18 +6,7 @@ class Projection
       return player_hand_state
     end
 
-    if event.is_a?(GameEndedEvent)
-      trash_name = Query::ProjectionVersion.projection_names['trash'].to_s
-      versions = Query::ProjectionVersion.where(game_number: event.game_number.value)
-                                         .where.not(projection_name: trash_name)
-      versions.each do |pv|
-        pv.event_id = event.event_id.value
-        pv.save!
-      end
-    else
-      ReadModels::ProjectionVersions.update_all_versions(event)
-    end
-
+    update_projection_versions(event)
     apply_to_player_hand_state(player_hand_state, event)
 
     ReadModels::Histories.add(player_hand_state.hand_set, event) if event.is_a?(GameEndedEvent)
@@ -37,6 +26,18 @@ class Projection
       player_hand_state.end_game!(event)
     else
       raise ArgumentError, "未対応のイベントです: #{event.class.name}"
+    end
+  end
+
+  def update_projection_versions(event)
+    if event.is_a?(GameEndedEvent)
+      versions = Query::ProjectionVersion.find_all_excluding_projection_name(event.game_number, 'trash')
+      versions.each do |pv|
+        pv.event_id = event.event_id.value
+        pv.save!
+      end
+    else
+      ReadModels::ProjectionVersions.update_all_versions(event)
     end
   end
 

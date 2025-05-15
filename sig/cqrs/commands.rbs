@@ -22,17 +22,15 @@ end
 
 module CommandHandlers
   class GameStart
-    include _CommandHandler   
-    
+    include _CommandHandler
   end
 
   class ExchangeCard
-    include _CommandHandler    
+    include _CommandHandler
   end
 
   class EndGame
-    include _CommandHandler    
-    
+    include _CommandHandler
   end
 end
 
@@ -170,26 +168,34 @@ module Aggregates
 end
 
 module CommandHandlers
-  class GameStart    
+  class GameStart
     private
     attr_reader command: Command
     def append_event_to_store!: () -> CommandResult
     def build_already_started_error_result: () -> CommandResult?
   end
 
-  class ExchangeCard    
+  class ExchangeCard
     private
-    def append_event_to_store!: (GameNumber) -> CommandResult
+    def append_event_to_store!: () -> CommandResult
     def rebuild_hand_from_event: (Array[_CardForCommand], _Event) -> Array[_CardForCommand]
     def build_cards_from_exchanged_event: (Array[_CardForCommand], CardExchangedEvent) -> Array[_CardForCommand]
-    def build_board_error_result_if_needed: () -> CommandResult?
+    def build_board_error_result_if_needed: (Array[_CardForCommand]) -> CommandResult?
     def build_game_state_error_result_if_needed: () -> CommandResult?
-    def raise_if_invalid_context: (CommandContext) -> void
-    attr_reader board: Aggregates::BoardAggregate
-    attr_reader command: Command
+    def build_error_if_needed: () -> CommandResult?
+    def raise_if_invalid_context: () -> void
+    attr_reader params: untyped
+
+    class Params
+      attr_reader command: Command
+      attr_reader context: CommandContext
+      attr_reader discarded_card: HandSet::Card
+      attr_reader board: Aggregates::BoardAggregate
+      def initialize: (Command, CommandContext, Aggregates::BoardAggregate) -> void
+    end
   end
 
-  class EndGame    
+  class EndGame
     private
     def validate_game_state: (Command) -> CommandResult?
     def process_end_game: (Command) -> CommandResult
