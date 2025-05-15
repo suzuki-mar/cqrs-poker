@@ -7,12 +7,13 @@ module CommandHandlers
       @aggregate_store = Aggregates::Store.new
     end
 
-    def handle(command, context)
+    def handle(command)
       @command = command
 
-      raise ArgumentError, 'このハンドラーはGAME_START専用です' unless context.type == CommandContext::Types::GAME_START
+      board = Aggregates::BoardAggregate.load_for_current_state
 
-      result = append_event_to_store!
+      initial_hand = board.draw_initial_hand
+      result = append_event_to_store!(initial_hand)
       return result if result.error
 
       event_bus.publish(result.event)
@@ -23,9 +24,7 @@ module CommandHandlers
 
     attr_reader :event_bus, :aggregate_store, :command
 
-    def append_event_to_store!
-      board = Aggregates::BoardAggregate.load_for_current_state
-      initial_hand = command.execute_for_game_start(board)
+    def append_event_to_store!(initial_hand)
       event = GameStartedEvent.new(initial_hand)
       game_number = GameNumber.build
 

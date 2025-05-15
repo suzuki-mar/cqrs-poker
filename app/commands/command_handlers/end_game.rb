@@ -7,14 +7,16 @@ module CommandHandlers
       @aggregate_store = Aggregates::Store.new
     end
 
-    def handle(command, context)
-      raise ArgumentError, 'game_numberがnilです' if context.game_number.nil?
+    def handle(command)
+      raise ArgumentError, 'game_numberがnilです' if command.game_number.nil?
 
-      # @type var game_number: GameNumber
-      game_number = context.game_number
+      game_number = command.game_number
 
       error_result = build_error_result_if_needed(command, game_number)
       return error_result if error_result
+
+      board = Aggregates::BoardAggregate.load_for_current_state
+      board.finish_game
 
       result = append_event_to_store!(command, game_number)
       return result if result.error
@@ -27,9 +29,8 @@ module CommandHandlers
 
     attr_reader :event_bus, :aggregate_store
 
-    def append_event_to_store!(command, game_number)
-      board = Aggregates::BoardAggregate.load_for_current_state
-      command.execute_for_end_game(board)
+    def append_event_to_store!(_command, game_number)
+      # ゲーム終了時のドメイン操作が必要ならここで直接呼ぶ
       event = GameEndedEvent.new
 
       aggregate_store.append_event(event, game_number)

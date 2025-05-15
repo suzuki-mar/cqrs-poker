@@ -10,22 +10,20 @@ RSpec.describe 'カード交換をするユースケース' do
   let(:player_hand_state) { ReadModels::PlayerHandState.new }
   let(:current_hand) { Query::PlayerHandState.find_current_session.hand_set }
   let(:discarded_card) { HandSet::Card.new(current_hand.first) }
-  let(:context) { CommandContext.build_for_exchange(discarded_card: discarded_card, game_number: @game_number) }
   let(:event_bus) do
     event_publisher = EventPublisher.new(projection: Projection.new, event_listener: LogEventListener.new(logger))
     EventBus.new(event_publisher)
   end
 
   before do
-    command_bus.execute(Command.new, CommandContext.build_for_game_start)
+    command_bus.execute(GameStartCommand.new)
     @game_number = Aggregates::Store.new.latest_event.game_number
     ReadModels::ProjectionVersions.load(@game_number)
   end
 
   let(:card) { discarded_card }
-  let(:main_command_context) { CommandContext.build_for_exchange(discarded_card: card, game_number: @game_number) }
 
-  subject { command_bus.execute(Command.new, main_command_context) }
+  subject { command_bus.execute(ExchangeCardCommand.new(card, @game_number)) }
 
   context '正常系' do
     let(:original_hand) { player_hand_state.hand_set }
@@ -34,8 +32,7 @@ RSpec.describe 'カード交換をするユースケース' do
       it 'イベントが正しく発行されること' do
         current_hand = player_hand_state.refreshed_hand_set
         discarded_card = current_hand.fetch_by_number(1)
-        context = CommandContext.build_for_exchange(discarded_card: discarded_card, game_number: @game_number)
-        published_event = command_bus.execute(Command.new, context)
+        published_event = command_bus.execute(ExchangeCardCommand.new(discarded_card, @game_number))
 
         expect(published_event.event).to be_a(CardExchangedEvent)
         expect(published_event.event.to_event_data[:discarded_card].to_s).to eq(discarded_card.to_s)
@@ -58,8 +55,7 @@ RSpec.describe 'カード交換をするユースケース' do
 
         hand_after_first = player_hand_state.refreshed_hand_set
         discarded_card2 = hand_after_first.fetch_by_number(1)
-        context2 = CommandContext.build_for_exchange(discarded_card: discarded_card2, game_number: @game_number)
-        command_bus.execute(Command.new, context2)
+        command_bus.execute(ExchangeCardCommand.new(discarded_card2, @game_number))
 
         hand_after_second = player_hand_state.refreshed_hand_set
         expect(hand_after_second.cards).not_to include(discarded_card2)
@@ -95,15 +91,13 @@ RSpec.describe 'カード交換をするユースケース' do
       context 'バージョン履歴' do
         context 'バージョン履歴が揃っている場合' do
           before do
-            command_bus.execute(Command.new, CommandContext.build_for_game_start)
+            command_bus.execute(GameStartCommand.new)
           end
 
           it 'バージョン履歴をアップデートをしていること' do
             start_event = Aggregates::Store.new.latest_event
 
-            command_bus.execute(Command.new,
-                                CommandContext.build_for_exchange(discarded_card: discarded_card,
-                                                                  game_number: @game_number))
+            command_bus.execute(ExchangeCardCommand.new(discarded_card, @game_number))
             exchange_event = Aggregates::Store.new.latest_event
 
             expect(start_event.event_id).to be < exchange_event.event_id
@@ -116,7 +110,7 @@ RSpec.describe 'カード交換をするユースケース' do
 
         context 'バージョン履歴が揃っていない場合' do
           before do
-            command_bus.execute(Command.new, CommandContext.build_for_game_start)
+            command_bus.execute(GameStartCommand.new)
           end
 
           it 'バージョン履歴をアップデートをしていること' do
@@ -147,9 +141,8 @@ RSpec.describe 'カード交換をするユースケース' do
   context '異常系' do
     context '存在しないGameNumberを指定した場合' do
       let(:game_number) { GameNumber.build }
-      let(:main_command_context) do
-        CommandContext.build_for_exchange(discarded_card: discarded_card, game_number: game_number)
-      end
+      let(:card) { discarded_card }
+      subject { command_bus.execute(ExchangeCardCommand.new(card, game_number)) }
       it 'InvalidCommandが発行されること' do
         result = subject
         expect(result.error).to be_a(CommandErrors::InvalidCommand)
@@ -158,6 +151,7 @@ RSpec.describe 'カード交換をするユースケース' do
 
     context '手札に存在しないカードを交換した場合' do
       let(:card) { CustomFaker.not_in_hand_card(player_hand_state.refreshed_hand_set) }
+      subject { command_bus.execute(ExchangeCardCommand.new(card, @game_number)) }
       it '警告ログが正しく出力されること' do
         subject
         expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: 交換対象のカードが手札に存在しません/)
@@ -167,14 +161,8 @@ RSpec.describe 'カード交換をするユースケース' do
     context '同じカードを2回交換した場合' do
       let(:card) { discarded_card }
       it '2回目で警告ログが正しく出力されること' do
-        command_bus.execute(
-          Command.new,
-          CommandContext.build_for_exchange(discarded_card: card, game_number: @game_number)
-        ) # 1回目
-        command_bus.execute(
-          Command.new,
-          CommandContext.build_for_exchange(discarded_card: card, game_number: @game_number)
-        ) # 2回目
+        command_bus.execute(ExchangeCardCommand.new(card, @game_number)) # 1回目
+        command_bus.execute(ExchangeCardCommand.new(card, @game_number)) # 2回目
         expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: 交換対象のカードが手札に存在しません/)
       end
     end
@@ -182,21 +170,14 @@ RSpec.describe 'カード交換をするユースケース' do
     context 'デッキが空のときに交換した場合' do
       let(:card) { player_hand_state.refreshed_hand_set.cards.first }
       before do
-        # デッキが空の状態を事前に作るためのセットアップ
-        # これにより、「デッキが空のときに交換しようとした場合のエラーやログ出力をテストする
         deck_size = HandSet::Card::VALID_SUITS.size * HandSet::Card::VALID_NUMBERS.size
         hand_size = GameSetting::MAX_HAND_SIZE
         exchange_count = deck_size - hand_size
         exchange_count.times do
-          command_bus.execute(
-            Command.new,
-            CommandContext.build_for_exchange(
-              discarded_card: player_hand_state.refreshed_hand_set.cards.first,
-              game_number: @game_number
-            )
-          )
+          command_bus.execute(ExchangeCardCommand.new(player_hand_state.refreshed_hand_set.cards.first, @game_number))
         end
       end
+      subject { command_bus.execute(ExchangeCardCommand.new(card, @game_number)) }
       it '警告ログが正しく出力されること' do
         subject
         expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: デッキの残り枚数が不足しています/)
@@ -204,11 +185,9 @@ RSpec.describe 'カード交換をするユースケース' do
     end
 
     it 'ゲームが終了している状態で交換しようとするとInvalidCommandが発行されること' do
-      command_bus.execute(Command.new, CommandContext.build_for_end_game(game_number: @game_number))
+      command_bus.execute(EndGameCommand.new(@game_number))
 
-      result = command_bus.execute(Command.new,
-                                   CommandContext.build_for_exchange(discarded_card: discarded_card,
-                                                                     game_number: @game_number))
+      result = command_bus.execute(ExchangeCardCommand.new(discarded_card, @game_number))
 
       expect(result.error).to be_a(CommandErrors::InvalidCommand)
       expect(result.error.reason).to eq('ゲームが進行中ではありません')

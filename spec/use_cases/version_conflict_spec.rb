@@ -40,22 +40,22 @@ RSpec.describe 'バージョン競合ユースケース' do
   let(:player_hand_state) { ReadModels::PlayerHandState.new }
   let(:event_publisher) { EventPublisher.new(projection: Projection.new, event_listener: LogEventListener.new(logger)) }
   let(:event_bus) { EventBus.new(event_publisher) }
+  let(:card) { ReadModels::PlayerHandState.new.refreshed_hand_set.cards.first }
+  let(:game_number) { Aggregates::Store.new.latest_event.game_number }
 
   describe 'カード交換時のバージョン競合' do
     before do
-      command_bus.execute(Command.new, CommandContext.build_for_game_start)
+      command_bus.execute(GameStartCommand.new)
+      @game_number = Aggregates::Store.new.latest_event.game_number
+      @card = ReadModels::PlayerHandState.new.refreshed_hand_set.cards.first
+      command_bus.execute(ExchangeCardCommand.new(@card, @game_number))
     end
 
     it '警告ログが出力されること' do
-      card = ReadModels::PlayerHandState.new.refreshed_hand_set.cards.first
-      game_number = Aggregates::Store.new.latest_event.game_number
-      context = CommandContext.build_for_exchange(discarded_card: card, game_number: game_number)
-      # Event.next_version_forをモックして常に1を返す（競合を強制）
       allow(Event).to receive(:next_version_for).and_return(1)
-      # 1回目で正常に保存
-      command_bus.execute(Command.new, context)
-      # 2回目で同じversionを使って競合を発生させる
-      result = command_bus.execute(Command.new, context)
+      card2 = ReadModels::PlayerHandState.new.refreshed_hand_set.cards.first
+      command_bus.execute(ExchangeCardCommand.new(card2, @game_number))
+      result = command_bus.execute(ExchangeCardCommand.new(card2, @game_number))
       expect(result.error).to be_a(CommandErrors::VersionConflict)
       expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
     end

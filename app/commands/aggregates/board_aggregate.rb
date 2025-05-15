@@ -28,12 +28,17 @@ module Aggregates
         apply_game_started_event_from_cards(cards)
       when CardExchangedEvent
         apply_card_exchanged_event(event)
+      when GameEndedEvent
+        apply_game_ended_event(event)
       end
     end
 
     def drawable?
       deck.remaining_count.positive?
     end
+
+    # 現時点ではおこなうことはないがAgreegateの振る舞いとしてはったほうがいいのでメソッドを実装している
+    def finish_game; end
 
     private
 
@@ -62,6 +67,9 @@ module Aggregates
       new_card = event.to_event_data[:new_card]
       deck.remove(new_card) if deck.has?(new_card)
     end
+
+    # 現時点ではおこなうことはないがAgreegateの振る舞いとしてはったほうがいいのでメソッドを実装している
+    def apply_game_ended_event(event); end
 
     def discard_to_trash(card)
       trash.accept(card)

@@ -4,11 +4,11 @@ class CommandBus
     @logger = logger
   end
 
-  def execute(command, context)
-    handler = build_handler_map[context.type]
-    raise ArgumentError, "未知のコマンドタイプです: #{context.type}" unless handler
+  def execute(command)
+    handler = build_handler_map[command.class]
+    raise ArgumentError, "未知のコマンドクラスです: #{command.class}" unless handler
 
-    result = handler.handle(command, context)
+    result = handler.handle(command)
     log_error_if_needed(result.error)
     result
   end
@@ -28,9 +28,9 @@ class CommandBus
 
   def build_handler_map
     {
-      CommandContext::Types::GAME_START => CommandHandlers::GameStart.new(event_bus),
-      CommandContext::Types::EXCHANGE_CARD => CommandHandlers::ExchangeCard.new(event_bus),
-      CommandContext::Types::END_GAME => CommandHandlers::EndGame.new(event_bus)
+      GameStartCommand => CommandHandlers::GameStart.new(event_bus),
+      EndGameCommand => CommandHandlers::EndGame.new(event_bus),
+      ExchangeCardCommand => CommandHandlers::ExchangeCard.new(event_bus)
     }
   end
 end

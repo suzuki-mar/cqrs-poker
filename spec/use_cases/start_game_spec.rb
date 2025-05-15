@@ -5,16 +5,15 @@ require 'rails_helper'
 RSpec.describe 'ゲーム開始' do
   let(:logger) { TestLogger.new }
   let(:command_bus) { UseCaseHelper.build_command_bus(logger) }
-  let(:main_command_context) { CommandContext.build_for_game_start }
   let(:read_model) { ReadModels::PlayerHandState.new }
   let(:event_publisher) { EventPublisher.new(projection: Projection.new, event_listener: LogEventListener.new(logger)) }
   let(:event_bus) { EventBus.new(event_publisher) }
 
   context '正常系' do
     describe 'ゲームが正しく開始されること' do
-      let(:command) { Command.new }
+      let(:command) { GameStartCommand.new }
 
-      subject { command_bus.execute(Command.new, main_command_context) }
+      subject { command_bus.execute(GameStartCommand.new) }
 
       it 'イベントが正しく発行されること' do
         subject
@@ -83,8 +82,8 @@ RSpec.describe 'ゲーム開始' do
 
     context 'ゲームがすでに開始されている場合' do
       it '新しいゲームを開始できること' do
-        command_bus.execute(Command.new, main_command_context)
-        command_bus.execute(Command.new, main_command_context)
+        command_bus.execute(GameStartCommand.new)
+        command_bus.execute(GameStartCommand.new)
 
         expect(ReadModels::ProjectionVersions.count_group_game_number).to eq(2)
       end
