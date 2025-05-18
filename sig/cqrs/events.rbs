@@ -14,6 +14,7 @@ interface _EventClass
   def from_store: (Event) -> _Event
   def event_type: () -> String
   def from_event_data: (Hash[Symbol, untyped], EventId, GameNumber) -> _Event
+  def from_event: (Event) -> _Event
 end
 
 class GameStartedEvent
@@ -41,9 +42,12 @@ class GameEndedEvent
   include _Event
   extend _EventClass
 
-  def initialize: () -> void
+  def initialize: (::ActiveSupport::TimeWithZone ended_at) -> void
+  def self.new: (::ActiveSupport::TimeWithZone) -> GameEndedEvent
 
-  private  
+  private
+
+  attr_reader ended_at: ::ActiveSupport::TimeWithZone
 end
 
 class EventBus
@@ -54,7 +58,7 @@ end
 
 
 module AssignableIds
-  def assign_ids: (event_id: untyped, game_number: untyped) -> void
-  def event_id: () -> untyped
-  def game_number: () -> untyped
+  def assign_ids: (event_id: EventId, game_number: GameNumber) -> void
+  def event_id: () -> EventId
+  def game_number: () -> GameNumber
 end

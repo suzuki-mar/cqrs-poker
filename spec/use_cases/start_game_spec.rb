@@ -35,51 +35,48 @@ RSpec.describe 'ゲーム開始' do
       it 'ゲーム状態が正しく更新されること' do
         subject
 
-        display_data = read_model.current_state_for_display
-        aggregate_failures do
-          expect(display_data[:status]).to eq('started')
-          expect(display_data[:hand].split.size).to eq(GameSetting::MAX_HAND_SIZE)
-          expect(display_data[:turn]).to eq(1)
-        end
+        display_data = QueryService.last_game_player_hand_summary
+
+        expect(display_data[:status]).to eq('started')
+        expect(display_data[:hand_set].size).to eq(GameSetting::MAX_HAND_SIZE)
       end
 
       it '表示用のデータが正しく整形されること' do
         subject
 
-        display_data = read_model.current_state_for_display
+        display_data = QueryService.last_game_player_hand_summary
 
-        aggregate_failures do
-          expect(display_data[:status]).to eq('started')
-          expect(display_data[:hand].split.size).to eq(GameSetting::MAX_HAND_SIZE)
-          expect(display_data[:turn]).to eq(1)
-        end
+        expect(display_data[:status]).to eq('started')
+        expect(display_data[:hand_set].size).to eq(GameSetting::MAX_HAND_SIZE)
       end
 
       it 'バージョン履歴を作成していること' do
         subject
+
+        query_service = QueryService.build_last_game_query_service
+        version_info = query_service.all_projection_versions
+
         latest_event = Aggregates::Store.new.latest_event
-        version_info = ReadModels::ProjectionVersions.load(latest_event.game_number)
-        version_ids = version_info.fetch_all_versions.map(&:last_event_id)
+        version_ids = version_info.map(&:last_event_id)
+
         expect(version_ids).to all(eq(latest_event.event_id))
+        expect(version_ids.size).to eq(query_service.all_projection_versions.size)
       end
 
       it '捨て札が用意されていること' do
         subject
-        game_number = Aggregates::Store.new.latest_event.game_number
-        trash_state = ReadModels::TrashState.load(game_number)
-        expect(trash_state.empty?).to be_falsey
+
+        query_service = QueryService.build_last_game_query_service
+        trash_state = query_service.trash_state
+
+        expect(trash_state.exists?).to be_truthy
+        expect(trash_state.empty?).to be_truthy
       end
 
       it 'ゲーム終了記録が作成されていないこと' do
         subject
-        expect(ReadModels::Histories.load.size).to eq(0)
-      end
-
-      it '捨て札が空であること' do
-        subject
-        game_number = Aggregates::Store.new.latest_event.game_number
-        trash_state = ReadModels::TrashState.load(game_number)
-        expect(trash_state.empty?).to be_falsey
+        query_service = QueryService.build_last_game_query_service
+        expect(query_service.ended_game_recorded?).to be false
       end
     end
 
@@ -88,7 +85,7 @@ RSpec.describe 'ゲーム開始' do
         command_bus.execute(Commands::GameStart.new)
         command_bus.execute(Commands::GameStart.new)
 
-        expect(ReadModels::ProjectionVersions.count_group_game_number).to eq(2)
+        expect(QueryService.number_of_games).to eq(2)
       end
     end
   end

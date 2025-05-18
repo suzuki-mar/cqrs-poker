@@ -3,11 +3,7 @@
 module EventListener
   class Projection
     def handle_event(event)
-      player_hand_state = ReadModels::PlayerHandState.new
-
-      if event.is_a?(CommandErrors::InvalidCommand) || event.is_a?(CommandErrors::VersionConflict)
-        return player_hand_state
-      end
+      player_hand_state = build_player_hand_state(event)
 
       update_projection_versions(event)
       apply_to_player_hand_state(player_hand_state, event)
@@ -19,6 +15,14 @@ module EventListener
 
     private
 
+    def build_player_hand_state(event)
+      if event.is_a?(GameStartedEvent)
+        ReadModels::PlayerHandState.build_from_event(event)
+      else
+        ReadModels::PlayerHandState.load_by_game_number(event.game_number)
+      end
+    end
+
     def apply_to_player_hand_state(player_hand_state, event)
       case event
       when GameStartedEvent
@@ -26,6 +30,7 @@ module EventListener
       when CardExchangedEvent
         player_hand_state.exchange_card!(event)
       when GameEndedEvent
+        # @type var event: GameEndedEvent
         player_hand_state.end_game!(event)
       else
         raise ArgumentError, "未対応のイベントです: #{event.class.name}"

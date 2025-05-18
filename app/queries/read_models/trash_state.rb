@@ -1,75 +1,74 @@
+# frozen_string_literal: true
+
 module ReadModels
   class TrashState
+    attr_reader :game_number
+
     def self.load(game_number)
       record = Query::TrashState.current_game(game_number)
+      raise "TrashState not found for game_number: \#{game_number.value}" unless record
+
       new(record)
     end
 
     def self.prepare!(game_number, first_event_id)
-      # @type var discarded_cards: Array[String]
-      discarded_cards = []
-      record = Query::TrashState.create!(
-        discarded_cards: discarded_cards,
+      record = Query::TrashState.new(
+        game_number: game_number.value,
+        discarded_cards: [],
         current_turn: 1,
-        last_event_id: first_event_id.value,
-        game_number: game_number.value
+        last_event_id: first_event_id.value
       )
-      new(record)
+      record.save!
     end
 
-    def accept!(card, current_turn, last_event_id, _game_number)
-      return if @trash_state.nil?
-
-      trash_state = @trash_state
-      # @type var trash_state: Query::TrashState
-      trash_state.discarded_cards << card.to_s
-      trash_state.current_turn = current_turn
-      trash_state.last_event_id = last_event_id
-      trash_state.save!
+    def initialize(record)
+      @trash_record = record
+      @game_number = GameNumber.new(record.game_number)
     end
 
-    def current_turn
-      raise 'trash_state is nil' if empty?
+    def accept!(card, current_turn, last_event_id, game_number)
+      record = Query::TrashState.current_game(game_number)
+      raise "TrashState record not found for game_number: #{game_number.value}" unless record
 
-      # @type var trash_state: Query::TrashState
-      trash_state = self.trash_state
-      trash_state.current_turn
+      record.discarded_cards << card.to_s
+
+      record.current_turn = current_turn
+      record.last_event_id = last_event_id
+
+      record.save!
     end
 
-    def last_event_id
-      raise 'trash_state is nil' if empty?
-
-      # @type var trash_state: Query::TrashState
-      trash_state = self.trash_state
-      EventId.new(trash_state.last_event_id)
-    end
-
-    def number?(card)
-      raise 'trash_state is nil' if empty?
-
-      # @type var trash_state: Query::TrashState
-      trash_state = @trash_state
-      trash_state.discarded_cards.any? { |c| HandSet::Card.new(c).same_number?(card) }
+    def exists?
+      Query::TrashState.current_game(@game_number).present?
     end
 
     def empty?
-      @trash_state.nil?
+      !exists? || trash_record.discarded_cards.empty?
     end
 
-    def cards
-      return [] if empty?
+    def number?(card)
+      # @type var card: Card
+      trash_record.discarded_cards.any? { |c| HandSet::Card.new(c).same_number?(card) }
+    end
 
-      trash_state = @trash_state
-      # @type var trash_state: Query::TrashState
-      trash_state.discarded_cards
+    delegate :discarded_cards, to: :trash_record
+
+    delegate :current_turn, to: :trash_record
+
+    def last_event_id
+      EventId.new(trash_record.last_event_id)
     end
 
     private
 
-    attr_reader :trash_state
+    def trash_record
+      if @_trash_record.nil?
+        record = Query::TrashState.current_game(@game_number)
+        raise "TrashState record not found for game_number: #{@game_number.value}" unless record
 
-    def initialize(trash_state)
-      @trash_state = trash_state
+        @_trash_record = record
+      end
+      @_trash_record
     end
   end
 end

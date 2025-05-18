@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 プロジェクトの進行に伴い、Ruby 特有の実装規約が随時追加されていきます。
 

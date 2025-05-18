@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 # ボブくん学習帳
 これはボブくんが新しいことを教わったときに書くものです

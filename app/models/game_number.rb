@@ -19,6 +19,8 @@ class GameNumber
   end
 
   def <=>(other)
+    return nil unless other.is_a?(GameNumber)
+
     value <=> other.value
   end
 

@@ -7,62 +7,52 @@
 
 require 'rails_helper'
 
-def __inject_slow_handler_into_command_bus(command_bus:, event_bus:, handler_key:, handler_class:, delay: 0.5)
-  # テスト専用: 任意のコマンドバスのハンドラーを遅延付きハンドラーに差し替える
-  command_bus.instance_variable_set(
-    handler_key,
-    SlowCommandHandler.new(handler_class.new(event_bus), delay: delay)
-  )
-end
-
-# shared_examplesを使用すると何らかの理由で処理が停止するのでメソッドを使用している
-def __run_concurrent_commands(command_bus, command, context, thread_count: 2)
-  results = []
-  threads = Array.new(thread_count) do
-    Thread.new do
-      results << command_bus.execute(command, context)
-    end
-  end
-  threads.each(&:join)
-  results
-end
-
-# バージョン競合を強制するテスト用ヘルパー
-# usage: __force_version_conflict
-
-def __force_version_conflict
-  allow_any_instance_of(Aggregates::Store).to receive(:current_version).and_return(0)
-end
-
 RSpec.describe 'バージョン競合ユースケース' do
   let(:logger) { TestLogger.new }
   let!(:command_bus) { UseCaseHelper.build_command_bus(logger) }
-  let(:player_hand_state) { ReadModels::PlayerHandState.new }
   let(:event_publisher) do
     EventPublisher.new(projection: EventListener::Projection.new,
                        event_listener: EventListener::Log.new(logger))
   end
   let(:event_bus) { EventBus.new(event_publisher) }
-  let(:card) { ReadModels::PlayerHandState.new.refreshed_hand_set.cards.first }
-  let(:game_number) { Aggregates::Store.new.latest_event.game_number }
+  # QueryServiceを使用してゲーム番号を取得
+  let(:game_number) { QueryService.latest_game_number }
+  # 先にQueryServiceをインスタンス化
+  let(:query_service) { QueryService.new(game_number) }
+
+  # QueryServiceの拡張メソッドを追加（まだ実装していない場合）
+  before do
+    unless QueryService.respond_to?(:fetch_current_version)
+      QueryService.class_eval do
+        def self.fetch_current_version
+          Aggregates::Store.new.current_version
+        end
+      end
+    end
+  end
 
   describe 'カード交換時のバージョン競合' do
-    before do
+    let!(:game_number) do
       command_bus.execute(Commands::GameStart.new)
-      @game_number = Aggregates::Store.new.latest_event.game_number
-      @card = ReadModels::PlayerHandState.new.refreshed_hand_set.cards.first
-      command_bus.execute(Commands::ExchangeCard.new(@card, @game_number))
+      QueryService.latest_game_number
+    end
+
+    let!(:query_service) { QueryService.new(game_number) }
+    let!(:card) { query_service.latest_hand_cards.first }
+
+    before do
+      # @card と @game_number を card と game_number に修正
+      command_bus.execute(Commands::ExchangeCard.new(card, game_number))
     end
 
     it '警告ログが出力されること' do
       allow(Event).to receive(:next_version_for).and_return(1)
-      card2 = ReadModels::PlayerHandState.new.refreshed_hand_set.cards.first
-      command_bus.execute(Commands::ExchangeCard.new(card2, @game_number))
-      result = command_bus.execute(Commands::ExchangeCard.new(card2, @game_number))
+      # 2枚目のカードを取得
+      card2 = query_service.latest_hand_cards.first
+      command_bus.execute(Commands::ExchangeCard.new(card2, game_number))
+      result = command_bus.execute(Commands::ExchangeCard.new(card2, game_number))
       expect(result.error).to be_a(CommandErrors::VersionConflict)
       expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
     end
   end
-
-  # 今後、他ユースケースのバージョン競合テストもここに追加可能
 end

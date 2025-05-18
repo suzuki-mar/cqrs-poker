@@ -11,6 +11,7 @@ module CommandHandlers
       raise ArgumentError, 'game_numberがnilです' if command.game_number.nil?
 
       game_number = command.game_number
+      # ここで型保証: game_numberは必ずGameNumber型
 
       error_result = build_error_result_if_needed(command, game_number)
       return error_result if error_result
@@ -31,7 +32,7 @@ module CommandHandlers
 
     def append_event_to_store!(_command, game_number)
       # ゲーム終了時のドメイン操作が必要ならここで直接呼ぶ
-      event = GameEndedEvent.new
+      event = GameEndedEvent.new(Time.current)
 
       aggregate_store.append_event(event, game_number)
     end

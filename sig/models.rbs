@@ -17,8 +17,11 @@ module Query
     attr_accessor current_rank: String
     attr_accessor current_turn: Integer
     attr_accessor hand_set: Array[String]
+    attr_reader game_number: Integer
     def assign_hand_number_from_set: (Array[String]) -> void
     def self.find_current_session: () -> PlayerHandState?
+    def self.latest_game_number: () -> GameNumber
+    def self.find_latest_by_event: () -> PlayerHandState?
   end
 
   class History < ApplicationRecord

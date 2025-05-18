@@ -27,10 +27,10 @@ RSpec.shared_examples 'version history update examples' do
     end
 
     it 'バージョン履歴をアップデートをしていること' do
-      start_event_id = Aggregates::Store.new.latest_event.event_id
+      start_event_id = QueryService.latest_event_id - 1
 
       versions = Query::ProjectionVersion.projection_names.keys
-      Query::ProjectionVersion.find_or_create_by!(projection_name: versions[0]).update!(event_id: start_event_id.value)
+      Query::ProjectionVersion.find_or_create_by!(projection_name: versions[0]).update!(event_id: start_event_id)
 
       subject
       main_event = Aggregates::Store.new.latest_event

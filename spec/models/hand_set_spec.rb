@@ -35,9 +35,6 @@ RSpec.describe HandSet do
 
     with_them do
       it '正しい役が返ること' do
-        if RSpec.configuration.formatters.any? { |f| f.class.name.include?('DocumentationFormatter') }
-          puts "テスト対象: expected_rank=#{expected_rank}"
-        end
         hand_set = HandSet.build(faker.call)
         expect(hand_set.evaluate).to eq(expected_rank)
       end

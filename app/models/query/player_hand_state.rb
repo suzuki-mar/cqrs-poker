@@ -22,6 +22,10 @@ module Query
       last
     end
 
+    def self.find_latest_by_event
+      order(last_event_id: :desc).first
+    end
+
     private
 
     def validate_hand_set_format
