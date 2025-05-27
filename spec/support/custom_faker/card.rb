@@ -19,19 +19,19 @@ module CustomFaker
     end
 
     def valid_card
-      HandSet.build_card_for_command(card_str)
+      HandSet.build_card(card_str)
     end
 
     def invalid_card
-      HandSet.build_card_for_command('@1')
+      HandSet.build_card('@1')
     end
 
     def card_with_suit(suit_value)
-      HandSet.build_card_for_command("#{suit_value}#{number}")
+      HandSet.build_card("#{suit_value}#{number}")
     end
 
     def card_with_number(number_value)
-      HandSet.build_card_for_command("#{suit}#{number_value}")
+      HandSet.build_card("#{suit}#{number_value}")
     end
 
     def card_str

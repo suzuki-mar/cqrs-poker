@@ -3,16 +3,17 @@
 module Aggregates
   class Store
     def append_event(event, game_number)
-      persist_and_finalize_event(event, game_number)
-    rescue ActiveRecord::RecordInvalid => e
-      if version_conflict_error?(e)
-        return ErrorBuilder.version_conflict_result(current_version) ||
-               CommandResult.new(
-                 error: CommandErrors::VersionConflict.new(current_version, current_version)
-               )
+      if next_available_version_for_game(game_number) <= Event.current_version_for_game(game_number)
+        return ErrorResultBuilder.version_conflict(game_number, current_version_for_game(game_number))
       end
 
-      CommandResult.new(error: ErrorBuilder.validation_error(e, event))
+      persist_and_finalize_event(event, game_number)
+    rescue ActiveRecord::RecordInvalid => e
+      if Event.version_conflict_error?(e)
+        return ErrorResultBuilder.version_conflict(game_number, current_version_for_game(game_number))
+      end
+
+      ErrorResultBuilder.validation_error(e, event)
     end
 
     def append_initial_event(event, game_number)
@@ -39,10 +40,14 @@ module Aggregates
       event
     end
 
-    def game_in_progress?
-      started = Event.exists?(event_type: GameStartedEvent.event_type)
-      ended = Event.exists?(event_type: GameEndedEvent.event_type)
-      started && !ended
+    def game_in_progress?(game_number)
+      exists_types = Event.exists_by_types(game_number, %w[game_started game_ended])
+      exists_types['game_started'] && !exists_types['game_ended']
+    end
+
+    def game_ended?(game_number)
+      exists_types = Event.exists_by_types(game_number, %w[game_started game_ended])
+      exists_types['game_ended']
     end
 
     def load_board_aggregate_for_current_state
@@ -52,10 +57,21 @@ module Aggregates
       aggregate
     end
 
+    delegate :current_version_for_game, to: :Event
+
+    def next_available_version_for_game(game_number)
+      current_version_for_game(game_number) + 1
+    end
+
+    def exists_game?(game_number)
+      Event.exists?(game_number: game_number.value)
+    end
+
     private
 
     def create_event_record!(event, game_number)
-      version = Event.next_version_for(game_number)
+      version = next_available_version_for_game(game_number)
+
       Event.create!(
         event_type: event.event_type,
         event_data: event.to_serialized_hash.to_json,
@@ -65,18 +81,10 @@ module Aggregates
       )
     end
 
-    def current_version
-      Event.maximum(:version) || 0
-    end
-
     def valid_event_type?(event)
       event.is_a?(GameStartedEvent) ||
         event.is_a?(CardExchangedEvent) ||
         event.is_a?(GameEndedEvent)
-    end
-
-    def version_conflict_error?(err)
-      err.record.errors.details[:version]&.any? { |detail| detail[:error] == :taken }
     end
 
     def persist_and_finalize_event(event, game_number)

@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
+# RubyMineでは型が書いていないと扱われているがRBS側に型を書いている
+#
 class HandSet
-  class RankEvaluater
+  class Evaluator
     NUMBER_TO_VALUE = {
       'A' => 14,
       'K' => 13,
@@ -60,7 +62,11 @@ class HandSet
       is_wheel = values == [2, 3, 4, 5, 14]
       return true if is_wheel
 
-      values.each_cons(2).all? { |a, b| b - a == 1 }
+      # 明示的に2つの整数値を取り出して比較することで型エラーを回避
+      values.each_cons(2).all? do |pair|
+        a, b = pair
+        b && a && (b - a == 1)
+      end
     end
 
     delegate :three_of_a_kind?, to: :rank_combinations

@@ -5,7 +5,12 @@ class CommandBus
   end
 
   def execute(command)
-    handler = build_handler_map[command.class]
+    handler = if command.is_a?(Commands::GameStart)
+                CommandHandlers::GameStart.new(event_bus)
+              else
+                CommandHandlers::InGame.new(event_bus)
+              end
+
     raise ArgumentError, "未知のコマンドクラスです: #{command.class}" unless handler
 
     result = handler.handle(command)
@@ -20,17 +25,9 @@ class CommandBus
   def log_error_if_needed(error)
     case error
     when CommandErrors::InvalidCommand
-      logger.warn "[警告] コマンド失敗: #{error.reason}"
+      logger.warn "[警告] コマンド失敗: #{error.message}"
     when CommandErrors::VersionConflict
       logger.warn '[警告] コマンド失敗: バージョン競合'
     end
-  end
-
-  def build_handler_map
-    {
-      Commands::GameStart => CommandHandlers::GameStart.new(event_bus),
-      Commands::EndGame => CommandHandlers::EndGame.new(event_bus),
-      Commands::ExchangeCard => CommandHandlers::ExchangeCard.new(event_bus)
-    }
   end
 end

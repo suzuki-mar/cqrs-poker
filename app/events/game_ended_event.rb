@@ -30,13 +30,9 @@ class GameEndedEvent
     event_data = JSON.parse(event_record.event_data, symbolize_names: true)
     ended_at = event_data[:ended_at]
     event = new(ended_at)
-    if event_record.respond_to?(:id) && event_record.id &&
-       event_record.respond_to?(:game_number) && event_record.game_number
-      event.assign_ids(
-        event_id: EventId.new(event_record.id),
-        game_number: GameNumber.new(event_record.game_number)
-      )
-    end
+
+    EventFinalizer.execute(event, event_record)
+
     event
   end
 

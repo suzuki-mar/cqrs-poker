@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
+# @dynamic discarded_cards, current_turn
 module ReadModels
   class TrashState
     attr_reader :game_number
+
+    delegate :discarded_cards, :current_turn, to: :trash_record
 
     def self.load(game_number)
       record = Query::TrashState.current_game(game_number)
@@ -26,7 +29,7 @@ module ReadModels
       @game_number = GameNumber.new(record.game_number)
     end
 
-    def accept!(card, current_turn, last_event_id, game_number)
+    def accept!(card, current_turn, last_event_id)
       record = Query::TrashState.current_game(game_number)
       raise "TrashState record not found for game_number: #{game_number.value}" unless record
 
@@ -39,7 +42,7 @@ module ReadModels
     end
 
     def exists?
-      Query::TrashState.current_game(@game_number).present?
+      Query::TrashState.current_game(game_number).present?
     end
 
     def empty?
@@ -47,13 +50,12 @@ module ReadModels
     end
 
     def number?(card)
-      # @type var card: Card
-      trash_record.discarded_cards.any? { |c| HandSet::Card.new(c).same_number?(card) }
+      trash_record.discarded_cards.any? do |c|
+        # 警告エラーがでるのでコメントを付けている
+        # @type var c: String
+        HandSet::Card.new(c).same_number?(card)
+      end
     end
-
-    delegate :discarded_cards, to: :trash_record
-
-    delegate :current_turn, to: :trash_record
 
     def last_event_id
       EventId.new(trash_record.last_event_id)
@@ -62,13 +64,13 @@ module ReadModels
     private
 
     def trash_record
-      if @_trash_record.nil?
-        record = Query::TrashState.current_game(@game_number)
-        raise "TrashState record not found for game_number: #{@game_number.value}" unless record
+      return @trash_record unless @trash_record.nil?
 
-        @_trash_record = record
-      end
-      @_trash_record
+      record = Query::TrashState.current_game(game_number)
+      raise "TrashState record not found for game_number: #{game_number.value}" unless record
+
+      @trash_record = record
+      @trash_record
     end
   end
 end

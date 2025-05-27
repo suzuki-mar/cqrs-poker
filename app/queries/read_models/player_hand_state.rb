@@ -66,7 +66,7 @@ module ReadModels
 
     def hand_set
       player_hand_state = self.player_hand_state
-      HandSet.build(player_hand_state.hand_set.map { |c| HandSet.build_card_for_query(c) })
+      HandSet.build(player_hand_state.hand_set.map { |c| HandSet.build_card(c) })
     end
 
     def refreshed_hand_set
@@ -109,7 +109,7 @@ module ReadModels
     end
 
     def build_exchanged_hand_set(discarded_card, new_card)
-      hand_set = HandSet.build(player_hand_state.hand_set.map { |c| HandSet.build_card_for_query(c) })
+      hand_set = HandSet.build(player_hand_state.hand_set.map { |c| HandSet.build_card(c) })
       hand_set.rebuild_after_exchange(discarded_card, new_card)
     end
   end

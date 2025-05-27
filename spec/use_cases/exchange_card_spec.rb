@@ -17,7 +17,6 @@ RSpec.describe 'カード交換をするユースケース' do
     EventBus.new(event_publisher)
   end
 
-  # @game_number を let で定義
   let(:game_number) do
     command_bus.execute(Commands::GameStart.new)
     Aggregates::Store.new.latest_event.game_number
@@ -29,16 +28,16 @@ RSpec.describe 'カード交換をするユースケース' do
 
   let(:card) { discarded_card }
 
-  subject { command_bus.execute(Commands::ExchangeCard.new(card, game_number)) }
-
   context '正常系' do
+    subject { command_bus.execute(Commands::ExchangeCard.new(card, game_number)) }
+
     let(:original_hand) { player_hand_state.hand_set }
 
     describe '手札のカードを1枚交換できること' do
       it 'イベントが正しく発行されること' do
         current_hand = player_hand_state.refreshed_hand_set
         discarded_card = current_hand.fetch_by_number(1)
-        # game_number を使用
+
         published_event = command_bus.execute(Commands::ExchangeCard.new(discarded_card, game_number))
 
         expect(published_event.event).to be_a(CardExchangedEvent)
@@ -147,37 +146,43 @@ RSpec.describe 'カード交換をするユースケース' do
   end
 
   context '異常系' do
-    context '存在しないGameNumberを指定した場合' do
-      let(:game_number) { GameNumber.build } # このコンテキスト内の game_number は上書きされる
-      let(:card) { HandSet::Card.new('♠A') }
-      subject { command_bus.execute(Commands::ExchangeCard.new(card, game_number)) }
-      it 'InvalidCommandが発行されること' do
+    shared_examples '__エラーを返すこと' do |error_code|
+      it 'エラーを返すこと' do
         result = subject
         expect(result.error).to be_a(CommandErrors::InvalidCommand)
+        expect(result.error.error_code).to eq(error_code)
+
+        expect(logger.messages_for_level(:warn)).not_to be_empty
       end
+    end
+
+    context '存在しないGameNumberを指定した場合' do
+      subject do
+        command_bus.execute(Commands::ExchangeCard.new(
+                              HandSet::Card.new('♠A'), GameNumber.build
+                            ))
+      end
+      it_behaves_like '__エラーを返すこと', :game_not_found
     end
 
     context '手札に存在しないカードを交換した場合' do
-      let(:card) { CustomFaker.not_in_hand_card(player_hand_state.refreshed_hand_set) }
-      # game_number を使用
-      subject { command_bus.execute(Commands::ExchangeCard.new(card, game_number)) }
-      it '警告ログが正しく出力されること' do
-        subject
-        expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: 交換対象のカードが手札に存在しません/)
+      subject do
+        card = CustomFaker.not_in_hand_card(player_hand_state.refreshed_hand_set)
+        command_bus.execute(Commands::ExchangeCard.new(card, game_number))
       end
+      it_behaves_like '__エラーを返すこと', :card_not_found
     end
 
     context '同じカードを2回交換した場合' do
-      let(:card) { discarded_card }
-      it '2回目で警告ログが正しく出力されること' do
+      subject do
+        card = discarded_card
         command_bus.execute(Commands::ExchangeCard.new(card, game_number)) # 1回目
         command_bus.execute(Commands::ExchangeCard.new(card, game_number)) # 2回目
-        expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: 交換対象のカードが手札に存在しません/)
       end
+      it_behaves_like '__エラーを返すこと', :card_not_found
     end
 
     context 'デッキが空のときに交換した場合' do
-      let(:card) { player_hand_state.refreshed_hand_set.cards.first }
       before do
         deck_size = HandSet::Card::VALID_SUITS.size * HandSet::Card::VALID_NUMBERS.size
         hand_size = GameSetting::MAX_HAND_SIZE
@@ -187,24 +192,25 @@ RSpec.describe 'カード交換をするユースケース' do
                                                          game_number))
         end
       end
-      subject { command_bus.execute(Commands::ExchangeCard.new(card, game_number)) }
-      it '警告ログが正しく出力されること' do
-        subject
-        expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: デッキの残り枚数が不足しています/)
+      subject do
+        card = player_hand_state.refreshed_hand_set.cards.first
+        command_bus.execute(Commands::ExchangeCard.new(card, game_number))
       end
+      it_behaves_like '__エラーを返すこと', :no_cards_left
     end
 
-    it 'ゲームが終了している状態で交換しようとするとInvalidCommandが発行されること' do
-      command_bus.execute(Commands::EndGame.new(game_number))
+    context 'ゲームが終了している状態で交換をする場合', :target do
+      before do
+        command_bus.execute(Commands::EndGame.new(game_number))
+      end
 
-      result = command_bus.execute(Commands::ExchangeCard.new(discarded_card, game_number))
+      subject do
+        command_bus.execute(Commands::ExchangeCard.new(discarded_card, game_number))
+      end
 
-      expect(result.error).to be_a(CommandErrors::InvalidCommand)
-      expect(result.error.reason).to eq('ゲームが進行中ではありません')
+      it_behaves_like 'return command error use_case', :game_already_ended
     end
   end
 
-  # バージョン競合が発生した場合は version_conflict_specでテストをしている
-
-  it_behaves_like 'version history update examples' # from support/use_case_shared
+  it_behaves_like 'version history update examples'
 end

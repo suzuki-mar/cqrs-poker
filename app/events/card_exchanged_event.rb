@@ -31,20 +31,18 @@ class CardExchangedEvent
     }
   end
 
-  def self.from_event(store)
-    event_data = JSON.parse(store.event_data, symbolize_names: true)
-    discarded = HandSet.build_card_for_command(event_data[:discarded_card])
-    new_c = HandSet.build_card_for_command(event_data[:new_card])
+  def self.from_event(event_record)
+    event_data = JSON.parse(event_record.event_data, symbolize_names: true)
+    discarded = HandSet.build_card(event_data[:discarded_card].to_s)
+    new_c = HandSet.build_card(event_data[:new_card].to_s)
     event = new(discarded, new_c)
-    if store.respond_to?(:id) && store.id && store.respond_to?(:game_number) && store.game_number
-      event.assign_ids(event_id: EventId.new(store.id), game_number: GameNumber.new(store.game_number))
-    end
-    event
+
+    EventFinalizer.execute(event, event_record)
   end
 
   def self.from_event_data(event_data, event_id, game_number)
-    discarded = HandSet.build_card_for_command(event_data[:discarded_card])
-    new_c = HandSet.build_card_for_command(event_data[:new_card])
+    discarded = HandSet.build_card(event_data[:discarded_card])
+    new_c = HandSet.build_card(event_data[:new_card])
     event = new(discarded, new_c)
     event.assign_ids(event_id: event_id, game_number: game_number)
     event

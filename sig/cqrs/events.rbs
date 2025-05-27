@@ -31,11 +31,11 @@ class CardExchangedEvent
   include _Event
   extend _EventClass
 
-  def initialize: (_CardForCommand discarded_card, _CardForCommand new_card) -> void
+  def initialize: (HandSet::Card discarded_card, HandSet::Card new_card) -> void
 
   private
-  attr_reader discarded_card: _CardForCommand
-  attr_reader new_card: _CardForCommand
+  attr_reader discarded_card: HandSet::Card
+  attr_reader new_card: HandSet::Card
 end
 
 class GameEndedEvent
@@ -43,7 +43,6 @@ class GameEndedEvent
   extend _EventClass
 
   def initialize: (::ActiveSupport::TimeWithZone ended_at) -> void
-  def self.new: (::ActiveSupport::TimeWithZone) -> GameEndedEvent
 
   private
 
@@ -53,8 +52,15 @@ end
 class EventBus
   def initialize: (EventPublisher) -> void
   def publish: (_Event) -> void
-end 
 
+  private
+  attr_reader event_publisher: EventPublisher
+end
+
+module EventFinalizer
+
+  def self.execute:(_Event, Event) -> _Event
+end
 
 
 module AssignableIds

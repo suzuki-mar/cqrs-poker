@@ -33,7 +33,7 @@ class GameStartedEvent
   def self.from_store(store)
     event_data = JSON.parse(store.event_data, symbolize_names: true)
     hand_data = event_data[:initial_hand]
-    hand_cards = hand_data.map { |c| HandSet.build_card_for_query(c) }
+    hand_cards = hand_data.map { |c| HandSet.build_card(c.to_s) }
     hand_set = HandSet.build(hand_cards)
     new(hand_set)
   end
@@ -42,19 +42,13 @@ class GameStartedEvent
     event_data = JSON.parse(event_record.event_data, symbolize_names: true)
     initial_hand = event_data[:initial_hand]
     event = new(initial_hand)
-    if event_record.respond_to?(:id) && event_record.id &&
-       event_record.respond_to?(:game_number) && event_record.game_number
-      event.assign_ids(
-        event_id: EventId.new(event_record.id),
-        game_number: GameNumber.new(event_record.game_number)
-      )
-    end
-    event
+
+    EventFinalizer.execute(event, event_record)
   end
 
   def self.from_event_data(event_data, event_id, game_number)
     hand_data = event_data[:initial_hand]
-    hand_cards = hand_data.map { |c| HandSet.build_card_for_query(c) }
+    hand_cards = hand_data.map { |c| HandSet.build_card(c) }
     hand_set = HandSet.build(hand_cards)
     event = new(hand_set)
     event.assign_ids(event_id: event_id, game_number: game_number)

@@ -8,7 +8,7 @@ module CommandHandlers
     end
 
     def handle(command)
-      @command = command
+      raise ArgumentError, '不正なコマンドです' unless command.is_a?(Commands::GameStart)
 
       board = aggregate_store.load_board_aggregate_for_current_state
 
@@ -16,13 +16,15 @@ module CommandHandlers
       result = append_event_to_store!(initial_hand)
       return result if result.error
 
+      result.event or raise '不正な実行結果'
+
       event_bus.publish(result.event)
       result
     end
 
     private
 
-    attr_reader :event_bus, :aggregate_store, :command
+    attr_reader :event_bus, :aggregate_store
 
     def append_event_to_store!(initial_hand)
       event = GameStartedEvent.new(initial_hand)

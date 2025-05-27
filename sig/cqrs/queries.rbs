@@ -4,18 +4,21 @@ end
 
 module ReadModels
   class ProjectionVersions
+
+    def fetch_all_versions: () -> Array[VersionInfo]
+    def initialize: (Array[VersionInfo]) -> void
+    def self.load: (GameNumber game_number) -> ReadModels::ProjectionVersions
+    def self.update_all_versions: (_Event) -> void
+    def self.count_group_game_number: () -> Integer
+
+    private
+    attr_reader version_infos: Array[VersionInfo]
+
     class VersionInfo
       attr_reader projection_name: String
       attr_reader last_event_id: EventId
       def initialize: (String, EventId) -> void
     end
-
-    def self.load: (GameNumber game_number) -> ReadModels::ProjectionVersions
-    def initialize: (Array[VersionInfo]) -> void
-    def fetch_all_versions: () -> Array[VersionInfo]
-    def self.update_all_versions: (_Event) -> void
-    def self.update_by_name: (String, EventId) -> void
-    def self.count_group_game_number: () -> Integer
   end
 
   interface _HasLastEventId
@@ -27,7 +30,6 @@ module ReadModels
     include _HasLastEventId
     include _EventSubscriber
 
-    attr_reader player_hand_state: Query::PlayerHandState
     attr_reader game_number: GameNumber
 
     def initialize: (Query::PlayerHandState record) -> void
@@ -46,55 +48,49 @@ module ReadModels
 
     private
     def format_hand: () -> String
-    def build_exchanged_hand_set: (_Card discarded_card, _Card new_card) -> HandSet
+    # nilも返せるように型を修正
+    def build_exchanged_hand_set: (HandSet::Card discarded_card, HandSet::Card new_card) -> (HandSet | nil)
+    attr_reader player_hand_state: Query::PlayerHandState
   end
 
   class TrashState
-    def self.load: (GameNumber game_number) -> ReadModels::TrashState
-    def self.new: (Query::TrashState?) -> ReadModels::TrashState
-    def accept!: (_CardForQuery card, Integer current_turn, Integer last_event_id, GameNumber game_number) -> void
-    def self.prepare!: (GameNumber game_number, EventId first_event_id) -> void
-    def empty?: () -> bool
-    def exists?: () -> bool
-    def initialize: (untyped) -> void
-    attr_reader trash_state: Query::TrashState?
-    def current_turn: () -> Integer
-    def last_event_id: () -> EventId
-    def number?: (_CardForQuery card) -> bool
-    def cards: () -> Array[String]
-    def trash_record: () -> Query::TrashState
-    def include?: (_CardForQuery card) -> bool
-  end
+    attr_reader game_number: GameNumber
 
-  class TrashList
-    def self.load: () -> ReadModels::TrashList
-    def has_rank: (String) -> bool
-    def initialize: (Array[Query::TrashState]) -> void
-    def accept!: (untyped card, Integer current_turn, Integer last_event_id) -> void
+    def self.load: (GameNumber game_number) -> TrashState
+    def initialize: (Query::TrashState) -> void
+
+    def accept!: (HandSet::Card card, Integer current_turn, Integer last_event_id) -> void
+    def self.prepare!: (GameNumber game_number, EventId first_event_id) -> void
+
+    def exists?: () -> bool
+    #TODO 名前がわかりづらい
+    def number?: (HandSet::Card card) -> bool
+    def discarded_cards: () -> Array[HandSet::Card]
+    def last_event_id: () -> EventId
+    def current_turn: () -> Integer
+    def empty?: () -> bool
 
     private
-    attr_reader trashes: Array[Query::TrashState]
+
+    def trash_record: () -> Query::TrashState
+
   end
 
   class Histories
     def self.load: (GameNumber game_number) -> Array[Query::History]
     def self.add: (HandSet hand_set, GameEndedEvent event) -> Query::History
 
-    private
-    # privateメソッドはここに定義する
   end
 
 end
 
-interface _CardForQuery
-  include _Card
-end
-
 class EventPublisher
-  def initialize: (projection: EventListener::Projection, event_listener: EventListener::Log) -> void
-  def subscribe: (EventListener::Projection | EventListener::Log) -> void
-  def broadcast: (String, _Event) -> void
   attr_reader published_events: Array[_Event]
+
+  def initialize: (projection: EventListener::Projection, event_listener: EventListener::Log) -> void
+  def broadcast: (String | Symbol, _Event) -> void
+  # ライブラリーからインクルードをされるもの
+  def subscribe: (untyped) -> void
 
   private
   attr_reader projection: EventListener::Projection
@@ -104,9 +100,11 @@ end
 module EventListener
   class Log
     include _EventSubscriber
+
     def initialize: (Logger) -> void
+
     private
-    def logger: () -> Logger
+    attr_reader logger: Logger
   end
 
   class Projection
@@ -120,45 +118,28 @@ module EventListener
   end
 end
 
-class LogEventListener
-  include _EventSubscriber
-
-  def initialize: (Logger) -> void
-
-  private
-  def broadcast: (String, _Event) -> void
-  def format_event_message: ((String | nil), ?String) -> String
-  def format_cards: (Array[String]) -> String
-  def build_info_message: (_Event event) -> String
-  def build_warning_message_if_needed: (_Event event) -> String?
-  def logger: () -> Logger
-end
-
 class MessageBuilder
-  def self.build_info_message: (untyped event) -> String
-  def self.build_warning_message_if_needed: (untyped event) -> String?
+  def self.build_info_message: (_Event event) -> String
+  def self.build_warning_message_if_needed: (_Event event) -> String?
   def self.format_event_message: (String, ?String) -> String
   def self.format_cards: (Array[String]) -> String
 end
 
 class QueryService
-  def initialize: (GameNumber | Integer game_number) -> void
-  def latest_hand_set: () -> HandSet
-  def latest_hand_cards: () -> Array[_Card]
-  def all_projection_versions: () -> Array[ReadModels::ProjectionVersions::VersionInfo]
-  def player_hand_summary: () -> { hand_set: Array[String], rank: Integer?, status: String }
-  def ended_game_recorded?: () -> bool
+  def initialize: (GameNumber) -> void
   def trash_state: () -> ReadModels::TrashState
+  def player_hand_set: () -> HandSet
+  def all_projection_versions: () -> Array[ReadModels::ProjectionVersions::VersionInfo]
+  def player_hand_summary: () -> Hash[Symbol, untyped]
+  def ended_game_recorded?: () -> bool
 
   def self.latest_game_number: () -> GameNumber
   def self.latest_event_id: () -> Integer
-  def self.fetch_current_version: () -> Integer
   def self.build_last_game_query_service: () -> QueryService
-  def self.last_game_player_hand_summary: () -> { hand_set: Array[String], rank: Integer?, status: String }
+  def self.last_game_player_hand_summary: () -> Hash[Symbol, untyped]
   def self.number_of_games: () -> Integer
 
-  attr_reader game_number: GameNumber
-
   private
-  attr_reader projection_versions: ReadModels::ProjectionVersions
+  def projection_versions: () -> ReadModels::ProjectionVersions
+  attr_reader game_number: GameNumber
 end

@@ -4,13 +4,9 @@ class QueryService
     @projection_versions = nil
   end
 
-  def latest_hand_set
+  def player_hand_set
     phs = ReadModels::PlayerHandState.load_by_game_number(game_number)
     phs.hand_set
-  end
-
-  def latest_hand_cards
-    latest_hand_set.cards
   end
 
   def all_projection_versions

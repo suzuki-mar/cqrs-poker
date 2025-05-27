@@ -2,8 +2,6 @@
 
 module EventListener
   class Log
-    attr_reader :logger
-
     def initialize(logger = Rails.logger)
       @logger = logger
     end
@@ -18,5 +16,9 @@ module EventListener
       info_message = MessageBuilder.build_info_message(event)
       logger.info info_message
     end
+
+    private
+
+    attr_reader :logger
   end
 end

@@ -4,8 +4,8 @@ module Aggregates
   class Deck
     attr_reader :cards
 
-    def self.build
-      new
+    def initialize
+      @cards = generate_initial_cards
     end
 
     def draw_initial_hand
@@ -38,14 +38,10 @@ module Aggregates
 
     private
 
-    def initialize
-      @cards = generate_initial_cards
-    end
-
     def generate_initial_cards
       suit_number_pairs = HandSet::Card::VALID_SUITS.product(HandSet::Card::VALID_NUMBERS)
       suit_number_pairs.map do |suit, number|
-        HandSet.build_card_for_command("#{suit}#{number}")
+        HandSet.build_card("#{suit}#{number}")
       end
     end
   end

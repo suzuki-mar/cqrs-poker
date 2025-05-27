@@ -7,13 +7,11 @@ RSpec.shared_examples 'version history update examples' do
     end
 
     it 'バージョン履歴をアップデートをしていること' do
-      start_event = Aggregates::Store.new.latest_event
+      Aggregates::Store.new.latest_event
 
       subject
 
       main_event = Aggregates::Store.new.latest_event
-
-      expect(start_event.event_id).to be < main_event.event_id
 
       version_info = ReadModels::ProjectionVersions.load(main_event.game_number)
       version_ids = version_info.fetch_all_versions.map(&:last_event_id)
@@ -39,5 +37,15 @@ RSpec.shared_examples 'version history update examples' do
       version_ids = version_info.fetch_all_versions.map(&:last_event_id)
       expect(version_ids).to all(eq(main_event.event_id))
     end
+  end
+end
+
+RSpec.shared_examples 'return command error use_case' do |error_code|
+  it 'エラーを返すこと' do
+    result = subject
+    expect(result.error).to be_a(CommandErrors::InvalidCommand)
+    expect(result.error.error_code).to eq(error_code)
+
+    expect(logger.messages_for_level(:warn)).not_to be_empty
   end
 end

@@ -3,7 +3,7 @@
 module Aggregates
   class BoardAggregate
     def initialize
-      @deck = Deck.build
+      @deck = Deck.new
       @trash = Trash.new
       @game_started = false
     end
@@ -57,7 +57,7 @@ module Aggregates
         if HandSet.card?(card)
           card
         else
-          HandSet.build_card_for_command(card)
+          HandSet.build_card(card.to_s)
         end
       end
     end

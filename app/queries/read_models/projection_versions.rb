@@ -23,7 +23,7 @@ module ReadModels
     private_class_method :new
 
     def fetch_all_versions
-      @version_infos
+      version_infos
     end
 
     def self.update_all_versions(event)
@@ -36,5 +36,9 @@ module ReadModels
     def self.count_group_game_number
       Query::ProjectionVersion.distinct.count(:game_number)
     end
+
+    private
+
+    attr_reader :version_infos
   end
 end

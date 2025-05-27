@@ -73,27 +73,39 @@ RSpec.describe 'ゲーム終了ユースケース' do
       end
     end
   end
+
   context '異常系' do
     context 'ゲームが開始されていない状態で終了しようとする' do
-      it 'ゲームが開始されていない状態で終了しようとするとInvalidCommandEventが発行されること' do
+      subject do
         game_number = GameNumber.new(CustomFaker.game_number)
-        result = command_bus.execute(Commands::EndGame.new(game_number))
-        expect(result.error).to be_a(CommandErrors::InvalidCommand)
-        expect(result.error.reason).to eq('ゲームが進行中ではありません')
+        command_bus.execute(Commands::EndGame.new(game_number))
       end
+
+      it_behaves_like 'return command error use_case', :game_not_found
     end
-  end
 
-  context 'ゲームが終了している状態でゲームを終了する' do
-    it 'エラーが発生すること' do
-      command_bus.execute(Commands::GameStart.new)
-      game_number = QueryService.latest_game_number
+    context '複数のゲームが存在する場合' do
+      subject do
+        command_bus.execute(Commands::GameStart.new)
+        first_game_number = QueryService.latest_game_number
 
-      command_bus.execute(Commands::EndGame.new(game_number))
-      result = command_bus.execute(Commands::EndGame.new(game_number))
+        non_existent_game_number = GameNumber.new(first_game_number.value + 1)
+        command_bus.execute(Commands::EndGame.new(non_existent_game_number))
+      end
 
-      expect(result.error).to be_a(CommandErrors::InvalidCommand)
-      expect(result.error.reason).to eq('すでにゲームが終了しています')
+      it_behaves_like 'return command error use_case', :game_not_found
+    end
+
+    context 'ゲームが終了している状態でゲームを終了する' do
+      subject do
+        command_bus.execute(Commands::GameStart.new)
+        game_number = QueryService.latest_game_number
+
+        command_bus.execute(Commands::EndGame.new(game_number))
+        command_bus.execute(Commands::EndGame.new(game_number))
+      end
+
+      it_behaves_like 'return command error use_case', :game_already_ended
     end
   end
 end

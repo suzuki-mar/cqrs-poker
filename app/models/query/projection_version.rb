@@ -14,12 +14,18 @@ module Query
     end
 
     def self.projection_name_and_event_id_pairs(game_number)
+      # nilチェックを追加
+      return [] if game_number.nil?
+
       where(game_number: game_number.value).map do |pv|
         [pv.projection_name, EventId.new(pv.event_id)]
       end
     end
 
     def self.find_all_excluding_projection_name(game_number, exclude_name)
+      # nilチェックを追加
+      return [] if game_number.nil?
+
       exclude_value = projection_names[exclude_name]
       where(game_number: game_number.value).where.not(projection_name: exclude_value)
     end

@@ -18,15 +18,6 @@ class HandSet
     HandSet::Rank.japanese_name(rank)
   end
 
-  # コマンドとクエリー用のCardを返している
-  def self.build_card_for_command(str)
-    Card.new(str)
-  end
-
-  def self.build_card_for_query(str)
-    Card.new(str)
-  end
-
   def self.card?(obj)
     obj.is_a?(Card)
   end
@@ -37,6 +28,10 @@ class HandSet
     raise ArgumentError, '手札が不正です' unless valid_cards?(cards)
 
     new(cards)
+  end
+
+  def self.build_card(card_str)
+    Card.new(card_str)
   end
 
   def initialize(cards)
@@ -60,7 +55,7 @@ class HandSet
   end
 
   def evaluate
-    HandSet::RankEvaluater.call(@cards)
+    HandSet::Evaluator.call(@cards)
   end
 
   def rank_name

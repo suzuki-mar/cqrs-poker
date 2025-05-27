@@ -9,6 +9,11 @@ interface _HasLastEventId
   def to_event_id: () -> EventId
 end
 
+interface _HasGameNumber
+  def game_number: () -> Integer
+  def game_number=: (Integer) -> Integer
+end
+
 module Query
   class PlayerHandState < ApplicationRecord
     include _HasLastEventId
@@ -18,24 +23,40 @@ module Query
     attr_accessor current_turn: Integer
     attr_accessor hand_set: Array[String]
     attr_reader game_number: Integer
+    # started?メソッドを追加
+    def started?: () -> bool
     def assign_hand_number_from_set: (Array[String]) -> void
     def self.find_current_session: () -> PlayerHandState?
     def self.latest_game_number: () -> GameNumber
     def self.find_latest_by_event: () -> PlayerHandState?
+
+    private
+
+    def validate_hand_set_format: -> void
   end
 
   class History < ApplicationRecord
     include _HasLastEventId
     attr_accessor hand_set: Array[String]
     attr_accessor rank: Integer
-    attr_accessor ended_at: Time
+    # TimeWithZoneに修正
+    attr_accessor ended_at: ActiveSupport::TimeWithZone
+
+    private
+
+    def ended_at_cannot_be_in_the_future: -> void
   end
 
   class TrashState < ApplicationRecord
     include _HasLastEventId
+    include _HasGameNumber
     attr_accessor discarded_cards: Array[String]
     attr_accessor current_turn: Integer
     def self.current_game: (GameNumber) -> TrashState?
+
+    private
+
+    def validate_discarded_cards_format: -> void
   end
 
   class ProjectionVersion < ApplicationRecord
@@ -44,25 +65,43 @@ module Query
     attr_accessor projection_name: String
     def self.projection_names: () -> Hash[String, String]
     def self.find_or_build_all_by_game_number: (GameNumber) -> Array[Query::ProjectionVersion]
+    # nilの場合は空配列を返すことを明示
     def self.projection_name_and_event_id_pairs: (GameNumber?) -> Array[[String, EventId]]
-    def self.find_all_excluding_projection_name: (GameNumber, String) -> untyped
+    # nilの場合は空配列を返すことを明示
+    def self.find_all_excluding_projection_name: (GameNumber?, String) -> Array[Query::ProjectionVersion]
   end
 end
 
 class Event < ApplicationRecord
+  EVENT_TYPES: Array[String]
   attr_reader event_type: String
   attr_reader event_data: String
-  attr_reader occurred_at: Time
+  # ActiveSupport::TimeWithZoneを使用
+  attr_reader occurred_at: ActiveSupport::TimeWithZone
   attr_reader version: Integer
   attr_reader game_number: Integer
   def to_event_id: () -> EventId
-  def self.next_version_for: (GameNumber) -> Integer
+  def self.current_version_for_game: (GameNumber) -> Integer
   def self.exists_game?: (GameNumber) -> bool
+  # 戻り値の型をより具体的に定義し、空ハッシュの注釈を追加
+  def self.exists_by_types: (GameNumber, Array[String]) -> Hash[String | Symbol, bool]
+  def self.version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
+
+  private
+  def validate_event_data_json: () -> void
+  def valid_json?: (String?) -> bool
+  def validate_occurred_at_not_future_date: () -> void
 end
 
 class EventId
+  include Comparable
+  
   attr_reader value: Integer
   def initialize: (Integer) -> void
+  # <=>メソッドの戻り値型を修正（Integer | nil）
+  def <=>: (EventId other) -> (Integer | nil)
+  def ==: (untyped other) -> bool
+  def to_s: () -> String
 end
 
 class GameSetting
@@ -71,26 +110,38 @@ end
 
 # HandSet本体
 class HandSet
-  MAX_HAND_SIZE: Integer
-  attr_reader cards: Array[HandSet::Card]
-  def self.build: (Array[HandSet::Card | _CardForQuery | _CardForCommand]) -> HandSet
-  def self.valid_cards?: (Array[HandSet::Card]) -> bool
-  def initialize: (Array[HandSet::Card]) -> void
-  def rebuild_after_exchange: (_Card, _Card) -> HandSet
+  def self.build_card: (String) -> Card
+
+  # rank_allメソッドを追加
+  def self.rank_all: () -> Array[String]
+
+  # 戻り値の型をHashに修正
+  def self.rank_names: () -> Hash[String, String]
+
+  def self.valid_hand_set_format?:(untyped) -> bool
+
+  attr_reader cards: Array[Card]
+  def self.build: (Array[Card]) -> HandSet
+  def self.valid_cards?: (Array[Card]) -> bool
+  def initialize: (Array[Card]) -> void
+  # nilも返せるように型を修正
+  def rebuild_after_exchange: (Card, Card) -> (HandSet | nil)
   def evaluate: () -> String
   def rank_name: () -> String
   def valid?: () -> bool
-  def fetch_by_number: (Integer) -> HandSet::Card
-  def include?: (HandSet::Card) -> bool  
-  def self.build_card_from_string: (String) -> HandSet::Card
-  def self.card?: (HandSet::Card | String | _CardForCommand | _CardForQuery) -> bool
+  def fetch_by_number: (Integer) -> Card
+  def include?: (Card) -> bool
+  def self.card?: (Card | String) -> bool
   def self.rank_japanese_name: (String) -> String
-  def self.build_card_for_command: (String) -> _CardForCommand
-  def self.build_card_for_query: (String) -> _CardForQuery
-  def apply_event_to_replay_hand: (Array[_CardForCommand] cards, _Event event) -> Array[_CardForCommand]
-  def build_invalid_command_event_if_unexchangeable: (Array[_CardForCommand] cards) -> CommandErrors::InvalidCommand
 
-  module Rank
+  class Rank
+    include ActiveModel::Model
+    include ActiveModel::Attributes
+    
+    # ActiveModelメソッドを追加
+    def self.attribute: (Symbol name, untyped type) -> void
+    def self.validates: (Symbol attribute, *untyped options) -> void
+    
     # 重複定義はしていないがLinterが誤検知をしている
     HIGH_CARD: String
     ONE_PAIR: String
@@ -107,54 +158,80 @@ class HandSet
     def self.japanese_name: (String) -> String
   end
 
-  private
-  # HandSetのprivateメソッドがあればここに記述
-end
+  class Card
+    attr_reader number: String
+    attr_reader suit: String
 
-class HandSet::Card
-  include _CardForCommand
-  include _CardForQuery
-  VALID_SUITS: ::Array[String]
-  VALID_NUMBERS: ::Array[String]
+    def valid?: () -> bool
 
-  def self.generate_available: (?Array[HandSet::Card]) -> Array[HandSet::Card]
-  def initialize: (String) -> void
-  def same_number?: (_CardForQuery) -> bool
+    VALID_SUITS: ::Array[String]
+    VALID_NUMBERS: ::Array[String]
 
-  private
-  # HandSet::Cardのprivateメソッドがあればここに記述
-end
+    def self.generate_available: (?Array[Card]) -> Array[Card]
+    def initialize: (String) -> void
+    def same_number?: (Card) -> bool
 
-class HandSet::Evaluate
-  def self.call: (Array[HandSet::Card] cards) -> String
-  def call: (Array[HandSet::Card] cards) -> String
-
-  private  
-  def build_rank_checks_map: () -> Hash[String, ::Proc]
-  def valid_hand?: (Array[HandSet::Card] cards) -> bool
-  def straight_flush?: () -> bool
-  def four_of_a_kind?: () -> bool
-  def full_house?: () -> bool
-  def flush?: () -> bool
-  def straight?: () -> bool
-  def three_of_a_kind?: () -> bool
-  def two_pair?: () -> bool
-  def one_pair?: () -> bool
-  def royal_flush?: () -> bool
-  
-  def rank_combinations: () -> HandSet::Evaluate::RankCombinations
-  def rank_counts: () -> Hash[String, Integer]
-  def suits: () -> Array[String]
-  def ranks: () -> Array[String]
-
-  # RankCombinationsはEvaluate内部でしか使わない
-  class RankCombinations
-    def initialize: (Array[Integer] values) -> void
-    def pair_count: () -> Integer
-    def three_of_a_kind?: () -> bool
-    def four_of_a_kind?: () -> bool
-    def full_house?: () -> bool
   end
+
+  class Evaluator
+    NUMBER_TO_VALUE: Hash[String, Integer]
+    
+    def self.call: (Array[Card] cards) -> String
+      
+    def initialize: (Array[Card] cards) -> void
+      
+    def call: () -> String
+      
+    private
+    
+    attr_reader cards: Array[Card]
+      
+    def build_rank_checks_map: (Array[Card] _cards) -> Hash[String, ::Proc]
+      
+    def valid_hand?: (Array[Card] cards) -> bool
+      
+    def straight_flush?: () -> bool
+      
+    def four_of_a_kind?: () -> bool
+      
+    def full_house?: () -> bool
+      
+    def flush?: () -> bool
+      
+    # values配列は整数のみを含むことを明示する
+    # 数値演算を行うstraight?メソッドの定義
+    def straight?: () -> bool
+  
+    def three_of_a_kind?: () -> bool
+  
+    def two_pair?: () -> bool
+  
+    def one_pair?: () -> bool
+  
+    def royal_flush?: () -> bool
+  
+    def rank_combinations: () -> HandSet::Evaluator::RankCombinations
+
+    def rank_counts: () -> Hash[String, Integer]
+
+    def suits: () -> Array[String]
+
+    def ranks: () -> Array[String]
+
+    # RankCombinationsはEvaluate内部でしか使わない
+    class RankCombinations
+      def initialize: (Array[Integer] values) -> void
+
+      def pair_count: () -> Integer
+
+      def three_of_a_kind?: () -> bool
+
+      def four_of_a_kind?: () -> bool
+
+      def full_house?: () -> bool
+    end
+  end
+
 end
 
 class GameId
@@ -163,8 +240,13 @@ class GameId
 end
 
 class GameNumber
+  include Comparable
+  
   attr_reader value: Integer
   def initialize: (Integer) -> void
+  # <=>メソッドの戻り値型を修正（Integer | nil）
+  def <=>: (GameNumber other) -> (Integer | nil)
+  def ==: (untyped other) -> bool
   def to_s: () -> String
   def self.build: () -> GameNumber
 end

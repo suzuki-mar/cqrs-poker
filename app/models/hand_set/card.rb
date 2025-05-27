@@ -25,7 +25,7 @@ class HandSet
     end
 
     def to_s
-      "#{@suit}#{@number}"
+      "#{suit}#{number}"
     end
 
     def ==(other)
@@ -38,10 +38,6 @@ class HandSet
 
     def hash
       [suit, number].hash
-    end
-
-    def same_rank?(other_card)
-      other_card.is_a?(Card) && number == other_card.number
     end
 
     def same_number?(other_card)

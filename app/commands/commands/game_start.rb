@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
 module Commands
-  # rubocop:disable Lint/EmptyClass
   class GameStart
+    def game_number
+      nil
+    end
+
     # ゲームを開始する段階なのでパラメーターを持っていない
   end
-  # rubocop:enable Lint/EmptyClass
 end

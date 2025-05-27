@@ -7,8 +7,6 @@ class HandSet
 
     attribute :name, :string
 
-    validates :name, presence: true
-
     HIGH_CARD = 'HIGH_CARD'
     ONE_PAIR = 'ONE_PAIR'
     TWO_PAIR = 'TWO_PAIR'
