@@ -25,8 +25,9 @@ module Aggregates
     end
 
     def load_all_events_in_order(game_number)
-      # Event.where(game_number: game_number).order(:occurred_at).map do |event_record|
-      Event.order(:occurred_at).map do |event_record|
+      raise if game_number.nil?
+
+      Event.where(game_number: game_number.value).order(:occurred_at).map do |event_record|
         EventBuilder.execute(event_record)
       end
     end
@@ -42,11 +43,15 @@ module Aggregates
     end
 
 
-    def load_board_aggregate_for_current_state(game_number = nil)
-      events = load_all_events_in_order
+    def load_board_aggregate_for_current_state(game_number)
+      events = load_all_events_in_order(game_number)
       aggregate = Aggregates::BoardAggregate.new(game_number: game_number)
       events.each { |event| aggregate.apply(event) }
       aggregate
+    end
+
+    def build_board_aggregate
+      Aggregates::BoardAggregate.new
     end
 
     delegate :current_version_for_game, to: :Event
