@@ -24,7 +24,7 @@ module Aggregates
       raise "イベントの保存に失敗しました: #{e.record.errors.full_messages.join(', ')}"
     end
 
-    def load_all_events_in_order(game_number = nil)
+    def load_all_events_in_order(game_number)
       # Event.where(game_number: game_number).order(:occurred_at).map do |event_record|
       Event.order(:occurred_at).map do |event_record|
         EventBuilder.execute(event_record)
