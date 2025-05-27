@@ -15,6 +15,7 @@ module CommandHandlers
       @command = command
       @executor = build_executor
 
+      game_number = command.game_number or raise "不正なコマンドです #{command}"
       board = aggregate_store.load_board_aggregate_for_current_state(game_number)
 
       error = ErrorResultBuilder.build_error_if_needed(

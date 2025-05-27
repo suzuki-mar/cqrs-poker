@@ -24,8 +24,9 @@ module Aggregates
       raise "イベントの保存に失敗しました: #{e.record.errors.full_messages.join(', ')}"
     end
 
-    def load_all_events_in_order(game_number)
-      Event.where(game_number: game_number).order(:occurred_at).map do |event_record|
+    def load_all_events_in_order(game_number = nil)
+      # Event.where(game_number: game_number).order(:occurred_at).map do |event_record|
+      Event.order(:occurred_at).map do |event_record|
         EventBuilder.execute(event_record)
       end
     end
@@ -40,22 +41,12 @@ module Aggregates
       event
     end
 
-    def load_board_aggregate_for_current_state(game_number)
-      events = load_all_events_in_order(game_number)
-      exists_types = Event.exists_by_types(game_number, %w[game_started game_ended])
 
-      aggregate = Aggregates::BoardAggregate.new(
-        game_started: exists_types['game_started'], game_ended: exists_types['game_ended'],
-        exists_game:  Event.exists?(game_number: game_number.value)
-        )
+    def load_board_aggregate_for_current_state(game_number = nil)
+      events = load_all_events_in_order
+      aggregate = Aggregates::BoardAggregate.new(game_number: game_number)
       events.each { |event| aggregate.apply(event) }
       aggregate
-    end
-
-    def build_new_board_aggregate
-      Aggregates::BoardAggregate.new(
-        game_started: false, game_ended: false, exists_game:  true
-      )
     end
 
     delegate :current_version_for_game, to: :Event

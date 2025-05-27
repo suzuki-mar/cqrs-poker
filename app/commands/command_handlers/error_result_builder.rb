@@ -22,11 +22,11 @@ module CommandHandlers
       private
 
       def build_error_code_of_game_status_if_needed(command, board, aggregate_store)
-        return CommandErrors::InvalidCommand::GAME_NOT_FOUND unless board.exists_game
+        return CommandErrors::InvalidCommand::GAME_NOT_FOUND unless board.exists_game?
 
-        return CommandErrors::InvalidCommand::GAME_ALREADY_ENDED if board.game_ended
+        return CommandErrors::InvalidCommand::GAME_ALREADY_ENDED if board.game_ended?
 
-        return CommandErrors::InvalidCommand::GAME_NOT_IN_PROGRESS unless board.game_in_progress
+        return CommandErrors::InvalidCommand::GAME_NOT_IN_PROGRESS unless board.game_in_progress?
         return CommandErrors::InvalidCommand::NO_CARDS_LEFT unless board.drawable?
 
         nil
