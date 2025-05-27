@@ -10,7 +10,7 @@ module CommandHandlers
     def handle(command)
       raise ArgumentError, '不正なコマンドです' unless command.is_a?(Commands::GameStart)
 
-      board = aggregate_store.load_board_aggregate_for_current_state
+      board = aggregate_store.build_new_board_aggregate
 
       initial_hand = board.draw_initial_hand
       result = append_event_to_store!(initial_hand)

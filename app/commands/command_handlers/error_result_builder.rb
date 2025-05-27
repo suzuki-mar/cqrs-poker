@@ -1,11 +1,11 @@
 module CommandHandlers
   class ErrorResultBuilder
     class << self
-      def build_error_if_needed(command, aggregate_store, board)
-        error_code = build_error_code_of_game_status_if_needed(aggregate_store, command, board)
+      def build_error_if_needed(command, board, aggregate_store)
+        error_code = build_error_code_of_game_status_if_needed(command, board, aggregate_store)
 
         if error_code.nil? && command.is_a?(Commands::ExchangeCard)
-          error_code = build_card_not_found_error_code_if_needed(aggregate_store, board, command)
+          error_code = build_card_not_found_error_code_if_needed(command, board, aggregate_store)
         end
 
         return nil if error_code.nil?
@@ -21,28 +21,26 @@ module CommandHandlers
 
       private
 
-      def build_error_code_of_game_status_if_needed(aggregate_store, command, board)
-        game_number = command.game_number or raise "#{command} game_numberが未設定です"
+      def build_error_code_of_game_status_if_needed(command, board, aggregate_store)
+        return CommandErrors::InvalidCommand::GAME_NOT_FOUND unless board.exists_game
 
-        return CommandErrors::InvalidCommand::GAME_NOT_FOUND unless aggregate_store.exists_game?(game_number)
+        return CommandErrors::InvalidCommand::GAME_ALREADY_ENDED if board.game_ended
 
-        return CommandErrors::InvalidCommand::GAME_ALREADY_ENDED if aggregate_store.game_ended?(game_number)
-
-        return CommandErrors::InvalidCommand::GAME_NOT_IN_PROGRESS unless aggregate_store.game_in_progress?(game_number)
+        return CommandErrors::InvalidCommand::GAME_NOT_IN_PROGRESS unless board.game_in_progress
         return CommandErrors::InvalidCommand::NO_CARDS_LEFT unless board.drawable?
 
         nil
       end
 
-      def build_card_not_found_error_code_if_needed(aggregate_store, board, command)
-        events = aggregate_store.load_all_events_in_order
-        rebuilt_hand = events.reduce([]) { |acc, event| rebuild_hand_from_event(acc, event, board) }
+      def build_card_not_found_error_code_if_needed(command, board, aggregate_store)
+        events = aggregate_store.load_all_events_in_order(command.game_number)
+        rebuilt_hand = events.reduce([]) { |acc, event| rebuild_hand_from_event(board, acc, event) }
         return CommandErrors::InvalidCommand::CARD_NOT_FOUND unless rebuilt_hand.include?(command.discarded_card)
 
         nil
       end
 
-      def rebuild_hand_from_event(hand, event, board)
+      def rebuild_hand_from_event(board, hand, event)
         return hand unless event.is_a?(GameStartedEvent) || event.is_a?(CardExchangedEvent)
 
         return board.build_cards_from_exchanged_event(hand, event) if event.is_a?(CardExchangedEvent)

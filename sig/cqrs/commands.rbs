@@ -132,14 +132,13 @@ module CommandHandlers
   end
 
   class ErrorResultBuilder
-    def self.build_error_if_needed: (_Command, Aggregates::Store, Aggregates::BoardAggregate) -> CommandResult?
-
-    def self.build_card_not_found_error_code_if_needed:(Aggregates::Store, Aggregates::BoardAggregate, Commands::ExchangeCard) -> command_error_code?
+    def self.build_error_if_needed: (_Command, Aggregates::BoardAggregate, Aggregates::Store) -> CommandResult?
 
     private
-    def self.rebuild_hand_from_event: (Array[HandSet::Card], _Event, Aggregates::BoardAggregate) -> Array[HandSet::Card]
-    def self.build_error_code_of_game_status_if_needed: (Aggregates::Store, _Command, Aggregates::BoardAggregate) -> command_error_code?
-    def self.build_error_code_of_hand_state_in_hand_if_needed: (Aggregates::Store, Aggregates::BoardAggregate, _Command) -> command_error_code?
+    def self.build_card_not_found_error_code_if_needed:(Commands::ExchangeCard, Aggregates::BoardAggregate, Aggregates::Store) -> command_error_code?
+    def self.rebuild_hand_from_event: (Aggregates::BoardAggregate, Array[HandSet::Card], _Event, ) -> Array[HandSet::Card]
+    def self.build_error_code_of_game_status_if_needed: (_Command, Aggregates::BoardAggregate, Aggregates::Store) -> command_error_code?
+    def self.build_error_code_of_hand_state_in_hand_if_needed: (_Command, Aggregates::BoardAggregate, Aggregates::Store) -> command_error_code?
     def self.raise_if_invalid_error_code:(command_error_code) -> void
   end
 end
@@ -182,6 +181,12 @@ module Aggregates
   end
 
   class BoardAggregate
+    attr_reader game_in_progress: bool
+    attr_reader game_ended: bool
+    attr_reader exists_game: bool
+
+    def initialize:(game_started: bool, game_ended: bool, exists_game: bool)) -> void
+
     def apply: (_Event event) -> void
     def draw_initial_hand: () -> HandSet
     def draw: () -> HandSet::Card

@@ -10,13 +10,15 @@ module CommandHandlers
     # メソッド分割をしているため今の状態のほうがコードが見やすいため
     # rubocop:disable Metrics/MethodLength
     def handle(command)
+      game_number = command.game_number or raise "不正なコマンドです"
+
       @command = command
       @executor = build_executor
 
-      board = aggregate_store.load_board_aggregate_for_current_state
+      board = aggregate_store.load_board_aggregate_for_current_state(game_number)
 
       error = ErrorResultBuilder.build_error_if_needed(
-        command, aggregate_store, board
+        command, board, aggregate_store
       )
 
       return error if error
