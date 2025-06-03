@@ -21,7 +21,7 @@ module CommandHandlers
 
       private
 
-      def build_error_code_of_game_status_if_needed(command, board, aggregate_store)
+      def build_error_code_of_game_status_if_needed(_command, board, _aggregate_store)
         return CommandErrors::InvalidCommand::GAME_NOT_FOUND unless board.exists_game?
 
         return CommandErrors::InvalidCommand::GAME_ALREADY_ENDED if board.game_ended?

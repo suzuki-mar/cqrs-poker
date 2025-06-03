@@ -10,7 +10,7 @@ module CommandHandlers
     # メソッド分割をしているため今の状態のほうがコードが見やすいため
     # rubocop:disable Metrics/MethodLength
     def handle(command)
-      game_number = command.game_number or raise "不正なコマンドです"
+      command.game_number or raise '不正なコマンドです'
 
       @command = command
       @executor = build_executor

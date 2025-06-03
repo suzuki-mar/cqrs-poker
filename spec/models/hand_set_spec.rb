@@ -60,4 +60,41 @@ RSpec.describe HandSet do
       expect(invalid_hand_set.valid?).to be false
     end
   end
+
+  describe 'comparable' do
+    context '役が異なる場合' do
+      it 'Two Pair > One Pair' do
+        two_pair = HandSet.build(CustomFaker.two_pair_hand.cards)
+        one_pair = HandSet.build(CustomFaker.one_pair_hand.cards)
+
+        expect(two_pair > one_pair).to be true
+      end
+
+      it 'Four of a Kind > Full House' do
+        four_of_a_kind = HandSet.build(CustomFaker.four_of_a_kind_hand.cards)
+        full_house = HandSet.build(CustomFaker.full_house_hand.cards)
+
+        expect(four_of_a_kind > full_house).to be true
+      end
+
+      it 'Straight Flush > Four of a Kind' do
+        straight_flush = HandSet.build(CustomFaker.straight_flush_hand.cards)
+        four_of_a_kind = HandSet.build(CustomFaker.four_of_a_kind_hand.cards)
+
+        expect(straight_flush > four_of_a_kind).to be true
+      end
+    end
+
+    context '完全に同等の場合' do
+      it '同じ手札は等しい' do
+        cards = CustomFaker.one_pair_hand.cards
+        hand1 = HandSet.build(cards)
+        hand2 = HandSet.build(cards)
+
+        expect(hand1 == hand2).to be true
+      end
+    end
+
+    # 役が同じ場合はコードが大きくなるので hand_set/same_rank_compare_specにテストを書いてある
+  end
 end

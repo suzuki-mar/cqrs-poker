@@ -10,7 +10,7 @@ module Aggregates
         CommandResult.new(error: error)
       end
 
-      def self.validation_error(error, command)
+      def self.validation_error(_error, command)
         CommandResult.new(
           error: CommandErrors::InvalidCommand.new(
             command: command,

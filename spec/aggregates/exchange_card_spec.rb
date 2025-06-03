@@ -67,7 +67,7 @@ RSpec.describe 'カード交換コマンド後のAggregateの詳細状態' do
           # 同じゲーム番号であること
           expect(first_aggregate.game_number).to eq(second_aggregate.game_number)
           # 2回目の方がデッキの残り枚数が1枚少ないこと
-          expect(second_aggregate.remaining_deck_count ).to eq(first_aggregate.remaining_deck_count - 1)
+          expect(second_aggregate.remaining_deck_count).to eq(first_aggregate.remaining_deck_count - 1)
           # 現在の実装ではトラッシュにカードが追加されていない
           expect(first_aggregate.empty_trash?).to eq(true)
           expect(second_aggregate.empty_trash?).to eq(true)
