@@ -5,12 +5,6 @@ require 'rails_helper'
 RSpec.describe 'ゲーム開始' do
   let(:logger) { TestLogger.new }
   let(:command_bus) { UseCaseHelper.build_command_bus(logger) }
-  let(:read_model) { ReadModels::PlayerHandState.new }
-  let(:event_publisher) do
-    EventPublisher.new(projection: EventListener::Projection.new,
-                       event_listener: EventListener::Log.new(logger))
-  end
-  let(:event_bus) { EventBus.new(event_publisher) }
 
   context '正常系' do
     describe 'ゲームが正しく開始されること' do

@@ -154,9 +154,9 @@ module Aggregates
     def game_in_progress?: (GameNumber) -> bool
     def append_event: (_Event, GameNumber) -> CommandResult
     def append_initial_event: (_Event, GameNumber) -> CommandResult
-    def load_all_events_in_order: () -> Array[_Event]
+    def load_all_events_in_order: (GameNumber) -> Array[_Event]
     def latest_event: () -> _Event?
-    def load_board_aggregate_for_current_state: () -> Aggregates::BoardAggregate
+    def load_board_aggregate_for_current_state: (GameNumber) -> Aggregates::BoardAggregate
 
     private
     def persist_and_finalize_event: (_Event, GameNumber) -> CommandResult
@@ -181,11 +181,10 @@ module Aggregates
   end
 
   class BoardAggregate
-    attr_reader game_in_progress: bool
-    attr_reader game_ended: bool
-    attr_reader exists_game: bool
+    attr_reader deck: Deck
+    attr_reader trash: Trash
 
-    def initialize:(game_started: bool, game_ended: bool, exists_game: bool)) -> void
+    def initialize:(game_number: GameNumber?) -> void
 
     def apply: (_Event event) -> void
     def draw_initial_hand: () -> HandSet
@@ -193,11 +192,13 @@ module Aggregates
     def drawable?: () -> bool
     def finish_game: () -> nil
     def build_cards_from_exchanged_event: (Array[HandSet::Card], CardExchangedEvent) -> Array[HandSet::Card]
+    def game_in_progress?: () -> bool
+    def game_ended?: () -> bool
+    def exists_game?: () -> bool
   
     private
-    attr_reader deck: Deck
-    attr_reader trash: Trash
-    attr_accessor game_started: bool
+    attr_reader game_started: bool
+    attr_reader game_number: GameNumber?
     def build_cards_from_event: (GameStartedEvent) -> Array[HandSet::Card]
   end
 
@@ -215,10 +216,8 @@ module Aggregates
   end
 
   class Trash
-    def accept: (HandSet::Card card) -> void
-
-    private
     attr_reader cards: Array[HandSet::Card]
+    def accept: (HandSet::Card card) -> void
   end
 end
 
@@ -239,7 +238,7 @@ class CommandBus
   def execute: (_Command) -> CommandResult
   private
   type command_class = singleton(Commands::GameStart) | singleton(Commands::EndGame) | singleton(Commands::ExchangeCard)
-  type command_handler = CommandHandlers::GameStart | CommandHandlers::EndGame | CommandHandlers::ExchangeCard
+  type command_handler = CommandHandlers::GameStart | CommandHandlers::EndGame | CommandHandlers::InGame
 
 
   def build_handler_map: () -> Hash[command_class, command_handler]

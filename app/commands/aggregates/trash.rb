@@ -2,6 +2,8 @@
 
 module Aggregates
   class Trash
+    attr_reader :cards
+
     def initialize
       @cards = []
     end
@@ -9,9 +11,5 @@ module Aggregates
     def accept(card)
       @cards << card
     end
-
-    private
-
-    attr_reader :cards
   end
 end

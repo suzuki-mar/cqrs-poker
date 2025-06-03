@@ -2,9 +2,10 @@
 
 module Aggregates
   class BoardAggregate
-    attr_reader :game_ended, :exists_game, :game_in_progress
+    # テストを通すために一時的に定義する
+    attr_reader :deck, :trash
 
-    def initialize(game_number:nil)
+    def initialize(game_number: nil)
       @deck = Deck.new
       @trash = Trash.new
       @game_started = false
@@ -65,7 +66,7 @@ module Aggregates
 
     private
 
-    attr_reader :deck, :trash, :game_started, :game_number
+    attr_reader :game_started, :game_number
 
     delegate :draw_initial_hand, :draw, to: :deck
 
