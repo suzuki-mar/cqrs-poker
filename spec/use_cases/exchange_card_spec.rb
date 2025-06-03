@@ -73,7 +73,6 @@ RSpec.describe 'カード交換をするユースケース' do
       it '捨て札が正しく更新されていること' do
         subject
 
-        # game_number を使用
         trash_state = ReadModels::TrashState.load(game_number)
         expect(trash_state.number?(discarded_card)).to be true
 
@@ -82,6 +81,18 @@ RSpec.describe 'カード交換をするユースケース' do
 
         expect(trash_state.current_turn).to eq(expected_turn)
         expect(trash_state.last_event_id).to eq(expected_event_id)
+      end
+
+      it '指定したカードが捨て札に含まれていること' do
+        subject
+
+        trash_state = ReadModels::TrashState.load(game_number)
+
+        same_rank_count = trash_state.count_same_rank_by_card(discarded_card)
+        expect(same_rank_count).to eq(1)
+
+        same_suit_count = trash_state.count_same_suit_by_card(discarded_card)
+        expect(same_suit_count).to eq(1)
       end
 
       it 'カード交換時にinfoログが出力されること' do
@@ -115,10 +126,6 @@ RSpec.describe 'カード交換をするユースケース' do
         end
 
         context 'バージョン履歴が揃っていない場合' do
-          before do
-            command_bus.execute(Commands::GameStart.new)
-          end
-
           it 'バージョン履歴をアップデートをしていること' do
             start_event_id = Aggregates::Store.new.latest_event.event_id
 
@@ -129,8 +136,7 @@ RSpec.describe 'カード交換をするユースケース' do
             subject
             latest_event = Aggregates::Store.new.latest_event
 
-            # 4. すべてのバージョンが最新イベントIDで揃っていることを検証
-            # game_number を使用
+            # CardExchangedEventでは、全バージョンが最新イベントIDに更新される
             version_info = ReadModels::ProjectionVersions.load(game_number)
             version_ids = version_info.fetch_all_versions.map(&:last_event_id)
             expect(version_ids).to all(eq(latest_event.event_id))
@@ -146,23 +152,13 @@ RSpec.describe 'カード交換をするユースケース' do
   end
 
   context '異常系' do
-    shared_examples '__エラーを返すこと' do |error_code|
-      it 'エラーを返すこと' do
-        result = subject
-        expect(result.error).to be_a(CommandErrors::InvalidCommand)
-        expect(result.error.error_code).to eq(error_code)
-
-        expect(logger.messages_for_level(:warn)).not_to be_empty
-      end
-    end
-
     context '存在しないGameNumberを指定した場合' do
       subject do
         command_bus.execute(Commands::ExchangeCard.new(
                               HandSet::Card.new('♠A'), GameNumber.build
                             ))
       end
-      it_behaves_like '__エラーを返すこと', :game_not_found
+      it_behaves_like 'return command error use_case', :game_not_found
     end
 
     context '手札に存在しないカードを交換した場合' do
@@ -170,7 +166,7 @@ RSpec.describe 'カード交換をするユースケース' do
         card = CustomFaker.not_in_hand_card(player_hand_state.refreshed_hand_set)
         command_bus.execute(Commands::ExchangeCard.new(card, game_number))
       end
-      it_behaves_like '__エラーを返すこと', :card_not_found
+      it_behaves_like 'return command error use_case', :card_not_found
     end
 
     context '同じカードを2回交換した場合' do
@@ -179,7 +175,7 @@ RSpec.describe 'カード交換をするユースケース' do
         command_bus.execute(Commands::ExchangeCard.new(card, game_number)) # 1回目
         command_bus.execute(Commands::ExchangeCard.new(card, game_number)) # 2回目
       end
-      it_behaves_like '__エラーを返すこと', :card_not_found
+      it_behaves_like 'return command error use_case', :card_not_found
     end
 
     context 'デッキが空のときに交換した場合' do
@@ -196,7 +192,7 @@ RSpec.describe 'カード交換をするユースケース' do
         card = player_hand_state.refreshed_hand_set.cards.first
         command_bus.execute(Commands::ExchangeCard.new(card, game_number))
       end
-      it_behaves_like '__エラーを返すこと', :no_cards_left
+      it_behaves_like 'return command error use_case', :no_cards_left
     end
 
     context 'ゲームが終了している状態で交換をする場合', :target do

@@ -38,13 +38,10 @@ module EventListener
     end
 
     def update_projection_versions(event)
-      ReadModels::ProjectionVersions.update_all_versions(event) unless event.is_a?(GameEndedEvent)
+      return if event.is_a?(GameEndedEvent)
 
-      versions = Query::ProjectionVersion.find_all_excluding_projection_name(event.game_number, 'trash')
-      versions.each do |pv|
-        pv.event_id = event.event_id.value
-        pv.save!
-      end
+      # GameEndedEvent以外では全バージョンを更新
+      ReadModels::ProjectionVersions.update_all_versions(event)
     end
 
     def update_trash_state(event, player_hand_state)

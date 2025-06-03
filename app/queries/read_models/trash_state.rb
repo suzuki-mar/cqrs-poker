@@ -57,6 +57,20 @@ module ReadModels
       end
     end
 
+    def count_same_rank_by_card(card)
+      trash_record.discarded_cards.count do |c|
+        # @type var c: String
+        HandSet::Card.new(c).number == card.number
+      end
+    end
+
+    def count_same_suit_by_card(card)
+      trash_record.discarded_cards.count do |c|
+        # @type var c: String
+        HandSet::Card.new(c).suit == card.suit
+      end
+    end
+
     def last_event_id
       EventId.new(trash_record.last_event_id)
     end

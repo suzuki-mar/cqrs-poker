@@ -14,7 +14,6 @@ module Aggregates
         CommandResult.new(
           error: CommandErrors::InvalidCommand.new(
             command: command,
-            reason: error.record.errors.full_messages.join(', '),
             error_code: CommandErrors::InvalidCommand::VALIDATION_ERROR
           )
         )

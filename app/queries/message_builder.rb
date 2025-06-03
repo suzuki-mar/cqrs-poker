@@ -21,7 +21,7 @@ class MessageBuilder
     def build_warning_message_if_needed(event)
       case event
       when CommandErrors::InvalidCommand
-        format_event_message('不正な選択肢の選択', event.reason)
+        format_event_message('不正な選択肢の選択', event.message)
       when CommandErrors::VersionConflict
         expected = event.expected_version
         actual   = event.actual_version

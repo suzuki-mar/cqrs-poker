@@ -17,6 +17,8 @@ module Aggregates
     end
 
     def append_initial_event(event, game_number)
+      raise if game_number.nil?
+
       event_record = create_event_record!(event, game_number)
       event.assign_ids(event_id: EventId.new(event_record.id), game_number: game_number)
       CommandResult.new(event: event)
@@ -42,7 +44,6 @@ module Aggregates
       event
     end
 
-
     def load_board_aggregate_for_current_state(game_number)
       events = load_all_events_in_order(game_number)
       aggregate = Aggregates::BoardAggregate.new(game_number: game_number)
@@ -51,7 +52,7 @@ module Aggregates
     end
 
     def build_board_aggregate
-      Aggregates::BoardAggregate.new
+      Aggregates::BoardAggregate.new(game_number: nil)
     end
 
     delegate :current_version_for_game, to: :Event
@@ -63,6 +64,8 @@ module Aggregates
     private
 
     def create_event_record!(event, game_number)
+      raise if game_number.nil?
+
       version = next_available_version_for_game(game_number)
 
       Event.create!(
@@ -81,6 +84,8 @@ module Aggregates
     end
 
     def persist_and_finalize_event(event, game_number)
+      raise if game_number.nil?
+
       event_record = create_event_record!(event, game_number)
       event.assign_ids(event_id: EventId.new(event_record.id), game_number: game_number)
       CommandResult.new(event: event)

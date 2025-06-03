@@ -75,6 +75,13 @@ module ReadModels
       hand_set
     end
 
+    def rank_groups
+      hand_set.cards
+              .group_by(&:number)
+              .values
+              .select { |group| group.size >= 2 }
+    end
+
     def end_game!(_event)
       player_hand_state.status = 'ended'
       player_hand_state.save!

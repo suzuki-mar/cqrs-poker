@@ -3,6 +3,7 @@
 class HandSet
   include ActiveModel::Model
   include ActiveModel::Attributes
+  include Comparable
 
   attr_reader :cards
 
@@ -62,6 +63,10 @@ class HandSet
     self.class.rank_names[evaluate]
   end
 
+  def rank_strength
+    self.class.rank_all.index(evaluate) || 0
+  end
+
   def valid?
     self.class.valid_cards?(@cards)
   end
@@ -74,6 +79,16 @@ class HandSet
   end
 
   delegate :include?, to: :@cards
+
+  def <=>(other)
+    raise ArgumentError, 'HandSet expected' unless other.is_a?(HandSet)
+
+    # 役の強さを比較（高い数値ほど強い役）
+    primary = rank_strength <=> other.rank_strength
+    return primary unless primary.zero?
+
+    HandSet::SameRankStrengthComparer.call(self, other)
+  end
 
   def self.valid_cards?(cards)
     return false unless cards.is_a?(Array)

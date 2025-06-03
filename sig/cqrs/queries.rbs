@@ -39,6 +39,7 @@ module ReadModels
     def current_state_for_display: () -> { status: String, hand: String, current_rank: String, rank_name: String, turn: Integer }
     def hand_set: () -> HandSet
     def refreshed_hand_set: () -> HandSet
+    def rank_groups: () -> Array[Array[HandSet::Card]]
     def current_turn: () -> Integer
 
     def self.build_from_event: (GameStartedEvent event) -> ReadModels::PlayerHandState
@@ -65,6 +66,8 @@ module ReadModels
     def exists?: () -> bool
     #TODO 名前がわかりづらい
     def number?: (HandSet::Card card) -> bool
+    def count_same_rank_by_card: (HandSet::Card card) -> Integer
+    def count_same_suit_by_card: (HandSet::Card card) -> Integer
     def discarded_cards: () -> Array[HandSet::Card]
     def last_event_id: () -> EventId
     def current_turn: () -> Integer
