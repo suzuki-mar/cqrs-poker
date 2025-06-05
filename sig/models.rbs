@@ -235,21 +235,44 @@ class HandSet
     def initialize: (HandSet, HandSet) -> void
     def call: () -> Integer
 
-    class RemainingValuesCompare
-      def self.from_cards: (HandSet, HandSet, Array[Integer], Array[Integer]) -> RemainingValuesCompare
-      def self.from_high_cards: (HandSet, HandSet) -> RemainingValuesCompare
-      def self.from_pair_values: (HandSet, HandSet) -> RemainingValuesCompare
-      def self.from_three_of_a_kind_value: (HandSet, HandSet) -> RemainingValuesCompare
-      def self.from_four_of_a_kind_value: (HandSet, HandSet) -> RemainingValuesCompare
-      def self.from_straight_high_card: (HandSet, HandSet) -> RemainingValuesCompare
-      def self.from_cards_excluding_pairs: (HandSet, HandSet) -> RemainingValuesCompare
+    class RankValuesCompare
+      def self.from_pair_values: (HandSet, HandSet) -> RankValuesCompare
+      def self.from_three_of_a_kind_value: (HandSet, HandSet) -> RankValuesCompare
+      def self.from_four_of_a_kind_value: (HandSet, HandSet) -> RankValuesCompare
+      def self.from_straight_high_card: (HandSet, HandSet) -> RankValuesCompare
+      def initialize: (Array[Integer], Array[Integer]) -> void
+      def compare: () -> Integer
+
+      private
+
+      attr_reader values1: Array[Integer]
+      attr_reader values2: Array[Integer]
+
+      def nil_compare: (Integer?, Integer?) -> (Integer | nil)
       def self.extract_pair_values: (HandSet) -> Array[Integer]
       def self.extract_three_of_a_kind_value: (HandSet) -> (Integer | nil)
       def self.extract_four_of_a_kind_value: (HandSet) -> (Integer | nil)
       def self.extract_straight_high_card: (HandSet) -> Integer
+    end
+
+    class RemainingValuesCompare
+      def self.from_high_cards: (HandSet, HandSet) -> RemainingValuesCompare
+      def self.from_one_pair: (HandSet, HandSet) -> RemainingValuesCompare
+      def self.from_two_pair: (HandSet, HandSet) -> RemainingValuesCompare
+      def self.from_three_of_a_kind: (HandSet, HandSet) -> RemainingValuesCompare
+      def self.from_four_of_a_kind: (HandSet, HandSet) -> RemainingValuesCompare
       def initialize: (Array[Integer], Array[Integer]) -> void
       def compare: () -> Integer
-      def first_values: () -> Array[Integer?]
+
+      private
+
+      attr_reader values1: Array[Integer]
+      attr_reader values2: Array[Integer]
+
+      def nil_compare: (Integer?, Integer?) -> (Integer | nil)
+      def self.extract_pair_values: (HandSet) -> Array[Integer]
+      def self.extract_three_of_a_kind_value: (HandSet) -> (Integer | nil)
+      def self.extract_four_of_a_kind_value: (HandSet) -> (Integer | nil)
     end
 
     private
