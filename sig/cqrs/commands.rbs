@@ -199,6 +199,9 @@ module Aggregates
     def draw_initial_hand: () -> HandSet
     def draw: () -> HandSet::Card
     def drawable?: () -> bool
+    def remaining_deck_count: () -> Integer
+    def current_hand_cards: () -> Array[HandSet::Card]
+    def card_in_deck?: (HandSet::Card) -> bool
 
     def empty_trash?: -> bool
 

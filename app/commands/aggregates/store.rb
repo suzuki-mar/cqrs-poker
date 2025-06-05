@@ -3,15 +3,17 @@
 module Aggregates
   class Store
     def append_event(event, game_number)
-      if next_available_version_for_game(game_number) <= Event.current_version_for_game(game_number)
-        return ErrorResultBuilder.version_conflict(game_number, current_version_for_game(game_number))
+      raise if game_number.nil?
+
+      expected_version = next_available_version_for_game(game_number)
+      if expected_version <= Event.current_version_for_game(game_number)
+        return ErrorResultBuilder.version_conflict(game_number, expected_version)
       end
 
       persist_and_finalize_event(event, game_number)
     rescue ActiveRecord::RecordInvalid => e
-      if Event.version_conflict_error?(e)
-        return ErrorResultBuilder.version_conflict(game_number, current_version_for_game(game_number))
-      end
+      expected_version ||= next_available_version_for_game(game_number)
+      return ErrorResultBuilder.version_conflict(game_number, expected_version) if Event.version_conflict_error?(e)
 
       ErrorResultBuilder.validation_error(e, event)
     end

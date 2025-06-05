@@ -69,10 +69,6 @@ module HandSet
         [values1.first, values2.first]
       end
 
-      private
-
-      attr_reader :values1, :values2
-
       def self.extract_pair_values(hand_set)
         values = hand_set.cards.map { |card| HandSet::Evaluator::NUMBER_TO_VALUE[card.number] }
         rank_counts = values.group_by(&:itself).transform_values(&:size)
@@ -99,6 +95,13 @@ module HandSet
           values.max
         end
       end
+
+      private_class_method :extract_pair_values, :extract_three_of_a_kind_value,
+                           :extract_four_of_a_kind_value, :extract_straight_high_card
+
+      private
+
+      attr_reader :values1, :values2
     end
   end
 end
