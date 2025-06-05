@@ -43,7 +43,7 @@ module CommandHandlers
       def rebuild_hand_from_event(board, hand, event)
         return hand unless event.is_a?(GameStartedEvent) || event.is_a?(CardExchangedEvent)
 
-        return board.build_cards_from_exchanged_event(hand, event) if event.is_a?(CardExchangedEvent)
+        return Aggregates::BuildCards.from_exchanged_event(hand, event) if event.is_a?(CardExchangedEvent)
 
         event.to_event_data[:initial_hand].map do |c|
           c.is_a?(HandSet::Card) ? c : HandSet.build_card(c.to_s)

@@ -25,9 +25,7 @@ module Query
     attr_reader game_number: Integer
     # started?メソッドを追加
     def started?: () -> bool
-    def assign_hand_number_from_set: (Array[String]) -> void
     def self.find_current_session: () -> PlayerHandState?
-    def self.latest_game_number: () -> GameNumber
     def self.find_latest_by_event: () -> PlayerHandState?
 
     private
@@ -82,7 +80,6 @@ class Event < ApplicationRecord
   attr_reader game_number: Integer
   def to_event_id: () -> EventId
   def self.current_version_for_game: (GameNumber?) -> Integer
-  def self.exists_game?: (GameNumber?) -> bool
   # 戻り値の型をより具体的に定義し、空ハッシュの注釈を追加
   def self.exists_by_types: (GameNumber?, Array[String]) -> Hash[String | Symbol, bool]
   def self.version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
@@ -142,10 +139,6 @@ class HandSet
   class Rank
     include ActiveModel::Model
     include ActiveModel::Attributes
-    
-    # ActiveModelメソッドを追加
-    def self.attribute: (Symbol name, untyped type) -> void
-    def self.validates: (Symbol attribute, *untyped options) -> void
     
     # 重複定義はしていないがLinterが誤検知をしている
     HIGH_CARD: String

@@ -153,9 +153,6 @@ module Aggregates
 
     def next_available_version_for_game: (GameNumber?) -> Integer
     def current_version_for_game: (GameNumber?) -> Integer
-    def exists_game?: (GameNumber?) -> bool
-    def game_ended?:(GameNumber?) -> bool
-    def game_in_progress?: (GameNumber?) -> bool
     def append_event: (_Event, GameNumber?) -> CommandResult
     def append_initial_event: (_Event, GameNumber?) -> CommandResult
     def load_all_events_in_order: (GameNumber?) -> Array[_Event]
@@ -206,14 +203,18 @@ module Aggregates
     def empty_trash?: -> bool
 
     def finish_game: () -> nil
-    def build_cards_from_exchanged_event: (Array[HandSet::Card], CardExchangedEvent) -> Array[HandSet::Card]
     def game_in_progress?: () -> bool
     def game_ended?: () -> bool
     def exists_game?: () -> bool
   
     private
     attr_reader game_started: bool
-    def build_cards_from_event: (GameStartedEvent) -> Array[HandSet::Card]
+
+    def apply_game_started_event:(GameStartedEvent) -> void
+    def apply_card_exchanged_event:(CardExchangedEvent) -> void
+    def apply_game_ended_event:(GameEndedEvent) -> void
+    def remove_from_deck: (Array[HandSet::Card]) -> void
+
   end
 
   class Deck
@@ -232,6 +233,11 @@ module Aggregates
   class Trash
     attr_reader cards: Array[HandSet::Card]
     def accept: (HandSet::Card card) -> void
+  end
+
+  class BuildCards
+    def self.from_exchanged_event: (Array[HandSet::Card], CardExchangedEvent) -> Array[HandSet::Card]
+    def self.from_started_event: (GameStartedEvent) -> Array[HandSet::Card]
   end
 end
 

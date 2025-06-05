@@ -23,32 +23,18 @@ module Aggregates
       deck.remaining_count
     end
 
-    # rubocop:disable Metrics/MethodLength
     def apply(event)
       case event
       when GameStartedEvent
-        cards = build_cards_from_event(event)
-        @game_started = true
-        @current_hand_set = HandSet.build(cards) # 初期代入は @current_hand_set のまま
-
-        cards.each do |card|
-          deck.remove(card) if deck.has?(card)
-        end
+        apply_game_started_event(event)
 
       when CardExchangedEvent
-        new_card = event.to_event_data[:new_card]
-        discarded_card = event.to_event_data[:discarded_card]
-
-        current_hand = @current_hand_set
-        @current_hand_set = current_hand.rebuild_after_exchange(discarded_card, new_card) if current_hand
-
-        deck.remove(new_card) if deck.has?(new_card)
+        apply_card_exchanged_event(event)
 
       when GameEndedEvent
-        # 何もしない
+        apply_game_ended_event(event)
       end
     end
-    # rubocop:enable Metrics/MethodLength
 
     def drawable?
       deck.remaining_count.positive?
@@ -91,28 +77,37 @@ module Aggregates
       @trash.cards.empty?
     end
 
-    def build_cards_from_exchanged_event(hand, event)
-      idx = hand.find_index { |c| c == event.to_event_data[:discarded_card] }
-      return hand unless idx
-
-      new_hand = hand.dup
-      new_hand[idx] = event.to_event_data[:new_card]
-      new_hand
-    end
-
     private
 
     attr_reader :game_started, :trash, :current_hand_set, :deck
 
     delegate :draw_initial_hand, :draw, to: :deck
 
-    def build_cards_from_event(event)
-      event.to_event_data[:initial_hand].map do |card|
-        if HandSet.card?(card)
-          card
-        else
-          HandSet.build_card(card.to_s)
-        end
+    def apply_game_started_event(event)
+      cards = BuildCards.from_started_event(event)
+      @game_started = true
+      @current_hand_set = HandSet.build(cards)
+
+      remove_from_deck(cards)
+    end
+
+    def apply_card_exchanged_event(event)
+      new_card = event.to_event_data[:new_card]
+      discarded_card = event.to_event_data[:discarded_card]
+
+      current_hand = @current_hand_set
+      @current_hand_set = current_hand.rebuild_after_exchange(discarded_card, new_card) if current_hand
+
+      remove_from_deck([new_card])
+    end
+
+    def apply_game_ended_event(event)
+      # 何もしない
+    end
+
+    def remove_from_deck(cards)
+      cards.each do |card|
+        deck.remove(card) if deck.has?(card)
       end
     end
   end
