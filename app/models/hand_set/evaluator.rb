@@ -58,12 +58,11 @@ class HandSet
     end
 
     def straight?
-      values = ranks.map { |n| NUMBER_TO_VALUE[n] }.sort
-      is_wheel = values == [2, 3, 4, 5, 14]
-      return true if is_wheel
+      numbers = ranks.map { |n| NUMBER_TO_VALUE[n] }.sort
+      return true if GameSetting.is_wheel_straight?(numbers)
 
       # 明示的に2つの整数値を取り出して比較することで型エラーを回避
-      values.each_cons(2).all? do |pair|
+      numbers.each_cons(2).all? do |pair|
         a, b = pair
         b && a && (b - a == 1)
       end

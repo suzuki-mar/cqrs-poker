@@ -72,6 +72,10 @@ Performance:
 Rails/I18nLocaleTexts:
   Enabled: false
 
+# ネストするほうがかえってみづらくなるので
+Style/ClassAndModuleChildren:
+  Enabled: false
+
 # RSpec用（必要ならrubocop-rspecも追加可能）
 # require:
 #   - rubocop-rspec

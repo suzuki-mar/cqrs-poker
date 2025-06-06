@@ -247,11 +247,11 @@ class HandSet
       def nil_compare: (Integer?, Integer?) -> (Integer | nil)
     end
 
-    class RankNumbersCompareBuilder
-      def self.from_pair_values: (HandSet, HandSet) -> Compare
-      def self.from_three_of_a_kind_value: (HandSet, HandSet) -> Compare
-      def self.from_four_of_a_kind_value: (HandSet, HandSet) -> Compare
-      def self.from_straight_high_card: (HandSet, HandSet) -> Compare
+    class MatchedRankNumbersCompareBuilder
+      def self.from_pair_hand_set: (HandSet, HandSet) -> Compare
+      def self.from_three_of_a_kind_hand_set: (HandSet, HandSet) -> Compare
+      def self.from_four_of_a_kind_hand_set: (HandSet, HandSet) -> Compare
+      def self.from_straight_hand_set: (HandSet, HandSet) -> Compare
 
       private
 
@@ -261,7 +261,7 @@ class HandSet
       def self.extract_straight_high_card: (HandSet) -> Integer
     end
 
-    class RemainingNumbersCompareBuilder
+    class RemainingKindSetNumbersCompareBuilder
       def self.from_high_cards: (HandSet, HandSet) -> Compare
       def self.from_one_pair: (HandSet, HandSet) -> Compare
       def self.from_two_pair: (HandSet, HandSet) -> Compare
@@ -275,9 +275,7 @@ class HandSet
       def self.extract_four_of_a_kind_value: (HandSet) -> (Integer | nil)
     end
 
-    # これらのクラスは実際の実装では呼び出されているが、実態はビルダーのエイリアス
-    RankNumbersCompare: singleton(RankNumbersCompareBuilder)
-    RemainingNumbersCompare: singleton(RemainingNumbersCompareBuilder)
+
 
     private
 
