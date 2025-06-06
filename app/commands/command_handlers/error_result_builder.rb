@@ -40,7 +40,7 @@ module CommandHandlers
         nil
       end
 
-      def rebuild_hand_from_event(board, hand, event)
+      def rebuild_hand_from_event(_board, hand, event)
         return hand unless event.is_a?(GameStartedEvent) || event.is_a?(CardExchangedEvent)
 
         return Aggregates::BuildCards.from_exchanged_event(hand, event) if event.is_a?(CardExchangedEvent)
