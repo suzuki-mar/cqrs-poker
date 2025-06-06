@@ -6,32 +6,32 @@ RSpec.describe Query::PlayerHandState, type: :model do
       subject { build_stubbed(:player_hand_state, hand_set: hand_set_value, last_event_id: 1) }
 
       context '正常な値の場合' do
-        let(:hand_set_value) { Array.new(5) { CustomFaker.valid_card.to_s } }
+        let!(:hand_set_value) { Array.new(5) { CustomFaker.valid_card.to_s } }
         it { should be_valid }
       end
 
       context '5枚未満の場合' do
-        let(:hand_set_value) { Array.new(4) { CustomFaker.valid_card.to_s } }
+        let!(:hand_set_value) { Array.new(4) { CustomFaker.valid_card.to_s } }
         it { should be_invalid }
       end
 
       context '5枚より多い場合' do
-        let(:hand_set_value) { Array.new(6) { CustomFaker.valid_card.to_s } }
+        let!(:hand_set_value) { Array.new(6) { CustomFaker.valid_card.to_s } }
         it { should be_invalid }
       end
 
       context '空配列の場合' do
-        let(:hand_set_value) { [] }
+        let!(:hand_set_value) { [] }
         it { should be_invalid }
       end
 
       context 'nilを含む場合' do
-        let(:hand_set_value) { [nil, *Array.new(4) { CustomFaker.valid_card.to_s }] }
+        let!(:hand_set_value) { [nil, *Array.new(4) { CustomFaker.valid_card.to_s }] }
         it { should be_invalid }
       end
 
       context '文字列以外を含む場合' do
-        let(:hand_set_value) { [1, 2, 3, 4, 5] }
+        let!(:hand_set_value) { [1, 2, 3, 4, 5] }
         it { should be_invalid }
       end
     end
@@ -44,7 +44,7 @@ RSpec.describe Query::PlayerHandState, type: :model do
         subject { build_stubbed(:player_hand_state, current_rank: invalid_value, last_event_id: 1) }
 
         context '存在しない役の場合' do
-          let(:invalid_value) { 'INVALID_HAND' }
+          let!(:invalid_value) { 'INVALID_HAND' }
           it { should be_invalid }
         end
       end
@@ -57,12 +57,12 @@ RSpec.describe Query::PlayerHandState, type: :model do
         subject { build(:player_hand_state, current_turn: invalid_value) }
 
         context '0以下の値の場合' do
-          let(:invalid_value) { 0 }
+          let!(:invalid_value) { 0 }
           it { should be_invalid }
         end
 
         context '上限値を超える場合' do
-          let(:invalid_value) { 1000 }
+          let!(:invalid_value) { 1000 }
           it { should be_invalid }
         end
       end

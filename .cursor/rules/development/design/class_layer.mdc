@@ -1,0 +1,128 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 📘 クラスレイヤーガイド（最終更新日: 2025/06/09）
+
+##　このファイルについて
+現在のプロジェクトにおける各レイヤーの責務とクラス構成を整理したガイドです。CQRS実装時のディレクトリ配置やクラス設計の参考として使用します。
+---
+
+## ✅ Command層（`app/commands`）
+
+### 📌 役割：
+ユーザーの入力操作を受け取り、**ゲーム状態を変更する処理**を実行します。
+
+### 主なクラス
+- コマンドオブジェクト（`GameStartCommand`, `ExchangeCardCommand`）  
+- ユースケース実行クラス（`CommandHandler`）  
+- Aggregateルート
+
+---
+
+## 🔍 Query層（`app/queries`）
+
+### 📌 役割：
+発行されたイベントをもとに、**現在のゲーム状態を再構成して取得**する層です。
+
+### 📁 主なクラス
+- Projectionクラス
+  - イベントを受信してReadModelを更新する処理を担当
+- Read Model（`GameStateReadModel`）  
+  - ユーザーに提示するための状態表現
+- QueryService
+   - ゲーム状態の問い合わせに対する統一インターフェース
+    - ReadModelからデータを取得し、必要な形式で提供
+
+---
+
+---
+
+## ⚡ Event層（`app/events`）
+
+### 📌 役割：
+システム内で発生するイベントの定義と通知システムを管理します。
+
+### 📁 主なクラス
+- 各種 Eventクラス
+    - TBD
+- EventBus
+    - イベントの発行と配信を担当
+    - EventPublisherを通じてリスナーにイベントを通知
+
+
+
+
+## ⚙️ シミュレーター層（`app/simulators`）
+
+### 📌 役割：
+ゲームのシミュレーション機能を提供します。
+
+
+### 📁 主なクラス
+- Simulator
+    - - CommandBusを通じてシュミレーターを実行するクラス
+
+
+---
+
+## ⚙️ Model層（`app/domains`）
+
+### 📌 役割：
+データの永続化、データの抽象化
+
+### 📁 配置するもの：
+- HandSet
+    - 手札に関連するもの
+- Event
+    - イベントソーシングのレコードとして扱っている
+- Query
+    - ReadModelのために存在するテーブルのDB周り
+- 各ID (GameNumber等)
+    - 値オブジェクトとして実装され、比較演算子を提供
+    - プリミティブな型ではなくてIDクラスを渡すことでバグを少なくしている
+
+
+### ⚠️ ルール：
+- CQRS/ESの原則を守るために外部キーは設定しない
+- CommandとQueryの両方で使われるクラスのみ配置
+- 片方だけで使われるものはそれぞれの層に
+- アグリゲートはCommandレイヤーにおく
+
+---
+
+
+
+## 🩹 まとめ
+
+```
+flowchart TD
+    Model["Model"]
+    Event["Event"]
+    Query["Query"]
+    Command["Command"]
+    Simulator["Simulator"]
+
+    Command --Eventを発行--> Event
+    Event --発行されたEventが配送される--> Query
+
+    Command  --EventStoreを保存する --> Model
+    Query --ReadModelで使用するデータを保存する --> Model
+
+    Simulator --CommandBus経由でシミュレーションを実行--> Command
+    Simulator --シミュレーション結果を参照--> Query
+```
+https://www.mermaidchart.com/app/dashboard とかを使ってみてください
+
+
+
+| ディレクトリ | 主な責務 |
+|-------------|-----------|
+| `commands` | 状態の変更：ユーザー操作を受けてドメインロジックを実行し、イベントを発行する|
+| `queries` |  状態の読み取り：イベントを集約してReadModelを構築し、クエリに応答する|
+| `events` | イベント：ドメインイベントの定義、配信を担当する|
+| simulators | 自動実行：ゲームの自動化やテスト用のシミュレーション機能を提供する |
+| `models` | データ永続化：EventStore、ReadModel、IDクラスなどの永続化層を管理する|
+
+

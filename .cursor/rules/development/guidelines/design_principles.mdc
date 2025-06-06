@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # 設計原則（Design Principles）
 
@@ -48,18 +48,8 @@ alwaysApply: false
 - 不要な複雑さが入り込むのを防げる
 - 実際の要件に基づいた設計ができる
 
-## Railsにおけるリポジトリパターン
-Railsでは、ActiveRecordを直接利用するのが一般的で、リポジトリパターンを使わないことが推奨される。ActiveRecordは既にデータアクセス層を抽象化しており、リポジトリパターンを導入すると冗長になりがちである。
-
-これにより：
-- コードの簡潔さが保たれる
-- ActiveRecordの機能を最大限に活用できる
-- 開発速度が向上する
-- メンテナンスが容易になる
-- Railsのエコシステムからの恩恵を最大限に受けられる
-
 ## RailsWayとエコシステムのバランス
-Railsで開発する際は、RailsWayに従いすぎず、エコシステムの恩恵を受けることが重要。RailsWayは強力なガイドラインを提供するが、プロジェクトの要件によっては柔軟に対応する必要がある。
+RailsWayに従いすぎないが、エコシステムの恩恵を受けることが重要。RailsWayは強力なガイドラインを提供するが、プロジェクトの要件によっては柔軟に対応する必要がある。
 
 これにより：
 - Railsの強力な機能を最大限に活用できる
@@ -67,3 +57,46 @@ Railsで開発する際は、RailsWayに従いすぎず、エコシステムの�
 - 開発速度が向上する
 - メンテナンスが容易になる
 - Railsのエコシステムからの恩恵を最大限に受けられる
+
+## 重複の回避
+
+### 原則
+
+- 同じ情報を複数の場所で管理しない。
+- 情報は1箇所で定義し、必要なところで参照する。
+- 可能な限り自動化を活用して、コードとドキュメントの同期を保つ。
+
+#### コード管理のポイント
+
+- 定数や設定値は1つの場所に定義する。
+  - 例：`VALID_RANKS = ['HIGH_CARD', 'ONE_PAIR', ...]` をモデルで定義し、テストで参照する。
+- 共通ロジックは特定用途のクラスに抽出する（汎用ヘルパー／サービスにはしない）。
+  - 例：認証ロジックは `AuthenticationService` などにまとめる。
+- 再利用可能なテストデータはファクトリで定義する。
+  - 例：`FactoryBot.define { factory :user do ... end }`
+
+重複が避けられない場合は、明確な理由をコメントに記述する。
+
+## コメントスタイル
+
+### 「翻訳コメント」は書かない（コードの内容をそのまま日本語で説明するようなコメント）
+
+良いコメントとは、「なぜこのコードがこう書かれているのか」という背景や、コードからは読み取れない意図を説明するものです。
+
+#### 良い例
+```ruby
+# 高可用性とスケーラビリティの観点から AWS SNS を選定
+def send_notification(user, message)
+  return unless user.prefers_notifications?
+  AwsSnsService.deliver(user, message)
+end
+```
+
+#### 悪い例
+```ruby
+# 通知を送る
+def send_notification(user, message)
+  return unless user.prefers_notifications?
+  AwsSnsService.deliver(user, message)
+end
+```

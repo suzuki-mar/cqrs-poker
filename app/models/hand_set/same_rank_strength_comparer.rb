@@ -14,30 +14,29 @@ class HandSet
     private_class_method :new
 
     def call
-      rank = hand_set1.evaluate
+      method_maps = {
+        Rank::HIGH_CARD => :compare_high_cards,
+        Rank::FLUSH => :compare_high_cards, # HIGH_CARD と同じロジック
+        Rank::ONE_PAIR => :compare_one_pair,
+        Rank::TWO_PAIR => :compare_two_pair,
+        Rank::THREE_OF_A_KIND => :compare_three_of_a_kind,
+        Rank::STRAIGHT => :compare_straight,
+        Rank::STRAIGHT_FLUSH => :compare_straight, # STRAIGHT と同じロジック
+        Rank::ROYAL_FLUSH => :compare_straight, # STRAIGHT と同じロジック
+        Rank::FULL_HOUSE => :compare_full_house,
+        Rank::FOUR_OF_A_KIND => :compare_four_of_a_kind
+      }
 
-      case rank
-      when Rank::HIGH_CARD
-        compare_high_cards
-      when Rank::ONE_PAIR
-        compare_one_pair
-      when Rank::TWO_PAIR
-        compare_two_pair
-      when Rank::THREE_OF_A_KIND
-        compare_three_of_a_kind
-      when Rank::STRAIGHT
-        compare_straight
-      when Rank::FLUSH
-        compare_high_cards
-      when Rank::FULL_HOUSE
-        compare_full_house
-      when Rank::FOUR_OF_A_KIND
-        compare_four_of_a_kind
-      when Rank::STRAIGHT_FLUSH, Rank::ROYAL_FLUSH
-        compare_straight
-      else
-        0
-      end
+      rank = hand_set1.evaluate
+      method_name = method_maps[rank]
+      raise "不正な役が渡された rank:#{rank} hand_set:#{hand_set1}" if method_name.nil?
+
+      # 戻り値がuntypedなのですぐにreturnせずにタイプを指定してからreturnしている
+      # rubocop:disable Style/RedundantAssignment
+      # @type var result: Integer
+      result = send(method_maps[rank])
+      result
+      # rubocop:enable Style/RedundantAssignment
     end
 
     private

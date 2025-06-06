@@ -17,11 +17,13 @@ alwaysApply: true
   - 一度に大きな変更をしない
   - 各ステップで常に動作する状態を保つ
 
-- **モックの使用は最小限に**
-
-  - 実オブジェクトをできる限り使う
-  - 明確な外部依存（HTTP通信、サードパーティAPI、メール送信等）のみモック対象とする
-  - Rails内部のServiceやJobは原則モックしない
+- **モックの使用は仕様しない**
+ - テストダブルによる「テストのねつ造」や「偽仕様」リスクを減らすため
+    - モックが返す値を間違えることで、実際の利用時に起きるバグを隠してしまうことがある。
+    - 実装とテストの意図がズレたとき、テストの信頼性が下がる。
+ - リファクタビリティと設計品質のため
+    - 本物同士で動くよう設計すると、「疎結合でシンプルなAPI」「不要な依存がない」構造になりやすい。
+    - モック前提になると、APIの分割や協調設計のクセが強くなりがち。
 
 ---
 
@@ -43,13 +45,10 @@ alwaysApply: true
 
 ```ruby
 it "ユーザーが正しく保存されること" do
-  # Arrange
   user = build(:user)
 
-  # Act
   user.save
 
-  # Assert
   expect(user).to be_persisted
 end
 ```
@@ -144,8 +143,6 @@ end
 
 - 本番コードに依存しすぎないこと
 
-
-
 ```ruby
 # typed: true
 require 'rails_helper'
@@ -176,130 +173,35 @@ end
 
 ---
 
-# 🧪 RSpecテストガイドライン（詳細編）
-
-## ✅ aggregate_failuresの適切な使い方
-
-### 📌 学んだこと
-- `aggregate_failures` ブロックは **Assert（検証）専用** とする  
-- **Arrange → Act** はブロックの外側へ  
-- 意図と流れが分離され、テスト構造が明確になる
-
-### 🧪 コード例
-```ruby
-# ✅ Good：検証のみaggregate_failuresに入れる
-it "ゲームが正しく開始されること" do
-  # Arrange
-  command = GameStartCommand.new
-
-  # Act
-  command_handler.handle(command)
-
-  # Assert
-  aggregate_failures do
-    expect(logger.messages_for_level(:info)).to include(/イベント受信: ゲーム開始/)
-    expect(GameState.last.status).to eq("started")
-  end
-end
-
-# ❌ Bad：Actまでブロック内に含めている
-# ❌ Bad：Assertがブロック外に残っている
-```
-
----
-
 ## ✅ RSpecのsubject活用パターン
+* そのテストでは何をテストの対象とするためにテストで実行するものはsubjectを使う
+* そのときにsubjectに名前をつけるのは、一つのテストで複数のテストで実行するものが存在することになりかねないので禁止
 
-### 📌 学んだこと
-- `subject` は **Act の共通化** と **可読性向上** に有用  
-- 基本は **無名 subject { … }**  
-- `let`／`before` と役割を分ける
-
-### 🧪 ポイント
-- 「テストの主役（Act）」を一本化して **構造を整理**  
-- contextごとの再定義でバリエーションを表現
-
----
-
-## ✅ subject / let / context ベストプラクティス
-
-### 📌 ベストな使い方
-- **subject**：共通の実行（Act）  
-- **let**：状況依存データ（Arrange）  
-- **context**：前提条件の切替え
-
-### 🧪 コード例
 ```ruby
-subject { command_handler.handle(Command.new, CommandContext.build_for_exchange(card)) }
+OK
+subject { hoge.execute }
 
-context "正常系" do
-  let(:card) { Card.new(current_hand.first) }
+NG
+subject(:hoge) { hoge.execute }
 
-  it "CardExchangedEvent が発行されること" do
-    expect(subject).to be_a(CardExchangedEvent)
-  end
-end
-
-context "異常系（手札に存在しないカード）" do
-  let(:card) { Card.new("♠A") }
-
-  it "InvalidCommandEvent が発行されること" do
-    expect(subject).to be_a(InvalidCommandEvent)
-  end
-end
 ```
 
----
+## letについて
+* letは必要な項目だけを書く
+* 即時実行のほうがテストの理解があがるので let! を使って即時実行をする
+* `let` は **繰り返し参照** するものだけ
 
-## ✅ let の最小化と依存関係の整理
 
-### 📌 学んだこと
-- `let` は **繰り返し参照** するものだけ  
-- 依存オブジェクトは **ひとまとめ** に定義  
-- 一時データはローカル変数で十分
-
-### 🧪 コード例
-```ruby
-# ✅ Good：依存をlet内部でまとめる
-let(:log_event_listener) do
-  logger = TestLogger.new
-  LogEventListener.new(logger)
+```
+OK
+let!(:command) do
+    card = build(:card)
+    Command.new(card)
 end
 
-# ❌ Bad：細かく分割してletを乱用
-let(:logger) { TestLogger.new }
-let(:log_event_listener) { LogEventListener.new(logger) }
-```
-
-以下のとおり、**番号を削除**し、**見出しを1段階上げ**てフォーマットを統一しました。
+NG
+let(:card) { build(:card) }
+let(:command) { Command.new(card) }
 
 ---
-
-## ✅ テストダブルの使用制限
-
-### 📌 学んだこと
-- テスト用の偽物は **原則使わない**
-- 本物クラスの利用を優先
-
-### 📌 理由
-- 実際に近いテストになる
-- 実装変更に対する耐性が高い
-- コードの信頼性が増す
-
-### 🧪 コード例
-```ruby
-# ❌ Bad
-class TestEventListener
-  def handle_event(event)
-    @received_events << event
-  end
-end
-
-# ✅ Good
-let(:event_listener) { LogEventListener.new }
-```
-
-### 📌 例外
-- 記録用に実装パターンを残したいとき
-- ライブラリ提供の double（RSpec の `double` 等）
 

@@ -8,7 +8,7 @@ RSpec.describe 'カード交換コマンド後のAggregateの詳細状態' do
   let(:aggregate_store) { Aggregates::Store.new }
 
   # 事前状態：ゲームをスタートしていること
-  let!(:game_start_result) do
+  let(:game_start_result) do
     command_bus.execute(Commands::GameStart.new)
   end
 
@@ -50,7 +50,7 @@ RSpec.describe 'カード交換コマンド後のAggregateの詳細状態' do
     end
 
     context '2回連続でExchangeCardを呼ぶ' do
-      let!(:first_exchange_result) { subject }
+      let(:first_exchange_result) { subject }
 
       let(:second_exchange_result) do
         # 2回目のカード交換

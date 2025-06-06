@@ -17,7 +17,7 @@ RSpec.describe 'カード交換をするユースケース' do
     EventBus.new(event_publisher)
   end
 
-  let(:game_number) do
+  let!(:game_number) do
     command_bus.execute(Commands::GameStart.new)
     Aggregates::Store.new.latest_event.game_number
   end

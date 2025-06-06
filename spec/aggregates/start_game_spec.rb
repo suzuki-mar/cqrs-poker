@@ -1,11 +1,11 @@
 require 'rails_helper'
 
 RSpec.describe 'ゲーム開始コマンド後のAggregateの詳細状態' do
-  let(:command_bus) do
+  let!(:command_bus) do
     AggregateTestHelper.build_command_bus
   end
 
-  let(:aggregate_store) { Aggregates::Store.new }
+  let!(:aggregate_store) { Aggregates::Store.new }
 
   subject { command_bus.execute(Commands::GameStart.new) }
 

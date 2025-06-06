@@ -3,9 +3,9 @@ require 'rspec-parameterized'
 require 'support/custom_faker'
 
 RSpec.describe HandSet do
-  let(:cards) { Array.new(5) { instance_double(HandSet::Card, valid?: true) } }
-  let(:hand_set) { described_class.build(cards) }
-  let(:excluded_rank_consts) { %i[ALL NAMES] }
+  let!(:cards) { Array.new(5) { instance_double(HandSet::Card, valid?: true) } }
+  let!(:hand_set) { described_class.build(cards) }
+  let!(:excluded_rank_consts) { %i[ALL NAMES] }
 
   describe '.build' do
     it '有効なカード配列からHandSetを生成できる' do

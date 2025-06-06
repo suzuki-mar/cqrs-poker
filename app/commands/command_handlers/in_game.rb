@@ -15,13 +15,9 @@ module CommandHandlers
       @command = command
       @executor = build_executor
 
-      game_number = command.game_number or raise "不正なコマンドです #{command}"
-      board = aggregate_store.load_board_aggregate_for_current_state(game_number)
+      board = load_board
 
-      error = ErrorResultBuilder.build_error_if_needed(
-        command, board, aggregate_store
-      )
-
+      error = build_error_result(board)
       return error if error
 
       executor.operate_board(board)
@@ -50,6 +46,17 @@ module CommandHandlers
     def append_event_to_store!
       event = executor.build_event(command)
       aggregate_store.append_event(event, command.game_number)
+    end
+
+    def load_board
+      game_number = command.game_number or raise "不正なコマンドです #{command}"
+      aggregate_store.load_board_aggregate_for_current_state(game_number)
+    end
+
+    def build_error_result(board)
+      ErrorResultBuilder.build_error_if_needed(
+        command, board, aggregate_store
+      )
     end
   end
 end

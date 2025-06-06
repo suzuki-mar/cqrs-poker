@@ -1,0 +1,150 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# クラス実装ガイドライン
+
+## 共通
+
+### ✅ Ruby インスタンス変数参照は attr_reader 経由で統一
+
+#### 📌 ポリシー
+
+インスタンス変数は必ず attr_reader で定義する
+直接アクセス (@foo) は禁止
+外部公開が必要にならないかぎり private attr_reader を使う
+
+
+🧪 Good 例
+```
+class Example
+  attr_reader :foo
+
+  def initialize(foo)
+    @foo = foo
+  end
+
+  def show_foo
+    foo  # ← OK
+  end
+end
+```
+
+❌ Bad 例
+
+```
+class Example
+  attr_reader :foo
+
+  def initialize(foo)
+    @foo = foo
+  end
+
+  def show_foo
+    @foo  # ← NG
+  end
+end
+```
+
+
+
+
+## ActiveRecord
+
+### バリデーションメソッドの命名規則
+
+#### 主な学び
+- **バリデーションメソッド名には対象のフィールドを含めること。**  
+  - 例：`validate_occurred_at_not_future_date`  
+  - どのフィールドに対するバリデーションかが一目で分かるようにする。
+
+- **メソッド名はバリデーションロジックの内容を明確に示すこと。**  
+  - `validate_occurred_at` のような曖昧な名前ではなく、`validate_occurred_at_not_future_date` のように具体的に。  
+  - 何をチェックしているかが名前からわかるようにする。
+
+- **バリデーションの宣言と、ロジックの実装を分離する。**  
+  - 例：  
+    - `valid_json_...
+
+### リポジトリパターン
+ActiveRecordは既にデータアクセス層を抽象化しており、リポジトリパターンを導入すると冗長になりがちである。
+
+これにより：
+- ActiveRecordの機能を最大限に活用できる
+- Railsのエコシステムからの恩恵を最大限に受けられる
+
+
+
+## ファンクショナルクラスの実装
+
+### メソッド名の規約
+- Commandパターンを実装する場合は`call`ではなく`execute`を使用する
+- `execute`の方がCommandパターンの意図をより明確に表現できる
+
+#### 例
+```ruby
+# 良い例：executeを使用
+class GameStartCommand
+  def self.execute(deck)
+    new(deck).execute
+  end
+
+  private :initialize
+
+  def initialize(deck)
+    @deck = deck
+  end
+
+  def execute
+    initial_hand = deck.generate_hand_set
+    GameStartedEvent.new(initial_hand)
+  end
+end
+```
+
+## require_relative は絶対に書かない
+### 理由
+RailsではAutoLoadを使うのが暗黙のルールになっているため
+
+
+
+## ディレクトリ構成とファイル配置
+
+### 禁止されるディレクトリ名
+
+以下のディレクトリ名の使用は避ける
+- **services**："service" という用語は曖昧で、責務が不明確になりがちです。より具体的な役割を示す名前を使用してください。
+- **helpers**：ヘルパーは無関係なロジックの集積所になりやすいです。より説明的な名前にしましょう。
+- **utils(utilities)**：ユーティリティクラスは責務が曖昧になりがちです。より具体的な名前を使いましょう。
+
+
+より具体的な名前を使うことで、以下のようなメリットがあります：
+
+1. **責務の明確化** – クラスの役割が明瞭になる。
+2. **発見しやすさの向上** – コードが探しやすくなる。
+3. **一貫性の確保** – アプリ全体で設計の原則が統一される。
+4. **コード配置の指針** – 新しいコードの置き場所が判断しやすくなる。
+
+
+## メソッド引数の指定方法
+### 基本ルール
+- 引数が3つ以上の場合はキーワード引数を使用する
+- 引数が1つか2つの場合は通常の引数を使用する
+
+### 例
+```ruby
+良い例：引数が3つ以上の場合
+def complex_method(name:, type:, options:)  # ✅ 3つ以上なのでキーワード引数
+  # 処理
+end
+
+良い例：引数が2つ以下の場合
+def simple_method(name, type)  # ✅ 2つ以下なので通常の引数
+  # 処理
+end
+
+避けるべき例：少ない引数でのキーワード引数使用
+def bad_method(name:)  # ❌ 1つの引数なのでキーワード引数は不要
+  # 処理
+end

@@ -2,9 +2,9 @@ require 'rails_helper'
 
 describe Aggregates::Store do
   describe '#append_event' do
-    let(:initial_hand) { CustomFaker.high_card_hand }
-    let(:event) { GameStartedEvent.new(initial_hand) }
-    let(:aggregate_store) { described_class.new }
+    let!(:initial_hand) { CustomFaker.high_card_hand }
+    let!(:event) { GameStartedEvent.new(initial_hand) }
+    let!(:aggregate_store) { described_class.new }
 
     it 'イベントを保存できること' do
       expect do
@@ -26,9 +26,9 @@ describe Aggregates::Store do
   end
 
   describe '#append_initial_event' do
-    let(:initial_hand) { CustomFaker.high_card_hand }
-    let(:event) { GameStartedEvent.new(initial_hand) }
-    let(:aggregate_store) { described_class.new }
+    let!(:initial_hand) { CustomFaker.high_card_hand }
+    let!(:event) { GameStartedEvent.new(initial_hand) }
+    let!(:aggregate_store) { described_class.new }
 
     it '初期イベントを保存できること' do
       expect do

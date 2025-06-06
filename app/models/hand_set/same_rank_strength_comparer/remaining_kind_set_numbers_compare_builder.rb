@@ -14,9 +14,9 @@ class HandSet::SameRankStrengthComparer
       end
 
       def from_one_pair(hand_set1, hand_set2)
-        remaining_numbers_proc = ->(hand_set) do
+        remaining_numbers_proc = lambda do |hand_set|
           pair_numbers      = extract_numbers_by_count(hand_set, 2)
-          excluded_numbers  = pair_numbers.take(1)                 # ← ワンペアなので 1 つだけ除外
+          excluded_numbers  = pair_numbers.take(1) # ← ワンペアなので 1 つだけ除外
           numbers           = convert_numbers_for_comparer(hand_set)
           remaining_numbers = numbers.reject { |n| excluded_numbers.include?(n) }
 
@@ -30,9 +30,9 @@ class HandSet::SameRankStrengthComparer
       end
 
       def from_two_pair(hand_set1, hand_set2)
-        remaining_numbers_proc = ->(hand_set) do
-          four_number = extract_numbers_by_count(hand_set, 2)
-          numbers = convert_numbers_for_comparer(hand_set)
+        remaining_numbers_proc = lambda do |hand_set|
+          extract_numbers_by_count(hand_set, 2)
+          convert_numbers_for_comparer(hand_set)
           remaining_numbers = numbers1.reject { |n| excluded_numbers.include?(n) }.sort.reverse
           sort_desc_by_strength(remaining_numbers)
         end
@@ -44,7 +44,7 @@ class HandSet::SameRankStrengthComparer
       end
 
       def from_three_of_a_kind(hand_set1, hand_set2)
-        remaining_numbers_proc = ->(hand_set) do
+        remaining_numbers_proc = lambda do |hand_set|
           three_number = extract_numbers_by_count(hand_set, 3)
           excluded_numbers = three_number ? [three_number] : []
           numbers = convert_numbers_for_comparer(hand_set)
@@ -59,7 +59,7 @@ class HandSet::SameRankStrengthComparer
       end
 
       def from_four_of_a_kind(hand_set1, hand_set2)
-        remaining_numbers_proc = ->(hand_set) do
+        remaining_numbers_proc = lambda do |hand_set|
           four_number = extract_numbers_by_count(hand_set, 4)
           excluded_numbers = four_number ? [four_number] : []
           numbers = convert_numbers_for_comparer(hand_set)
@@ -88,7 +88,6 @@ class HandSet::SameRankStrengthComparer
       def sort_desc_by_strength(numbers)
         numbers.sort.reverse
       end
-
     end
   end
 end

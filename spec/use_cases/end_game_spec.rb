@@ -4,7 +4,7 @@ require 'rails_helper'
 require 'support/use_case_shared'
 
 RSpec.describe 'ゲーム終了ユースケース' do
-  let(:logger) { TestLogger.new }
+  let!(:logger) { TestLogger.new }
   let!(:command_bus) { UseCaseHelper.build_command_bus(logger) }
 
   context '正常系' do
@@ -57,7 +57,7 @@ RSpec.describe 'ゲーム終了ユースケース' do
     # it_behaves_like 'version history update examples' # from support/use_case_shared
 
     describe 'ゲーム終了の捨て札管理' do
-      let(:game_number) { QueryService.latest_game_number }
+      let!(:game_number) { QueryService.latest_game_number }
 
       it 'バージョン履歴で捨て札のバージョンだけは上がっていないこと' do
         query_service = QueryService.new(game_number)

@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe ReadModels::PlayerHandState do
   describe 'rank_groups' do
-    let(:game_number) { GameNumber.new(1) }
-    let(:player_hand_state_record) do
+    let!(:game_number) { GameNumber.new(1) }
+    let!(:player_hand_state_record) do
       Query::PlayerHandState.new(
         game_number: game_number.value,
         hand_set: hand_cards,
@@ -13,10 +13,10 @@ RSpec.describe ReadModels::PlayerHandState do
         last_event_id: 1
       )
     end
-    let(:player_hand_state) { described_class.send(:new, player_hand_state_record) }
+    let!(:player_hand_state) { described_class.send(:new, player_hand_state_record) }
 
     context '2種類以上のペアがある場合' do
-      let(:hand_cards) { %w[♥A ♠A ♦10 ♣10 ♥K] }
+      let!(:hand_cards) { %w[♥A ♠A ♦10 ♣10 ♥K] }
 
       it 'ペアの塊が2配列返ること' do
         result = player_hand_state.rank_groups
@@ -32,7 +32,7 @@ RSpec.describe ReadModels::PlayerHandState do
     end
 
     context '1種類だけのペアがある場合' do
-      let(:hand_cards) { %w[♥A ♠A ♦10 ♣J ♥K] }
+      let!(:hand_cards) { %w[♥A ♠A ♦10 ♣J ♥K] }
 
       it 'ペアの塊が1配列返ること' do
         result = player_hand_state.rank_groups
@@ -46,7 +46,7 @@ RSpec.describe ReadModels::PlayerHandState do
     end
 
     context 'ペアが全くない場合' do
-      let(:hand_cards) { %w[♥A ♠2 ♦10 ♣J ♥K] }
+      let!(:hand_cards) { %w[♥A ♠2 ♦10 ♣J ♥K] }
 
       it '空配列が返ること' do
         result = player_hand_state.rank_groups

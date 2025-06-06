@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe 'シミュレーターの基本動作' do
-  let(:logger) { TestLogger.new }
+  let!(:logger) { TestLogger.new }
   let!(:command_bus) { UseCaseHelper.build_command_bus(logger) }
 
   it 'ゲームを開始できること' do

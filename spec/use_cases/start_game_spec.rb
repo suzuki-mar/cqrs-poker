@@ -3,12 +3,12 @@
 require 'rails_helper'
 
 RSpec.describe 'ゲーム開始' do
-  let(:logger) { TestLogger.new }
-  let(:command_bus) { UseCaseHelper.build_command_bus(logger) }
+  let!(:logger) { TestLogger.new }
+  let!(:command_bus) { UseCaseHelper.build_command_bus(logger) }
 
   context '正常系' do
     describe 'ゲームが正しく開始されること' do
-      let(:command) { Commands::GameStart.new }
+      let!(:command) { Commands::GameStart.new }
 
       subject { command_bus.execute(Commands::GameStart.new) }
 
