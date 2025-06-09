@@ -181,7 +181,7 @@ RSpec.describe 'カード交換をするユースケース' do
     context 'デッキが空のときに交換した場合' do
       before do
         deck_size = HandSet::Card::VALID_SUITS.size * HandSet::Card::VALID_NUMBERS.size
-        hand_size = GameSetting::MAX_HAND_SIZE
+        hand_size = GameRule::MAX_HAND_SIZE
         exchange_count = deck_size - hand_size
         exchange_count.times do
           command_bus.execute(Commands::ExchangeCard.new(player_hand_state.refreshed_hand_set.cards.first,

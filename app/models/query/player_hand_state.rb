@@ -31,7 +31,7 @@ module Query
     def validate_hand_set_format
       return if HandSet.valid_hand_set_format?(hand_set)
 
-      errors.add(:hand_set, "は#{GameSetting::MAX_HAND_SIZE}枚のカード文字列配列でなければなりません")
+      errors.add(:hand_set, "は#{GameRule::MAX_HAND_SIZE}枚のカード文字列配列でなければなりません")
     end
   end
 end

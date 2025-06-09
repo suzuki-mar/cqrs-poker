@@ -26,7 +26,7 @@ class HandSet::SameRankStrengthComparer
       def from_straight_hand_set(hand_set1, hand_set2)
         extract_straight_high_card = lambda do |hand_set|
           numbers = hand_set.cards.map { |card| HandSet::Evaluator::NUMBER_TO_VALUE[card.number] }.sort
-          GameSetting.wheel_straight?(numbers) ? GameSetting::WHEEL_HIGH_CARD_INT : numbers.max
+          GameRule.wheel_straight?(numbers) ? GameRule::WHEEL_HIGH_CARD_INT : numbers.max
         end
 
         Compare.new(

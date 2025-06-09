@@ -59,7 +59,7 @@ class HandSet
 
     def straight?
       numbers = ranks.map { |n| NUMBER_TO_VALUE[n] }.sort
-      return true if GameSetting.wheel_straight?(numbers)
+      return true if GameRule.wheel_straight?(numbers)
 
       # 明示的に2つの整数値を取り出して比較することで型エラーを回避
       numbers.each_cons(2).all? do |pair|

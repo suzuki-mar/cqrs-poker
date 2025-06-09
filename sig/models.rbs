@@ -101,8 +101,11 @@ class EventId
   def to_s: () -> String
 end
 
-class GameSetting
+class GameRule
   MAX_HAND_SIZE: Integer
+  WHEEL_HIGH_CARD_INT: Integer
+  DECK_FULL_SIZE: Integer
+  def self.wheel_straight?: (Array[Integer]) -> bool
 end
 
 

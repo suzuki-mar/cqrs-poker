@@ -9,7 +9,7 @@ module Aggregates
     end
 
     def draw_initial_hand
-      drawn_cards = Array.new(GameSetting::MAX_HAND_SIZE) { draw }
+      drawn_cards = Array.new(GameRule::MAX_HAND_SIZE) { draw }
       HandSet.build(drawn_cards)
     end
 

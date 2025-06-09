@@ -70,3 +70,4 @@ yarn-debug.log*
 
 # brakemanの出力ファイル
 brakeman.html
+cursor_base_rules.mdc

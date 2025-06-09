@@ -73,7 +73,7 @@ class HandSet
 
   def fetch_by_number(number)
     raise ArgumentError, 'Invalid number' unless number.is_a?(Integer) &&
-                                                 number.between?(1, ::GameSetting::MAX_HAND_SIZE)
+                                                 number.between?(1, ::GameRule::MAX_HAND_SIZE)
 
     @cards[number - 1]
   end
@@ -92,14 +92,14 @@ class HandSet
 
   def self.valid_cards?(cards)
     return false unless cards.is_a?(Array)
-    return false unless cards.size == ::GameSetting::MAX_HAND_SIZE
+    return false unless cards.size == ::GameRule::MAX_HAND_SIZE
 
     cards.all?(&:valid?)
   end
 
   def self.valid_hand_set_format?(hand_set)
     hand_set.is_a?(Array) &&
-      hand_set.size == ::GameSetting::MAX_HAND_SIZE &&
+      hand_set.size == ::GameRule::MAX_HAND_SIZE &&
       hand_set.all? { |c| c.present? && c.is_a?(String) }
   end
 end

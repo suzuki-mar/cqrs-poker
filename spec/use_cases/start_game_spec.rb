@@ -32,7 +32,7 @@ RSpec.describe 'ゲーム開始' do
         display_data = QueryService.last_game_player_hand_summary
 
         expect(display_data[:status]).to eq('started')
-        expect(display_data[:hand_set].size).to eq(GameSetting::MAX_HAND_SIZE)
+        expect(display_data[:hand_set].size).to eq(GameRule::MAX_HAND_SIZE)
       end
 
       it '表示用のデータが正しく整形されること' do
@@ -41,7 +41,7 @@ RSpec.describe 'ゲーム開始' do
         display_data = QueryService.last_game_player_hand_summary
 
         expect(display_data[:status]).to eq('started')
-        expect(display_data[:hand_set].size).to eq(GameSetting::MAX_HAND_SIZE)
+        expect(display_data[:hand_set].size).to eq(GameRule::MAX_HAND_SIZE)
       end
 
       it 'バージョン履歴を作成していること' do
