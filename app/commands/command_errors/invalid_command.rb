@@ -28,7 +28,14 @@ module CommandErrors
         CommandErrors::InvalidCommand::GAME_ALREADY_ENDED => 'すでにゲームが終了しています'
       }
 
-      @message = messages[error_code]
+      # @type var keyed_error_code: game_state_invalid_command
+      keyed_error_code = error_code
+
+      @message = if messages.key?(keyed_error_code)
+                   messages[keyed_error_code]
+                 else
+                   'エラーが発生しました'
+                 end
       @error_code = error_code
     end
   end

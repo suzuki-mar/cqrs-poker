@@ -1,27 +1,26 @@
-# エラーコード定義（許容される値を明示）
+# ゲーム状態に関するエラーコード（InvalidCommandで実際に使用される）
+type game_state_invalid_command =
+  :game_not_in_progress |
+  :game_already_ended |
+  :game_not_found |
+  :card_not_found |
+  :no_cards_left
+
+# エラーコード定義（game_state_invalid_commandに追加のエラーコードを組み合わせ）
 type command_error_code =
-  :GAME_NOT_IN_PROGRESS |
-  :GAME_ALREADY_ENDED |
-  :GAME_NOT_FOUND |
-  :INVALID_CARD |
-  :CARD_NOT_FOUND |
-  :EXCHANGE_LIMIT_EXCEEDED |
-  :VALIDATION_ERROR |
-  :UNKNOWN_COMMAND |
-  :INVALID_SELECTION |
-  :NO_CARDS_LEFT
+  game_state_invalid_command |
+  :invalid_card |
+  :exchange_limit_exceeded |
+  :validation_error |
+  :unknown_command |
+  :invalid_selection
 
 type in_game_command = Commands::ExchangeCard | Commands::EndGame
-
 
 interface _Command
   def class: () -> untyped
   def nil?: () -> bool
   def is_a?: (Class) -> bool
-<<<<<<< HEAD
-=======
-  def game_number:() -> GameNumber?
->>>>>>> 3214f9b (リファクタ)
 end
 
 module Commands
@@ -33,11 +32,13 @@ module Commands
   class ExchangeCard
     include _Command
     attr_reader discarded_card: HandSet::Card
+    attr_reader game_number: GameNumber
     def initialize: (HandSet::Card, GameNumber) -> void
   end
 
   class EndGame
     include _Command
+    attr_reader game_number: GameNumber
     def initialize: (GameNumber) -> void
   end
 end
@@ -50,151 +51,106 @@ module CommandErrors
   end
 
   class InvalidCommand
-<<<<<<< HEAD
+    # 定数定義
+    GAME_NOT_IN_PROGRESS: :game_not_in_progress
+    GAME_ALREADY_ENDED: :game_already_ended
+    GAME_NOT_FOUND: :game_not_found
+    INVALID_CARD: :invalid_card
+    CARD_NOT_FOUND: :card_not_found
+    VALIDATION_ERROR: :validation_error
+    UNKNOWN_COMMAND: :unknown_command
+    INVALID_SELECTION: :invalid_selection
+    NO_CARDS_LEFT: :no_cards_left
+
     attr_reader command: _Command
-    attr_reader reason: String
-    def initialize: (command: _Command, reason: String) -> void
-=======
-      GAME_NOT_IN_PROGRESS: command_error_code
-      GAME_ALREADY_ENDED: command_error_code
-      GAME_NOT_FOUND: command_error_code
-  
-      INVALID_CARD: command_error_code
-      CARD_NOT_FOUND: command_error_code
-      EXCHANGE_LIMIT_EXCEEDED: command_error_code
-  
-      VALIDATION_ERROR: command_error_code
-  
-      UNKNOWN_COMMAND: command_error_code
-      INVALID_SELECTION: command_error_code
-      NO_CARDS_LEFT: command_error_code
-  
-      attr_reader command: _Command
-      attr_reader reason: String
-      attr_reader error_code: command_error_code
-      
-      def initialize: (command: _Command, reason: String, error_code: command_error_code) -> void
->>>>>>> 3214f9b (リファクタ)
+    attr_reader message: String
+    attr_reader error_code: command_error_code
+    def initialize: (command: _Command, error_code: command_error_code) -> void
   end
 end
 
 interface _CommandHandler
   def initialize: (EventBus) -> void
   def handle: (_Command) -> CommandResult
-  def append_to_aggregate_store: (_Event, _Command) -> CommandResult
-
 end
 
-
 module CommandHandlers
+  class ErrorResultBuilder
+    def self.build_error_if_needed: (_Command, Aggregates::BoardAggregate, Aggregates::Store) -> CommandResult?
+
+    private
+    def self.build_error_code_of_game_status_if_needed: (_Command, Aggregates::BoardAggregate, Aggregates::Store) -> game_state_invalid_command?
+    def self.build_card_not_found_error_code_if_needed: (Commands::ExchangeCard, Aggregates::BoardAggregate, Aggregates::Store) -> game_state_invalid_command?
+    def self.rebuild_hand_from_event: (Aggregates::BoardAggregate, Array[HandSet::Card], _Event) -> Array[HandSet::Card]
+    def self.raise_if_invalid_error_code: (game_state_invalid_command) -> void
+  end
+
   class GameStart
     include _CommandHandler
 
     private
-    attr_reader start_command: Commands::GameStart
-    attr_reader event_bus:  EventBus
+    attr_reader event_bus: EventBus
     attr_reader aggregate_store: Aggregates::Store
-    def append_event_to_store!: (HandSet initial_hand) -> CommandResult
+    def append_event_to_store!: (HandSet) -> CommandResult
   end
 
   class InGame
     include _CommandHandler
 
     private
-    attr_reader event_bus:  EventBus
+    attr_reader event_bus: EventBus
     attr_reader aggregate_store: Aggregates::Store
-<<<<<<< HEAD
-    attr_reader exchange_command: Commands::ExchangeCard
+    attr_reader command: (Commands::ExchangeCard | Commands::EndGame)
+    attr_reader executor: (InGameExecutor::ExchangeCard | InGameExecutor::EndGame)
 
-    def append_event_to_store!: (HandSet::Card) -> CommandResult
-
-
-    class ErrorResultBuilder
-      def self.build_error_if_needed: (Commands::ExchangeCard, Aggregates::Store, Aggregates::BoardAggregate) -> CommandResult?
-      def self.build_error_message_of_game_status_if_needed: (Aggregates::Store, Commands::ExchangeCard) -> String?
-      def self.build_error_message_of_hand_state_in_hand_if_needed: (Aggregates::Store, HandSet::Card, Aggregates::BoardAggregate, Commands::ExchangeCard) -> String?
-      def self.rebuild_hand_from_event: (Array[HandSet::Card], _Event, Aggregates::BoardAggregate) -> Array[HandSet::Card]
-=======
-    attr_reader command: in_game_command
-    attr_accessor executor: _InGameExecutor
-
-    def append_event_to_store!: (HandSet::Card) -> CommandResult
-
-    def build_executor: -> _InGameExecutor
-
-  end
-
-  interface _InGameExecutor
-    def initialize: () -> void
-
-    def operate_board: (Aggregates::BoardAggregate) -> void
-
-    def build_event: (in_game_command) -> _Event
+    def build_executor: () -> (InGameExecutor::ExchangeCard | InGameExecutor::EndGame)
+    def append_event_to_store!: () -> CommandResult
+    def load_board: () -> Aggregates::BoardAggregate
+    def build_error_result: (Aggregates::BoardAggregate) -> CommandResult?
   end
 
   module InGameExecutor
     class ExchangeCard
-      include _InGameExecutor
+      def operate_board: (Aggregates::BoardAggregate) -> void
+      def build_event: (Commands::ExchangeCard | Commands::EndGame) -> CardExchangedEvent
 
       private
       attr_reader new_card: HandSet::Card
->>>>>>> 3214f9b (リファクタ)
     end
-  end
 
-  class EndGame
-    include _CommandHandler
-
-    private
-    attr_reader event_bus:  EventBus
-    attr_reader aggregate_store: Aggregates::Store
-    attr_reader end_game_command: Commands::EndGame
-
-    def validate_game_state: () -> CommandResult?
-    def process_end_game: () -> CommandResult
-    def append_event_to_store!: () -> CommandResult
-    def build_error_result_if_needed: () -> CommandResult?
+    class EndGame
+      def operate_board: (Aggregates::BoardAggregate) -> void
+      def build_event: (Commands::ExchangeCard | Commands::EndGame) -> GameEndedEvent
+    end
   end
 end
 
 module Aggregates
   class Store
-<<<<<<< HEAD
     def next_available_version_for_game: (GameNumber) -> Integer
     def current_version_for_game: (GameNumber) -> Integer
     def exists_game?: (GameNumber) -> bool
-=======
-
-
-    def next_available_version_for_game: (GameNumber) -> Integer
-    def current_version_for_game: (GameNumber) -> Integer
-    def exists_game?: (GameNumber) -> bool
-    def game_ended?:(GameNumber) -> bool
-    def game_in_progress?: (GameNumber) -> bool
->>>>>>> 3214f9b (リファクタ)
     def append_event: (_Event, GameNumber) -> CommandResult
     def append_initial_event: (_Event, GameNumber) -> CommandResult
-    def load_all_events_in_order: () -> Array[_Event]
+    def load_all_events_in_order: (GameNumber) -> Array[_Event]
     def latest_event: () -> _Event?
-<<<<<<< HEAD
     def game_in_progress?: (GameNumber) -> bool
-=======
->>>>>>> 3214f9b (リファクタ)
-    def load_board_aggregate_for_current_state: () -> Aggregates::BoardAggregate
+    def load_board_aggregate_for_current_state: (GameNumber) -> Aggregates::BoardAggregate
+    def build_board_aggregate: () -> Aggregates::BoardAggregate
 
     private
     def persist_and_finalize_event: (_Event, GameNumber) -> CommandResult
-    def valid_event_type?: (_Event | CommandErrors::InvalidCommand | CommandErrors::VersionConflict) -> bool
+    def valid_event_type?: (_Event) -> bool
     def create_event_record!: (_Event, GameNumber) -> Event
 
     class EventBuilder
       MAPPINGS: Hash[String, untyped]
 
-      def self.execute: (Event event_record) -> _Event
+      def self.execute: (Event) -> _Event
 
       private
-      def self.raise_if_invalid_event_record: (Event event_record, Hash[String, untyped] maps) -> void
-      def self.build_event: (Event event_record, Hash[String, untyped] maps) -> _Event
+      def self.raise_if_invalid_event_record: (Event, Hash[String, untyped]) -> void
+      def self.build_event: (Event, Hash[String, untyped]) -> _Event
       def self.valid_event_type?: (untyped) -> bool
     end
 
@@ -205,38 +161,55 @@ module Aggregates
   end
 
   class BoardAggregate
-    def apply: (_Event event) -> void
+    attr_reader game_number: GameNumber?
+
+    def initialize: (?game_number: GameNumber?) -> void
+    def apply: (_Event) -> void
     def draw_initial_hand: () -> HandSet
     def draw: () -> HandSet::Card
     def drawable?: () -> bool
     def finish_game: () -> nil
-    def build_cards_from_exchanged_event: (Array[HandSet::Card], CardExchangedEvent) -> Array[HandSet::Card]
-  
+    def remaining_deck_count: () -> Integer
+    def current_hand_cards: () -> Array[HandSet::Card]
+    def game_in_progress?: () -> bool
+    def game_ended?: () -> bool
+    def exists_game?: () -> bool
+    def card_in_deck?: (HandSet::Card) -> bool
+    def empty_trash?: () -> bool
+
     private
     attr_reader deck: Deck
     attr_reader trash: Trash
-    attr_accessor game_started: bool
-    def build_cards_from_event: (GameStartedEvent) -> Array[HandSet::Card]
+    attr_reader game_started: bool
+    attr_reader current_hand_set: HandSet?
+    def apply_game_started_event: (GameStartedEvent) -> void
+    def apply_card_exchanged_event: (CardExchangedEvent) -> void
+    def apply_game_ended_event: (GameEndedEvent) -> void
+    def remove_from_deck: (Array[HandSet::Card]) -> void
   end
 
   class Deck
     attr_reader cards: Array[HandSet::Card]
+    def initialize: () -> void
     def draw_initial_hand: () -> HandSet
     def draw: () -> HandSet::Card
-    def remove: (HandSet::Card card) -> void
-    def has?: (HandSet::Card card) -> bool
-
+    def remove: (HandSet::Card) -> HandSet::Card
+    def has?: (HandSet::Card) -> bool
     def remaining_count: () -> Integer
-  
+
     private
     def generate_initial_cards: () -> Array[HandSet::Card]
   end
 
   class Trash
-    def accept: (HandSet::Card card) -> void
+    def initialize: () -> void
+    def accept: (HandSet::Card) -> void
+    def cards: () -> Array[HandSet::Card]
+  end
 
-    private
-    attr_reader cards: Array[HandSet::Card]
+  class BuildCards
+    def self.from_exchanged_event: (Array[HandSet::Card], CardExchangedEvent) -> Array[HandSet::Card]
+    def self.from_started_event: (GameStartedEvent) -> Array[HandSet::Card]
   end
 end
 
@@ -245,23 +218,19 @@ class CommandResult
 
   type command_result_error = CommandErrors::InvalidCommand | CommandErrors::VersionConflict
 
-  attr_reader error: (command_result_error)?
+  attr_reader error: command_result_error?
   def initialize: (?event: _Event?, ?error: command_result_error?) -> void
   def success?: () -> bool
   def failure?: () -> bool
-  def self.invalid_command: (_Command, String, command_error_code) -> CommandResult
+  def self.invalid_command: (_Command, command_error_code) -> CommandResult
 end
 
-class CommandBus
-  def initialize: (EventBus, Logger) -> void
-  def execute: (_Command) -> CommandResult
-  private
-  type command_class = singleton(Commands::GameStart) | singleton(Commands::EndGame) | singleton(Commands::ExchangeCard)
-  type command_handler = CommandHandlers::GameStart | CommandHandlers::EndGame | CommandHandlers::ExchangeCard
+  class CommandBus
+    def initialize: (EventBus, Logger) -> void
+    def execute: (_Command) -> CommandResult
 
-
-  def build_handler_map: () -> Hash[command_class, command_handler]
-  def log_error_if_needed: (untyped) -> void
-  attr_reader event_bus: EventBus
-  attr_reader logger: Logger
-end
+    private
+    attr_reader event_bus: EventBus
+    attr_reader logger: Logger
+    def log_error_if_needed: ((CommandErrors::InvalidCommand | CommandErrors::VersionConflict)?) -> void
+  end

@@ -10,9 +10,17 @@ module CommandHandlers
     # メソッド分割をしているため今の状態のほうがコードが見やすいため
     # rubocop:disable Metrics/MethodLength
     def handle(command)
-      command.game_number or raise '不正なコマンドです'
+      # 型キャスト：_Command -> (Commands::ExchangeCard | Commands::EndGame)
+      in_game_command = case command
+                        when Commands::ExchangeCard, Commands::EndGame
+                          command
+                        else
+                          raise ArgumentError, "InGameハンドラーは#{command.class}を処理できません"
+                        end
 
-      @command = command
+      in_game_command.game_number or raise '不正なコマンドです'
+
+      @command = in_game_command
       @executor = build_executor
 
       board = load_board

@@ -10,7 +10,9 @@ module CommandHandlers
 
         return nil if error_code.nil?
 
-        raise_if_invalid_error_code(error_code)
+        # @type var game_state_error_code: game_state_invalid_command
+        game_state_error_code = error_code
+        raise_if_invalid_error_code(game_state_error_code)
 
         error = CommandErrors::InvalidCommand.new(
           command: command, error_code: error_code

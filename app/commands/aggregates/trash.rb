@@ -5,7 +5,9 @@ module Aggregates
     attr_reader :cards
 
     def initialize
-      @cards = []
+      # @type var cards: Array[HandSet::Card]
+      cards = []
+      @cards = cards
     end
 
     def accept(card)

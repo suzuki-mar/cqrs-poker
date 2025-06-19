@@ -2,9 +2,14 @@ class Simulator
   # 一人用ポーカーの進行を担うクラス
   # command_bus: コマンドを流す CommandBus インスタンス
   # CommandBusはcommandsディレクトリに存在する
+  include _EventSubscriber
 
   def initialize: (CommandBus command_bus) -> void
 
   # ゲームを開始し、GameStart コマンドを CommandBus に送信するメソッド
-  def start: () -> void
+  def start: () -> CommandResult
+  def completed_events: () -> Array[_Event]
+
+  private
+  attr_reader command_bus: CommandBus
 end
