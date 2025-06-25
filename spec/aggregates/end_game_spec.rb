@@ -2,7 +2,9 @@ require 'rails_helper'
 
 RSpec.describe 'ゲーム終了コマンド後のAggregateの詳細状態' do
   let!(:command_bus) do
-    AggregateTestHelper.build_command_bus
+    logger = TestLogger.new
+    failure_handler = DummyFailureHandler.new
+    CommandBusAssembler.build(logger: logger, failure_handler: failure_handler)
   end
 
   let!(:game_start_result) do
@@ -75,7 +77,6 @@ RSpec.describe 'ゲーム終了コマンド後のAggregateの詳細状態' do
 
       it 'カード交換後のゲーム終了でDeckの枚数が正しいこと' do
         board_aggregate = AggregateTestHelper.load_board_aggregate(end_game_after_exchange)
-        # ゲーム開始で5枚引いて、カード交換で1枚引いているので、52 - 6 = 46枚のはず
         expected = GameRule::DECK_FULL_SIZE - (GameRule::MAX_HAND_SIZE + 1)
         expect(board_aggregate.remaining_deck_count).to eq(expected)
       end
@@ -85,7 +86,7 @@ RSpec.describe 'ゲーム終了コマンド後のAggregateの詳細状態' do
 
         aggregate_failures do
           expect(board_aggregate.current_hand_cards.size).to eq(GameRule::MAX_HAND_SIZE)
-          expect(board_aggregate.empty_trash?).to eq(true)
+          expect(board_aggregate.empty_trash?).to eq(false)
         end
       end
     end

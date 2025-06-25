@@ -1,114 +1,103 @@
 # frozen_string_literal: true
 
-# このクラスでは、内部状態を直接外部から変更されないよう、プリミティブ型以外のフィールドをすべて private にしています。
-# Aggregate はドメイン不変条件（Invariant）を担保する責務を持つため、外部からコレクションや値オブジェクトを直接操作されると、
-# 一貫性チェックやバリデーションを経ずに状態を壊される可能性があります。
-#
-# そのため、振る舞いを表すメソッド（例：exchange_card、play_card、hand_size など）だけを公開し、
-# 必要なデータはイミュータブルなコピーや値オブジェクトで返却することで、一貫性を保ちながら安全にドメインロジックを扱えるように設計しています。
-
 module Aggregates
   class BoardAggregate
-    attr_reader :game_number
+    attr_reader :game_number, :deck, :trash, :current_turn, :last_event_id, :game_started, :game_ended, :current_hand
 
     def initialize(game_number: nil)
+      @game_number = game_number
       @deck = Deck.new
       @trash = Trash.new
       @game_started = false
-      @game_number = game_number
-      @current_hand_set = nil
+      @game_ended = false
+      @current_turn = 0
+      @last_event_id = nil
+      @current_hand = nil
+    end
+
+    def apply(event)
+      case event
+      when GameStartedEvent
+        apply_of_game_started(event)
+      when CardExchangedEvent
+        apply_of_card_exchanged(event)
+      when GameEndedEvent
+        apply_of_game_ended(event)
+      end
+      @last_event_id = event.event_id if event.event_id
     end
 
     def remaining_deck_count
       deck.remaining_count
     end
 
-    def apply(event)
-      case event
-      when GameStartedEvent
-        apply_game_started_event(event)
+    delegate :draw_initial_hand, to: :deck
 
-      when CardExchangedEvent
-        apply_card_exchanged_event(event)
+    delegate :draw, to: :deck
 
-      when GameEndedEvent
-        apply_game_ended_event(event)
-      end
+    def start_game
+      draw_initial_hand
     end
+
+    def finish_game
+      # ゲーム終了のドメインロジック（現在は特に処理なし）
+    end
+
+    delegate :cards, to: :current_hand, prefix: true
 
     def drawable?
       deck.remaining_count.positive?
     end
 
-    def current_hand_cards
-      return [] unless current_hand_set
-
-      current_hand_set.cards
-    end
-
     def game_in_progress?
-      return false if game_number.nil?
-
-      exists_types = Event.exists_by_types(game_number, %w[game_started game_ended])
-      exists_types['game_started'] && !exists_types['game_ended']
+      game_started && !game_ended
     end
 
     def game_ended?
-      return false if game_number.nil?
-
-      exists_types = Event.exists_by_types(game_number, %w[game_started game_ended])
-      exists_types['game_ended']
+      game_ended
     end
 
     def exists_game?
-      return false if game_number.nil?
-
-      Event.exists?(game_number: game_number.value)
+      game_started
     end
 
     def card_in_deck?(card)
       deck.has?(card)
     end
 
-    # 現時点ではおこなうことはないがAggregateの振る舞いとしてはったほうがいいのでメソッドを実装している
-    def finish_game; end
-
     def empty_trash?
       @trash.cards.empty?
     end
 
-    private
+    def current_hand_cards
+      current_hand&.cards || []
+    end
 
-    attr_reader :game_started, :trash, :current_hand_set, :deck
-
-    delegate :draw_initial_hand, :draw, to: :deck
-
-    def apply_game_started_event(event)
-      cards = BuildCards.from_started_event(event)
+    def apply_of_game_started(event)
       @game_started = true
-      @current_hand_set = HandSet.build(cards)
-
-      remove_from_deck(cards)
+      event_data = event.to_event_data
+      initial_hand_cards = event_data[:initial_hand]
+      initial_hand_cards.each { |card| @deck.remove(card) }
+      @current_turn = 1
+      @current_hand = HandSet.build(initial_hand_cards)
     end
 
-    def apply_card_exchanged_event(event)
-      new_card = event.to_event_data[:new_card]
-      discarded_card = event.to_event_data[:discarded_card]
+    def apply_of_card_exchanged(event)
+      event_data = event.to_event_data
+      @trash.accept(event_data[:discarded_card])
+      @deck.remove(event_data[:new_card])
+      @current_turn += 1
 
-      current_hand = @current_hand_set
-      @current_hand_set = current_hand.rebuild_after_exchange(discarded_card, new_card) if current_hand
+      return unless @current_hand
 
-      remove_from_deck([new_card])
+      current_hand = @current_hand
+      # @type var current_hand: HandSet
+      new_cards = current_hand.cards.map { |card| card == event_data[:discarded_card] ? event_data[:new_card] : card }
+      @current_hand = HandSet.build(new_cards)
     end
 
-    def apply_game_ended_event(event)
-      # 何もしない
-    end
-
-    def remove_from_deck(cards)
-      cards.each do |card|
-        deck.remove(card) if deck.has?(card)
-      end
+    def apply_of_game_ended(_event)
+      @game_ended = true
     end
   end
 end

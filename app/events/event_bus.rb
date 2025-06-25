@@ -1,16 +1,18 @@
 # frozen_string_literal: true
 
 class EventBus
-  def initialize(event_publisher)
-    @event_publisher = event_publisher
+  def initialize(publishers)
+    @publishers = publishers
   end
 
   def publish(event)
     Rails.logger.info "Event published: #{event.class.name}"
-    @event_publisher.broadcast(:handle_event, event)
+    @publishers.each do |publisher|
+      publisher.broadcast(:handle_event, event)
+    end
   end
 
   private
 
-  attr_reader :event_publisher
+  attr_reader :publishers
 end

@@ -4,7 +4,13 @@ require 'rails_helper'
 
 RSpec.describe 'ゲーム開始' do
   let!(:logger) { TestLogger.new }
-  let!(:command_bus) { UseCaseHelper.build_command_bus(logger) }
+  let!(:command_bus) do
+    failure_handler = DummyFailureHandler.new
+    CommandBusAssembler.build(
+      logger: logger,
+      failure_handler: failure_handler
+    )
+  end
 
   context '正常系' do
     describe 'ゲームが正しく開始されること' do

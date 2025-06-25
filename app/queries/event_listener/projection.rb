@@ -26,8 +26,10 @@ module EventListener
     def apply_to_player_hand_state(player_hand_state, event)
       case event
       when GameStartedEvent
+        # @type var event: GameStartedEvent
         player_hand_state.start_new_game!(event)
       when CardExchangedEvent
+        # @type var event: CardExchangedEvent
         player_hand_state.exchange_card!(event)
       when GameEndedEvent
         # @type var event: GameEndedEvent

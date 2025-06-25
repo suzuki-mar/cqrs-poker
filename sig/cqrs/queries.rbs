@@ -36,21 +36,30 @@ module ReadModels
     def start_new_game!: (GameStartedEvent) -> void
     def exchange_card!: (CardExchangedEvent) -> void
     def end_game!: (GameEndedEvent) -> void
-    def current_state_for_display: () -> { status: String, hand: String, current_rank: String, rank_name: String, turn: Integer }
+    def current_state_for_display: () -> {
+      status: String,
+      hand: String,
+      current_rank: String,
+      rank_name: String,
+      turn: Integer
+    }
     def hand_set: () -> HandSet
     def refreshed_hand_set: () -> HandSet
     def rank_groups: () -> Array[Array[HandSet::Card]]
     def current_turn: () -> Integer
 
-    def self.build_from_event: (GameStartedEvent event) -> ReadModels::PlayerHandState
-    def self.load_by_game_number: (GameNumber game_number) -> ReadModels::PlayerHandState
+    def self.build_from_event: (GameStartedEvent event) -> PlayerHandState
+    def self.load_by_game_number: (GameNumber game_number) -> PlayerHandState
     def self.latest_game_number: () -> GameNumber
     def self.latest_event_id: () -> Integer
 
     private
     def format_hand: () -> String
     # nilも返せるように型を修正
-    def build_exchanged_hand_set: (HandSet::Card discarded_card, HandSet::Card new_card) -> (HandSet | nil)
+    def build_exchanged_hand_set: (
+      HandSet::Card discarded_card,
+      HandSet::Card new_card
+    ) -> (HandSet | nil)
     attr_reader player_hand_state: Query::PlayerHandState
   end
 
@@ -60,7 +69,11 @@ module ReadModels
     def self.load: (GameNumber game_number) -> TrashState
     def initialize: (Query::TrashState) -> void
 
-    def accept!: (HandSet::Card card, Integer current_turn, Integer last_event_id) -> void
+    def accept!: (
+      HandSet::Card card,
+      Integer current_turn,
+      Integer last_event_id
+    ) -> void
     def self.prepare!: (GameNumber game_number, EventId first_event_id) -> void
 
     def exists?: () -> bool
@@ -90,14 +103,18 @@ end
 class EventPublisher
   attr_reader published_events: Array[_Event]
 
-  def initialize: (projection: EventListener::Projection, event_listener: EventListener::Log) -> void
+  def initialize: (
+    projection: EventListener::Projection,
+    event_listeners: Array[_EventSubscriber]
+  ) -> void
   def broadcast: (String | Symbol, _Event) -> void
   # ライブラリーからインクルードをされるもの
   def subscribe: (untyped) -> void
 
   private
+
   attr_reader projection: EventListener::Projection
-  attr_reader event_listener: EventListener::Log
+  attr_reader event_listeners: Array[_EventSubscriber]
 end
 
 module EventListener
@@ -114,9 +131,15 @@ module EventListener
     include _EventSubscriber
     def initialize: () -> void
     private
-    def apply_to_player_hand_state: (ReadModels::PlayerHandState player_hand_state, _Event event) -> void
+    def apply_to_player_hand_state: (
+      ReadModels::PlayerHandState player_hand_state,
+      _Event event
+    ) -> void
     def update_projection_versions: (_Event event) -> void
-    def update_trash_state: (_Event event, ReadModels::PlayerHandState player_hand_state) -> void
+    def update_trash_state: (
+      _Event event,
+      ReadModels::PlayerHandState player_hand_state
+    ) -> void
     def build_player_hand_state: (_Event event) -> ReadModels::PlayerHandState
   end
 end
@@ -133,13 +156,21 @@ class QueryService
   def trash_state: () -> ReadModels::TrashState
   def player_hand_set: () -> HandSet
   def all_projection_versions: () -> Array[ReadModels::ProjectionVersions::VersionInfo]
-  def player_hand_summary: () -> Hash[Symbol, untyped]
+  def player_hand_summary: () -> {
+    hand_set: Array[String],
+    rank: Integer?,
+    status: String
+  }
   def ended_game_recorded?: () -> bool
 
   def self.latest_game_number: () -> GameNumber
   def self.latest_event_id: () -> Integer
   def self.build_last_game_query_service: () -> QueryService
-  def self.last_game_player_hand_summary: () -> Hash[Symbol, untyped]
+  def self.last_game_player_hand_summary: () -> {
+    hand_set: Array[String],
+    rank: Integer?,
+    status: String
+  }
   def self.number_of_games: () -> Integer
 
   private

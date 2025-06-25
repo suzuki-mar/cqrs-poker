@@ -1,27 +1,19 @@
 # frozen_string_literal: true
 
 class Simulator
-  def initialize(command_bus)
-    @command_bus = command_bus
-    @completed_events = []
+  attr_reader :event_handled, :failure_handled
+
+  def initialize
+    @event_handled = false
+    @failure_handled = false
   end
 
-  def start
-    game_start_command = Commands::GameStart.new
-    result = @command_bus.execute(game_start_command)
-
-    # エラーハンドリング（エラーがある場合はログ出力）
-    Rails.logger.error "ゲーム開始に失敗しました: #{result.error}" if result.failure?
-
-    result
-  end
-
-  def completed_events
-    @completed_events.dup
+  def run(command)
+    @command_bus.execute(command)
   end
 
   def handle_event(event)
-    @completed_events << event
+    @event_handled = true
     Rails.logger.info "Simulator: イベントが完了しました - #{event.class.name}"
 
     # 特定のイベントに対する追加処理があればここに記述
@@ -33,6 +25,12 @@ class Simulator
     when GameEndedEvent
       Rails.logger.info 'Simulator: ゲームが終了しました'
     end
+  end
+
+  def handle_failure(error)
+    @failure_handled = true
+    # ここでコマンド失敗時の共通処理を定義できる
+    Rails.logger.error "[HANDLER] コマンド失敗がハンドルされました: #{error.message}" if error
   end
 
   private

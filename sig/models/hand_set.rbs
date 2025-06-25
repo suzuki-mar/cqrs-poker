@@ -3,10 +3,8 @@ class HandSet
 
   def self.build_card: (String) -> Card
 
-  # rank_allメソッドを追加
   def self.rank_all: () -> Array[String]
 
-  # 戻り値の型をHashに修正
   def self.rank_names: () -> Hash[String, String]
 
   def self.valid_hand_set_format?:(untyped) -> bool
@@ -14,8 +12,7 @@ class HandSet
   attr_reader cards: Array[Card]
   def self.build: (Array[Card]) -> HandSet
   def self.valid_cards?: (Array[Card]) -> bool
-  # nilも返せるように型を修正
-  def rebuild_after_exchange: (Card, Card) -> (HandSet | nil)
+  def rebuild_after_exchange: (Card, Card) -> HandSet?
   def evaluate: () -> String
   def rank_name: () -> String
   def rank_strength: () -> Integer
@@ -72,57 +69,33 @@ class HandSet
     NUMBER_TO_VALUE: Hash[String, Integer]
     
     def self.call: (Array[Card] cards) -> String
-      
     def initialize: (Array[Card] cards) -> void
-      
     def call: () -> String
       
     private
-    
     attr_reader cards: Array[Card]
-      
     def build_rank_checks_map: (Array[Card] _cards) -> Hash[String, ::Proc]
-      
     def valid_hand?: (Array[Card] cards) -> bool
-      
     def straight_flush?: () -> bool
-      
     def four_of_a_kind?: () -> bool
-      
     def full_house?: () -> bool
-      
     def flush?: () -> bool
-      
-    # values配列は整数のみを含むことを明示する
-    # 数値演算を行うstraight?メソッドの定義
     def straight?: () -> bool
-  
     def three_of_a_kind?: () -> bool
-  
     def two_pair?: () -> bool
-  
     def one_pair?: () -> bool
-  
     def royal_flush?: () -> bool
-  
     def rank_combinations: () -> HandSet::Evaluator::RankCombinations
-
     def rank_counts: () -> Hash[String, Integer]
-
     def suits: () -> Array[String]
-
     def ranks: () -> Array[String]
 
-    # RankCombinationsはEvaluate内部でしか使わない
+
     class RankCombinations
       def initialize: (Array[Integer] values) -> void
-
       def pair_count: () -> Integer
-
       def three_of_a_kind?: () -> bool
-
       def four_of_a_kind?: () -> bool
-
       def full_house?: () -> bool
     end
   end
@@ -141,20 +114,32 @@ class HandSet
       attr_reader values1: Array[Integer]
       attr_reader values2: Array[Integer]
 
-      def nil_compare: (Integer?, Integer?) -> (Integer | nil)
+      def nil_compare: (Integer?, Integer?) -> Integer?
     end
 
     class MatchedRankNumbersCompareBuilder
-      def self.from_pair_hand_set: (HandSet, HandSet) -> Compare
-      def self.from_three_of_a_kind_hand_set: (HandSet, HandSet) -> Compare
-      def self.from_four_of_a_kind_hand_set: (HandSet, HandSet) -> Compare
-      def self.from_straight_hand_set: (HandSet, HandSet) -> Compare
+      def self.from_pair_hand_set: (
+        HandSet,
+        HandSet
+      ) -> Compare
+      def self.from_three_of_a_kind_hand_set: (
+        HandSet,
+        HandSet
+      ) -> Compare
+      def self.from_four_of_a_kind_hand_set: (
+        HandSet,
+        HandSet
+      ) -> Compare
+      def self.from_straight_hand_set: (
+        HandSet,
+        HandSet
+      ) -> Compare
 
       private
 
       def self.extract_pair_values: (HandSet) -> Array[Integer]
-      def self.extract_three_of_a_kind_value: (HandSet) -> (Integer | nil)
-      def self.extract_four_of_a_kind_value: (HandSet) -> (Integer | nil)
+      def self.extract_three_of_a_kind_value: (HandSet) -> Integer?
+      def self.extract_four_of_a_kind_value: (HandSet) -> Integer?
       def self.extract_straight_high_card: (HandSet) -> Integer
     end
 
@@ -168,8 +153,8 @@ class HandSet
       private
 
       def self.extract_pair_values: (HandSet) -> Array[Integer]
-      def self.extract_three_of_a_kind_value: (HandSet) -> (Integer | nil)
-      def self.extract_four_of_a_kind_value: (HandSet) -> (Integer | nil)
+      def self.extract_three_of_a_kind_value: (HandSet) -> Integer?
+      def self.extract_four_of_a_kind_value: (HandSet) -> Integer?
     end
 
     private
@@ -186,6 +171,7 @@ class HandSet
     def compare_four_of_a_kind: () -> Integer
   end
 
+  # HandSetの定義
   private
 
   def initialize: (Array[Card]) -> void

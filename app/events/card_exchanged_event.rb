@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative 'assignable_ids'
-
 class CardExchangedEvent
   include AssignableIds
 
@@ -25,9 +23,10 @@ class CardExchangedEvent
 
   # DB保存用
   def to_serialized_hash
+    event_data = to_event_data
     {
-      discarded_card: discarded_card.to_s,
-      new_card: new_card.to_s
+      discarded_card: event_data[:discarded_card].to_s,
+      new_card: event_data[:new_card].to_s
     }
   end
 

@@ -5,8 +5,13 @@ require 'support/use_case_shared'
 
 RSpec.describe 'カード交換をするユースケース' do
   let(:logger) { TestLogger.new }
-  # コマンドバスの初期化による副作用や前提状態のセットアップを、テスト実行前に必ず行いたい
-  let!(:command_bus) { UseCaseHelper.build_command_bus(logger) }
+  let(:command_bus) do
+    failure_handler = DummyFailureHandler.new
+    CommandBusAssembler.build(
+      logger: logger,
+      failure_handler: failure_handler
+    )
+  end
   # load_by_game_number を使用してインスタンスを生成
   let(:player_hand_state) { ReadModels::PlayerHandState.load_by_game_number(game_number) }
   let(:current_hand) { Query::PlayerHandState.find_current_session.hand_set }
@@ -17,7 +22,11 @@ RSpec.describe 'カード交換をするユースケース' do
     EventBus.new(event_publisher)
   end
 
-  let!(:game_number) do
+  before do
+    Event.destroy_all
+  end
+
+  let(:game_number) do
     command_bus.execute(Commands::GameStart.new)
     Aggregates::Store.new.latest_event.game_number
   end
@@ -76,7 +85,9 @@ RSpec.describe 'カード交換をするユースケース' do
         trash_state = ReadModels::TrashState.load(game_number)
         expect(trash_state.number?(discarded_card)).to be true
 
-        expected_turn = Query::PlayerHandState.find_current_session.current_turn
+        # 修正: find_current_sessionではなく、game_numberから直接取得
+        player_hand_state_after = ReadModels::PlayerHandState.load_by_game_number(game_number)
+        expected_turn = player_hand_state_after.current_turn
         expected_event_id = Aggregates::Store.new.latest_event.event_id
 
         expect(trash_state.current_turn).to eq(expected_turn)
@@ -178,6 +189,18 @@ RSpec.describe 'カード交換をするユースケース' do
       it_behaves_like 'return command error use_case', :card_not_found
     end
 
+    context 'ゲームが終了している状態で交換をする場合', :target do
+      before do
+        command_bus.execute(Commands::EndGame.new(game_number))
+      end
+
+      subject do
+        command_bus.execute(Commands::ExchangeCard.new(discarded_card, game_number))
+      end
+
+      it_behaves_like 'return command error use_case', :game_already_ended
+    end
+
     context 'デッキが空のときに交換した場合' do
       before do
         deck_size = HandSet::Card::VALID_SUITS.size * HandSet::Card::VALID_NUMBERS.size
@@ -193,18 +216,6 @@ RSpec.describe 'カード交換をするユースケース' do
         command_bus.execute(Commands::ExchangeCard.new(card, game_number))
       end
       it_behaves_like 'return command error use_case', :no_cards_left
-    end
-
-    context 'ゲームが終了している状態で交換をする場合', :target do
-      before do
-        command_bus.execute(Commands::EndGame.new(game_number))
-      end
-
-      subject do
-        command_bus.execute(Commands::ExchangeCard.new(discarded_card, game_number))
-      end
-
-      it_behaves_like 'return command error use_case', :game_already_ended
     end
   end
 

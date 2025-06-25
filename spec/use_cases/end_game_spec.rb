@@ -5,7 +5,13 @@ require 'support/use_case_shared'
 
 RSpec.describe 'ゲーム終了ユースケース' do
   let!(:logger) { TestLogger.new }
-  let!(:command_bus) { UseCaseHelper.build_command_bus(logger) }
+  let!(:command_bus) do
+    failure_handler = DummyFailureHandler.new
+    CommandBusAssembler.build(
+      logger: logger,
+      failure_handler: failure_handler
+    )
+  end
 
   context '正常系' do
     before do

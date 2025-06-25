@@ -3,12 +3,16 @@
 class EventPublisher
   include Wisper::Publisher
 
-  def initialize(projection:, event_listener:)
+  def initialize(projection:, event_listeners:)
     @projection = projection
-    @event_listener = event_listener
+    @event_listeners = event_listeners
     @published_events = []
     subscribe(projection)
-    subscribe(event_listener)
+    event_listeners.each do |listener|
+      subscribe(listener)
+    end
+
+    subscribe(projection)
   end
 
   def broadcast(event_name, *args)
@@ -23,5 +27,5 @@ class EventPublisher
 
   private
 
-  attr_reader :projection, :event_listener
+  attr_reader :projection, :event_listeners
 end

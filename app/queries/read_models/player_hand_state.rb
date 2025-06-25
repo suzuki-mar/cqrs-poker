@@ -27,16 +27,15 @@ module ReadModels
     end
 
     def start_new_game!(event)
-      @player_hand_state = Query::PlayerHandState.new(
-        status: 'started',
-        current_rank: event.to_event_data[:evaluate],
-        current_turn: 1,
-        hand_set: event.to_event_data[:initial_hand].map(&:to_s),
-        last_event_id: event.event_id.value,
+      @player_hand_state = Query::PlayerHandState.find_or_create_by(
         game_number: event.game_number.value
-      )
-
-      player_hand_state.save!
+      ) do |record|
+        record.status = 'started'
+        record.current_rank = event.to_event_data[:evaluate]
+        record.current_turn = 1
+        record.hand_set = event.to_event_data[:initial_hand].map(&:to_s)
+        record.last_event_id = event.event_id.value
+      end
     end
 
     def exchange_card!(event)
@@ -89,9 +88,7 @@ module ReadModels
 
     delegate :current_turn, :last_event_id, to: :player_hand_state
 
-    def game_number
-      GameNumber.new(player_hand_state.game_number)
-    end
+    attr_reader :game_number
 
     def self.latest_game_number
       latest_record = Query::PlayerHandState.find_latest_by_event

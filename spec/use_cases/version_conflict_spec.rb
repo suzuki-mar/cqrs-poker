@@ -9,7 +9,13 @@ require 'rails_helper'
 
 RSpec.describe 'バージョン競合ユースケース' do
   let!(:logger) { TestLogger.new }
-  let!(:command_bus) { UseCaseHelper.build_command_bus(logger) }
+  let!(:command_bus) do
+    failure_handler = DummyFailureHandler.new
+    CommandBusAssembler.build(
+      logger: logger,
+      failure_handler: failure_handler
+    )
+  end
   let!(:game_number) do
     command_bus.execute(Commands::GameStart.new)
     QueryService.latest_game_number

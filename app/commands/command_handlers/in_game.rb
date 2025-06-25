@@ -10,17 +10,8 @@ module CommandHandlers
     # メソッド分割をしているため今の状態のほうがコードが見やすいため
     # rubocop:disable Metrics/MethodLength
     def handle(command)
-      # 型キャスト：_Command -> (Commands::ExchangeCard | Commands::EndGame)
-      in_game_command = case command
-                        when Commands::ExchangeCard, Commands::EndGame
-                          command
-                        else
-                          raise ArgumentError, "InGameハンドラーは#{command.class}を処理できません"
-                        end
+      @command = cast_to_in_game_command(command)
 
-      in_game_command.game_number or raise '不正なコマンドです'
-
-      @command = in_game_command
       @executor = build_executor
 
       board = load_board
@@ -45,26 +36,35 @@ module CommandHandlers
     attr_reader :event_bus, :aggregate_store, :command, :executor
 
     def build_executor
-      return InGameExecutor::EndGame.new if command.is_a?(Commands::EndGame)
-      return InGameExecutor::ExchangeCard.new if command.is_a?(Commands::ExchangeCard)
+      return InGameExecutor::EndGame.new if @command.is_a?(Commands::EndGame)
+      return InGameExecutor::ExchangeCard.new if @command.is_a?(Commands::ExchangeCard)
 
-      raise ArgumentError, "不正なコマンドです #{command}"
+      raise ArgumentError, "不正なコマンドです #{@command}"
     end
 
     def append_event_to_store!
-      event = executor.build_event(command)
-      aggregate_store.append_event(event, command.game_number)
+      event = executor.build_event(@command)
+      aggregate_store.append_event(event, @command.game_number)
     end
 
     def load_board
-      game_number = command.game_number or raise "不正なコマンドです #{command}"
+      game_number = @command.game_number or raise "不正なコマンドです #{@command}"
       aggregate_store.load_board_aggregate_for_current_state(game_number)
     end
 
     def build_error_result(board)
       ErrorResultBuilder.build_error_if_needed(
-        command, board, aggregate_store
+        @command, board, aggregate_store
       )
+    end
+
+    def cast_to_in_game_command(command)
+      case command
+      when Commands::ExchangeCard, Commands::EndGame
+        command
+      else
+        raise '不正なコマンドです'
+      end
     end
   end
 end

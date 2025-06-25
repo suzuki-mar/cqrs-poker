@@ -2,6 +2,8 @@
 
 module Commands
   class GameStart
-    # ゲームを開始する段階なのでパラメーターを持っていない
+    def initialize
+      # ゲームを開始する段階なのでパラメーターを持っていない
+    end
   end
 end

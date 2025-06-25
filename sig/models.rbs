@@ -23,7 +23,6 @@ module Query
     attr_accessor current_turn: Integer
     attr_accessor hand_set: Array[String]
     attr_reader game_number: Integer
-    # started?メソッドを追加
     def started?: () -> bool
     def self.find_current_session: () -> PlayerHandState?
     def self.find_latest_by_event: () -> PlayerHandState?
@@ -37,7 +36,6 @@ module Query
     include _HasLastEventId
     attr_accessor hand_set: Array[String]
     attr_accessor rank: Integer
-    # TimeWithZoneに修正
     attr_accessor ended_at: ActiveSupport::TimeWithZone
 
     private
@@ -62,11 +60,18 @@ module Query
     attr_accessor event_id: Integer
     attr_accessor projection_name: String
     def self.projection_names: () -> Hash[String, String]
-    def self.find_or_build_all_by_game_number: (GameNumber) -> Array[Query::ProjectionVersion]
+    def self.find_or_build_all_by_game_number: (
+      GameNumber
+    ) -> Array[ProjectionVersion]
     # nilの場合は空配列を返すことを明示
-    def self.projection_name_and_event_id_pairs: (GameNumber?) -> Array[[String, EventId]]
+    def self.projection_name_and_event_id_pairs: (
+      GameNumber?
+    ) -> Array[[String, EventId]]
     # nilの場合は空配列を返すことを明示
-    def self.find_all_excluding_projection_name: (GameNumber?, String) -> Array[Query::ProjectionVersion]
+    def self.find_all_excluding_projection_name: (
+      GameNumber?,
+      String
+    ) -> Array[ProjectionVersion]
   end
 end
 
@@ -74,14 +79,15 @@ class Event < ApplicationRecord
   EVENT_TYPES: Array[String]
   attr_reader event_type: String
   attr_reader event_data: String
-  # ActiveSupport::TimeWithZoneを使用
   attr_reader occurred_at: ActiveSupport::TimeWithZone
   attr_reader version: Integer
   attr_reader game_number: Integer
   def to_event_id: () -> EventId
   def self.current_version_for_game: (GameNumber?) -> Integer
-  # 戻り値の型をより具体的に定義し、空ハッシュの注釈を追加
-  def self.exists_by_types: (GameNumber?, Array[String]) -> Hash[String | Symbol, bool]
+  def self.exists_by_types: (
+    GameNumber?,
+    Array[String]
+  ) -> Hash[String | Symbol, bool]
   def self.version_conflict_error?: (ActiveRecord::RecordInvalid) -> bool
 
   private
@@ -95,7 +101,6 @@ class EventId
   
   attr_reader value: Integer
   def initialize: (Integer) -> void
-  # <=>メソッドの戻り値型を修正（Integer | nil）
   def <=>: (EventId other) -> (Integer | nil)
   def ==: (untyped other) -> bool
   def to_s: () -> String
@@ -119,8 +124,7 @@ class GameNumber
   
   attr_reader value: Integer
   def initialize: (Integer) -> void
-  # <=>メソッドの戻り値型を修正（Integer | nil）
-  def <=>: (GameNumber other) -> (Integer | nil)
+  def <=>: (GameNumber other) -> Integer?
   def ==: (untyped other) -> bool
   def to_s: () -> String
   def self.build: () -> GameNumber

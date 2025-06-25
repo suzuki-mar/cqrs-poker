@@ -2,7 +2,9 @@ require 'rails_helper'
 
 RSpec.describe 'ゲーム開始コマンド後のAggregateの詳細状態' do
   let!(:command_bus) do
-    AggregateTestHelper.build_command_bus
+    logger = TestLogger.new
+    failure_handler = DummyFailureHandler.new
+    CommandBusAssembler.build(logger: logger, failure_handler: failure_handler)
   end
 
   let!(:aggregate_store) { Aggregates::Store.new }

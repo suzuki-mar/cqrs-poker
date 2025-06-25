@@ -36,4 +36,5 @@ interface _ActiveRecordClass
   def create!: (*untyped) -> untyped
   def exists?: (*untyped) -> bool
   def distinct: () -> untyped
+  def find_or_create_by: (*untyped) { (untyped) -> void } -> untyped
 end

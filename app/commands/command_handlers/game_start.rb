@@ -12,7 +12,7 @@ module CommandHandlers
 
       board = aggregate_store.build_board_aggregate
 
-      initial_hand = board.draw_initial_hand
+      initial_hand = board.start_game
       result = append_event_to_store!(initial_hand)
       return result if result.error
 

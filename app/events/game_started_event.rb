@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative 'assignable_ids'
-
 class GameStartedEvent
   include AssignableIds
 
@@ -24,9 +22,10 @@ class GameStartedEvent
 
   # DB保存用
   def to_serialized_hash
+    event_data = to_event_data
     {
-      initial_hand: initial_hand.cards.map(&:to_s),
-      evaluate: initial_hand.evaluate
+      initial_hand: event_data[:initial_hand].map(&:to_s),
+      evaluate: event_data[:evaluate]
     }
   end
 

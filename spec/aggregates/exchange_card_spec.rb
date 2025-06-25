@@ -1,28 +1,25 @@
 require 'rails_helper'
 
 RSpec.describe 'カード交換コマンド後のAggregateの詳細状態' do
-  let(:command_bus) do
-    AggregateTestHelper.build_command_bus
+  let!(:command_bus) do
+    logger = TestLogger.new
+    failure_handler = DummyFailureHandler.new
+    CommandBusAssembler.build(logger: logger, failure_handler: failure_handler)
   end
 
   let(:aggregate_store) { Aggregates::Store.new }
-
-  let(:game_start_result) do
-    command_bus.execute(Commands::GameStart.new)
-  end
-
-  let(:game_number) { game_start_result.event.game_number }
+  let(:game_started_result) { command_bus.execute(Commands::GameStart.new) }
+  let(:game_number) { game_started_result.event.game_number }
+  let(:board_aggregate) { AggregateTestHelper.load_board_aggregate(game_started_result) }
 
   subject do
-    board_aggregate = AggregateTestHelper.load_board_aggregate(game_start_result)
-
     discarded_card = board_aggregate.current_hand_cards.first
     command_bus.execute(Commands::ExchangeCard.new(discarded_card, game_number))
   end
 
   describe '正常系' do
-    context '初回のゲーム開始でAggregateが存在する状態になること' do
-      it 'Aggregateの状態が正しいこと' do
+    context '初回のゲーム開始時でAggregateが存在する状態になること' do
+      it 'ゲームが開始する状態Aggregateの状態が正しいこと' do
         board_aggregate = AggregateTestHelper.load_board_aggregate(subject)
 
         aggregate_failures do
@@ -34,7 +31,7 @@ RSpec.describe 'カード交換コマンド後のAggregateの詳細状態' do
 
       it 'AggregateのTrashの状態を確認する' do
         board_aggregate = AggregateTestHelper.load_board_aggregate(subject)
-        expect(board_aggregate.empty_trash?).to eq(true)
+        expect(board_aggregate.empty_trash?).to eq(false)
       end
 
       it 'Deckが最初のカードを引いた分プラス1枚減っていること' do
@@ -60,8 +57,8 @@ RSpec.describe 'カード交換コマンド後のAggregateの詳細状態' do
         aggregate_failures do
           expect(first_aggregate.game_number).to eq(second_aggregate.game_number)
           expect(second_aggregate.remaining_deck_count).to eq(first_aggregate.remaining_deck_count - 1)
-          expect(first_aggregate.empty_trash?).to eq(true)
-          expect(second_aggregate.empty_trash?).to eq(true)
+          expect(first_aggregate.empty_trash?).to eq(false)
+          expect(second_aggregate.empty_trash?).to eq(false)
         end
       end
 

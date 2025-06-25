@@ -1,0 +1,35 @@
+# frozen_string_literal: true
+
+class CommandBusAssembler
+  def self.build: (
+    ?logger: ::Logger?,
+    ?event_publishers: ::Array[EventPublisher]?,
+    ?failure_handler: _FailureHandler?,
+    ?simulator: ::Simulator?
+  ) -> ::CommandBus
+
+  def build: () -> CommandBus
+
+  private
+
+  def self.new: (
+    ::Logger?,
+    Array[EventPublisher]?,
+    _FailureHandler?,
+    ::Simulator?
+  ) -> instance
+
+  attr_reader logger: ::Logger
+  attr_reader event_publishers: Array[EventPublisher]
+  attr_reader failure_handler: _FailureHandler?
+  attr_reader simulator: Simulator?
+
+  def initialize: (
+    ::Logger?,
+    Array[EventPublisher]?,
+    _FailureHandler?,
+    ::Simulator?
+  ) -> void
+
+  def build_default_publishers: () -> Array[EventPublisher]
+end

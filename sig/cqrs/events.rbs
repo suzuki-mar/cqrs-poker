@@ -17,6 +17,9 @@ interface _EventClass
   def from_event: (Event) -> _Event
 end
 
+# 注意: _Eventインターフェースに共通のメソッド（event_id, game_number, event_type, 
+# to_event_data, to_serialized_hash, assign_ids等）が定義されているため、
+# 各イベントクラスではinitializeメソッドと固有のattr_readerのみ定義すること
 class GameStartedEvent
   include _Event
   extend _EventClass
@@ -24,6 +27,7 @@ class GameStartedEvent
   def initialize: (HandSet initial_hand) -> void
 
   private
+
   attr_reader initial_hand: HandSet
 end
 
@@ -34,6 +38,7 @@ class CardExchangedEvent
   def initialize: (HandSet::Card discarded_card, HandSet::Card new_card) -> void
 
   private
+
   attr_reader discarded_card: HandSet::Card
   attr_reader new_card: HandSet::Card
 end
@@ -50,11 +55,11 @@ class GameEndedEvent
 end
 
 class EventBus
-  def initialize: (EventPublisher) -> void
+  def initialize: (Array[EventPublisher]) -> void
   def publish: (_Event) -> void
 
   private
-  attr_reader event_publisher: EventPublisher
+  attr_reader publishers: Array[EventPublisher]
 end
 
 module EventFinalizer

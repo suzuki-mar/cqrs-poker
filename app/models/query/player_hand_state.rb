@@ -26,6 +26,17 @@ module Query
       order(last_event_id: :desc).first
     end
 
+    def self.build_for_game_start(game_number:, initial_hand:, evaluate:, event_id:)
+      new(
+        game_number: game_number.value,
+        hand_set: initial_hand.map(&:to_s),
+        current_rank: evaluate,
+        current_turn: 1,
+        status: 'started',
+        last_event_id: event_id.value
+      )
+    end
+
     private
 
     def validate_hand_set_format
