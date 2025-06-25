@@ -88,8 +88,13 @@ module Aggregates
     def apply_of_game_started(event)
       @game_started = true
       event_data = event.to_event_data
+
+      initial_deck_cards = event_data[:initial_deck]
+      @deck = Deck.new(cards: initial_deck_cards)
+
       initial_hand_cards = event_data[:initial_hand]
       initial_hand_cards.each { |card| @deck.remove(card) }
+
       @current_turn = 1
       @current_hand = HandSet.build(initial_hand_cards)
     end

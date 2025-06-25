@@ -24,11 +24,12 @@ class GameStartedEvent
   include _Event
   extend _EventClass
 
-  def initialize: (HandSet initial_hand) -> void
+  def initialize: (HandSet initial_hand, Array[HandSet::Card] initial_deck_cards) -> void
 
   private
 
   attr_reader initial_hand: HandSet
+  attr_reader initial_deck_cards: Array[HandSet::Card]
 end
 
 class CardExchangedEvent

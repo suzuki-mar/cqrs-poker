@@ -58,5 +58,32 @@ RSpec.describe 'ゲーム開始コマンド後のAggregateの詳細状態' do
         expect(first_aggregate.game_number).not_to eq(second_aggregate.game_number)
       end
     end
+
+    context '5枚だけの山札で復元テスト' do
+      let!(:custom_deck_card_strings) do
+        GameRule.generate_standard_deck.map(&:to_s).take(GameRule::MAX_HAND_SIZE)
+      end
+
+      let!(:command_bus) do
+        failure_handler = DummyFailureHandler.new
+        CommandBusAssembler.build(
+          failure_handler: failure_handler,
+          deck_card_strings: custom_deck_card_strings
+        )
+      end
+
+      it 'イベントをapplyして復元したアグリゲートの手札が元の手札と同じになること' do
+        # 最初のゲーム開始
+        result = subject
+        original_hand_cards = AggregateTestHelper.load_board_aggregate(result).current_hand_cards
+
+        # 新しい空のアグリゲートを作成してイベントをapply
+        new_aggregate = Aggregates::BoardAggregate.build_for_new_game
+        new_aggregate.apply(result.event)
+
+        # 手札が同じであることを確認
+        expect(new_aggregate.current_hand_cards).to eq(original_hand_cards)
+      end
+    end
   end
 end

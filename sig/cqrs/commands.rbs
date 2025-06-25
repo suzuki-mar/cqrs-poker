@@ -111,7 +111,7 @@ module CommandHandlers
     attr_reader aggregate_store: Aggregates::Store
     attr_reader custom_deck_cards: Array[HandSet::Card]?
     def initialize: (EventBus, ?Array[HandSet::Card]?) -> void
-    def append_event_to_store!: (HandSet) -> CommandResult
+    def append_event_to_store!: (HandSet, Array[HandSet::Card]) -> CommandResult
   end
 
   class InGame
