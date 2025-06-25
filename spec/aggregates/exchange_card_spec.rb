@@ -2,9 +2,8 @@ require 'rails_helper'
 
 RSpec.describe 'カード交換コマンド後のAggregateの詳細状態' do
   let!(:command_bus) do
-    logger = TestLogger.new
     failure_handler = DummyFailureHandler.new
-    CommandBusAssembler.build(logger: logger, failure_handler: failure_handler)
+    CommandBusAssembler.build(failure_handler: failure_handler)
   end
 
   let(:aggregate_store) { Aggregates::Store.new }

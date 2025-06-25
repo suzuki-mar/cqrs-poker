@@ -262,14 +262,12 @@ class CommandResult
 end
 
 class CommandBus
-  def initialize: (::Logger logger, EventBus event_bus, _FailureHandler? failure_handler) -> void
+  def initialize: (EventBus event_bus, _FailureHandler? failure_handler) -> void
   def execute: (_Command command) -> CommandResult
 
   private
   attr_reader event_bus: EventBus
-  attr_reader logger: Logger
   attr_reader failure_handler: _FailureHandler
-  def log_error_if_needed: ((CommandErrors::InvalidCommand | CommandErrors::VersionConflict)?) -> void
   def build_handler: (_Command) -> (CommandHandlers::GameStart | CommandHandlers::InGame)
   def handle_failure_if_needed: (CommandResult) -> void
 end

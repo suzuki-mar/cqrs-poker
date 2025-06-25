@@ -8,7 +8,6 @@ RSpec.describe 'カード交換をするユースケース' do
   let(:command_bus) do
     failure_handler = DummyFailureHandler.new
     CommandBusAssembler.build(
-      logger: logger,
       failure_handler: failure_handler
     )
   end
@@ -106,18 +105,6 @@ RSpec.describe 'カード交換をするユースケース' do
         expect(same_suit_count).to eq(1)
       end
 
-      it 'カード交換時にinfoログが出力されること' do
-        subject
-
-        log = logger.messages_for_level(:info).last
-        event_store_holder = Aggregates::Store.new
-        last_event = event_store_holder.latest_event
-
-        expect(last_event).to be_a(CardExchangedEvent)
-        expect(log).to match(/捨てたカード: #{discarded_card}/)
-        expect(log).to match(/引いたカード: #{last_event.to_event_data[:new_card]}/)
-      end
-
       context 'バージョン履歴' do
         context 'バージョン履歴が揃っている場合' do
           it 'バージョン履歴をアップデートをしていること' do
@@ -203,13 +190,17 @@ RSpec.describe 'カード交換をするユースケース' do
 
     context 'デッキが空のときに交換した場合' do
       before do
-        deck_size = HandSet::Card::VALID_SUITS.size * HandSet::Card::VALID_NUMBERS.size
-        hand_size = GameRule::MAX_HAND_SIZE
-        exchange_count = deck_size - hand_size
-        exchange_count.times do
-          command_bus.execute(Commands::ExchangeCard.new(player_hand_state.refreshed_hand_set.cards.first,
-                                                         game_number))
+        empty_deck_by_exchanging_all_cards = proc do
+          deck_size = HandSet::Card::VALID_SUITS.size * HandSet::Card::VALID_NUMBERS.size
+          hand_size = GameRule::MAX_HAND_SIZE
+          exchange_count = deck_size - hand_size
+          exchange_count.times do
+            command_bus.execute(Commands::ExchangeCard.new(player_hand_state.refreshed_hand_set.cards.first,
+                                                           game_number))
+          end
         end
+
+        empty_deck_by_exchanging_all_cards.call
       end
       subject do
         card = player_hand_state.refreshed_hand_set.cards.first

@@ -45,7 +45,5 @@ RSpec.shared_examples 'return command error use_case' do |error_code|
     result = subject
     expect(result.error).to be_a(CommandErrors::InvalidCommand)
     expect(result.error.error_code).to eq(error_code)
-
-    expect(logger.messages_for_level(:warn)).not_to be_empty
   end
 end

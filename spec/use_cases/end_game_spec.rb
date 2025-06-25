@@ -1,49 +1,33 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-require 'support/use_case_shared'
 
 RSpec.describe 'ゲーム終了ユースケース' do
-  let!(:logger) { TestLogger.new }
   let!(:command_bus) do
     failure_handler = DummyFailureHandler.new
     CommandBusAssembler.build(
-      logger: logger,
       failure_handler: failure_handler
     )
   end
 
+  let(:game_number) { QueryService.latest_game_number }
+  let(:command) { Commands::EndGame.new(game_number) }
+  subject(:result) { command_bus.execute(command) }
+
+  before do
+    # ゲームを開始して、終了可能な状態にしておく
+    command_bus.execute(Commands::GameStart.new)
+  end
+
   context '正常系' do
-    before do
-      # まずゲームを開始しておく
-      command_bus.execute(Commands::GameStart.new)
-    end
-
-    subject do
-      game_number = QueryService.latest_game_number
-      command_bus.execute(Commands::EndGame.new(game_number))
-    end
-
-    it 'GameEndedEventがEventStoreに記録されること' do
-      game_number = QueryService.latest_game_number
-      command_bus.execute(Commands::EndGame.new(game_number))
-      event = Aggregates::Store.new.latest_event
-      expect(event.event_type).to eq(GameEndedEvent.event_type)
-    end
-
-    it 'ログにゲーム終了が記録されること' do
-      game_number = QueryService.latest_game_number
-      command_bus.execute(Commands::EndGame.new(game_number))
-      expect(logger.messages_for_level(:info)).to include(/イベント受信: ゲーム終了/)
+    it 'イベントが発行されること' do
+      expect(result.event).to be_a(GameEndedEvent)
     end
 
     it 'PlayerHandStateの状態が終了済みになること' do
-      game_number = QueryService.latest_game_number
-      command_bus.execute(Commands::EndGame.new(game_number))
-
+      result
       query_service = QueryService.new(game_number)
       player_hand_summary = query_service.player_hand_summary
-
       expect(player_hand_summary[:status]).to eq('ended')
     end
 
@@ -63,8 +47,6 @@ RSpec.describe 'ゲーム終了ユースケース' do
     # it_behaves_like 'version history update examples' # from support/use_case_shared
 
     describe 'ゲーム終了の捨て札管理' do
-      let!(:game_number) { QueryService.latest_game_number }
-
       it 'バージョン履歴で捨て札のバージョンだけは上がっていないこと' do
         query_service = QueryService.new(game_number)
         all_versions_before = query_service.all_projection_versions
@@ -112,6 +94,14 @@ RSpec.describe 'ゲーム終了ユースケース' do
       end
 
       it_behaves_like 'return command error use_case', :game_already_ended
+    end
+
+    it '存在しないゲームを指定した場合、エラーが返されること' do
+      non_existent_game_number = GameNumber.new(999_999)
+      result = command_bus.execute(Commands::EndGame.new(non_existent_game_number))
+
+      expect(result.error).to be_a(CommandErrors::InvalidCommand)
+      expect(result.error.error_code).to eq(:game_not_found)
     end
   end
 end

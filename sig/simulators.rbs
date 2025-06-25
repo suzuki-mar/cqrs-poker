@@ -1,10 +1,10 @@
 class Simulator
   include _EventSubscriber
   include _FailureHandler
-  attr_reader event_handled: bool
   attr_reader failure_handled: bool
-  def initialize: () -> void
-  def run: (_Command command) -> CommandResult
+  def initialize: (untyped logger) -> void
+  def run: (CommandBus command_bus) -> untyped
+  def determine_next_command: (_Event event) -> (_Command | nil)
 
   private
 

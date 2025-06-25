@@ -8,11 +8,9 @@
 require 'rails_helper'
 
 RSpec.describe 'バージョン競合ユースケース' do
-  let!(:logger) { TestLogger.new }
   let!(:command_bus) do
     failure_handler = DummyFailureHandler.new
     CommandBusAssembler.build(
-      logger: logger,
       failure_handler: failure_handler
     )
   end
@@ -28,14 +26,13 @@ RSpec.describe 'バージョン競合ユースケース' do
       command_bus.execute(Commands::ExchangeCard.new(card, game_number))
     end
 
-    it '警告ログが出力されること' do
+    it 'バージョン競合エラーが返されること' do
       allow_any_instance_of(Aggregates::Store).to receive(:next_available_version_for_game).and_return(1)
       # 2枚目のカードを取得
       card2 = query_service.player_hand_set.cards.first
       command_bus.execute(Commands::ExchangeCard.new(card2, game_number))
       result = command_bus.execute(Commands::ExchangeCard.new(card2, game_number))
       expect(result.error).to be_a(CommandErrors::VersionConflict)
-      expect(logger.messages_for_level(:warn).last).to match(/コマンド失敗: バージョン競合/)
     end
 
     it 'バージョン競合時にEventレコードが作成されないこと' do

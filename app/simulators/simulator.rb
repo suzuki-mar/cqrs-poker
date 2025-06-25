@@ -1,39 +1,44 @@
 # frozen_string_literal: true
 
 class Simulator
-  attr_reader :event_handled, :failure_handled
+  attr_reader :failure_handled
 
-  def initialize
-    @event_handled = false
+  def initialize(logger)
+    @logger = logger
     @failure_handled = false
   end
 
-  def run(command)
-    @command_bus.execute(command)
+  # シミュレーションを開始する
+  def run(command_bus)
+    @command_bus = command_bus
+    @command_bus.execute(Commands::GameStart.new)
   end
 
   def handle_event(event)
-    @event_handled = true
-    Rails.logger.info "Simulator: イベントが完了しました - #{event.class.name}"
+    @logger.info "Simulator: イベント[#{event.class.name}]を処理しました。"
 
-    # 特定のイベントに対する追加処理があればここに記述
-    case event
-    when GameStartedEvent
-      Rails.logger.info 'Simulator: ゲームが開始されました'
-    when CardExchangedEvent
-      Rails.logger.info 'Simulator: カードが交換されました'
-    when GameEndedEvent
-      Rails.logger.info 'Simulator: ゲームが終了しました'
-    end
+    next_command = determine_next_command(event)
+    @command_bus.execute(next_command) if next_command
   end
 
   def handle_failure(error)
     @failure_handled = true
-    # ここでコマンド失敗時の共通処理を定義できる
-    Rails.logger.error "[HANDLER] コマンド失敗がハンドルされました: #{error.message}" if error
+    @logger.error "[HANDLER] コマンド失敗がハンドルされました: #{error.message}" if error
   end
 
   private
 
-  attr_reader :command_bus
+  def determine_next_command(event)
+    case event
+    when GameStartedEvent
+      query_service = QueryService.new(event.game_number)
+      card_to_discard = query_service.player_hand_set.cards.first
+      Commands::ExchangeCard.new(card_to_discard, event.game_number)
+    when CardExchangedEvent
+      Commands::EndGame.new(event.game_number)
+    when GameEndedEvent
+      # ゲームが終了したら、シミュレーションを停止する (次のコマンドは発行しない)
+      nil
+    end
+  end
 end

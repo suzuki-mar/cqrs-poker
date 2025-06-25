@@ -3,37 +3,29 @@
 require 'rails_helper'
 
 RSpec.describe 'ゲーム開始' do
-  let!(:logger) { TestLogger.new }
   let!(:command_bus) do
     failure_handler = DummyFailureHandler.new
     CommandBusAssembler.build(
-      logger: logger,
       failure_handler: failure_handler
     )
   end
 
   context '正常系' do
-    describe 'ゲームが正しく開始されること' do
-      let!(:command) { Commands::GameStart.new }
-
+    context 'ゲームが正しく開始されること' do
       subject { command_bus.execute(Commands::GameStart.new) }
 
-      it 'イベントが正しく発行されること' do
+      it 'イベントが発行されること' do
         subject
-
         event_store_holder = Aggregates::Store.new
         event = event_store_holder.latest_event
-        expect(event.event_type).to eq(GameStartedEvent.event_type)
-      end
-
-      it 'ログが正しく出力されること' do
-        subject
-
-        expect(logger.messages_for_level(:info)).to include(/イベント受信: ゲーム開始/)
+        expect(event).to be_a(GameStartedEvent)
       end
 
       it 'ゲーム状態が正しく更新されること' do
         subject
+        query_service = QueryService.build_last_game_query_service
+        player_hand_summary = query_service.player_hand_summary
+        expect(player_hand_summary[:hand_set].size).to eq(5)
 
         display_data = QueryService.last_game_player_hand_summary
 

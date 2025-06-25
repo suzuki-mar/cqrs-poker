@@ -45,4 +45,8 @@ class TestLogger
   def messages_for_level(level)
     @messages.select { |msg| msg[:level] == level }.pluck(:message)
   end
+
+  def full_log
+    @messages.pluck(:message).join("\n")
+  end
 end

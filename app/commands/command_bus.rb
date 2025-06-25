@@ -1,7 +1,6 @@
 class CommandBus
-  def initialize(logger, event_bus, failure_handler)
+  def initialize(event_bus, failure_handler)
     @event_bus = event_bus
-    @logger = logger
     @failure_handler = failure_handler
   end
 
@@ -16,16 +15,7 @@ class CommandBus
 
   private
 
-  attr_reader :event_bus, :logger, :failure_handler
-
-  def log_error_if_needed(error)
-    case error
-    when CommandErrors::InvalidCommand
-      logger.warn "[警告] コマンド失敗: #{error.message}"
-    when CommandErrors::VersionConflict
-      logger.warn '[警告] コマンド失敗: バージョン競合'
-    end
-  end
+  attr_reader :event_bus, :failure_handler
 
   def build_handler(command)
     handler = if command.is_a?(Commands::GameStart)
@@ -46,6 +36,5 @@ class CommandBus
     return unless error
 
     failure_handler&.handle_failure(error)
-    log_error_if_needed(error)
   end
 end
