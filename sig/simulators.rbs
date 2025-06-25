@@ -1,12 +1,23 @@
+class LogWriter
+  def initialize: (untyped logger) -> void
+  def initial_hand: (HandSet hand_set) -> void
+  def event_processed: (String event_class_name) -> void
+  def command_failure_handled: (String error_message) -> void
+
+  private
+  attr_reader logger: untyped
+end
+
 class Simulator
   include _EventSubscriber
   include _FailureHandler
   attr_reader failure_handled: bool
   def initialize: (untyped logger) -> void
-  def run: (CommandBus command_bus) -> untyped
-  def determine_next_command: (_Event event) -> (_Command | nil)
+  def run: (CommandBus command_bus) -> void
 
   private
 
   attr_reader command_bus: CommandBus
+  attr_reader log_writer: LogWriter
+  def determine_next_command: (untyped event) -> (Commands::ExchangeCard | Commands::EndGame | nil)
 end

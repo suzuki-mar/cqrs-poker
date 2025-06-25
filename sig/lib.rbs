@@ -1,10 +1,21 @@
 # frozen_string_literal: true
 
+class GameRule
+  MAX_HAND_SIZE: Integer
+  WHEEL_HIGH_CARD_INT: Integer
+  DECK_FULL_SIZE: Integer
+
+  def self.generate_standard_deck: () -> Array[HandSet::Card]
+  def self.generate_deck_from_strings: (Array[String]) -> Array[HandSet::Card]
+  def self.wheel_straight?: (Array[Integer]) -> bool
+end
+
 class CommandBusAssembler
   def self.build: (
     ?event_publishers: ::Array[EventPublisher]?,
     ?failure_handler: _FailureHandler?,
-    ?simulator: ::Simulator?
+    ?simulator: ::Simulator?,
+    ?deck_card_strings: Array[String]?
   ) -> ::CommandBus
 
   def build: () -> CommandBus
@@ -14,18 +25,22 @@ class CommandBusAssembler
   def self.new: (
     Array[EventPublisher]?,
     _FailureHandler?,
-    ::Simulator?
+    ::Simulator?,
+    Array[String]?
   ) -> instance
 
   attr_reader event_publishers: Array[EventPublisher]
   attr_reader failure_handler: _FailureHandler?
   attr_reader simulator: Simulator?
+  attr_reader deck_card_strings: Array[String]?
 
   def initialize: (
     Array[EventPublisher]?,
     _FailureHandler?,
-    ::Simulator?
+    ::Simulator?,
+    Array[String]?
   ) -> void
 
   def build_default_publishers: () -> Array[EventPublisher]
+  def build_deck_cards: () -> Array[HandSet::Card]
 end

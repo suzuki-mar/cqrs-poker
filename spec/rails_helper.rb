@@ -72,6 +72,11 @@ RSpec.configure do |config|
   # FactoryBotの設定を追加
   config.include FactoryBot::Syntax::Methods
   config.use_transactional_fixtures = true
+
+  # CustomFakerの重複カード履歴をテスト前にリセット
+  config.before(:each) do
+    CustomFaker::Card.reset_unique_cards
+  end
 end
 
 Shoulda::Matchers.configure do |config|

@@ -4,29 +4,36 @@ class Simulator
   attr_reader :failure_handled
 
   def initialize(logger)
-    @logger = logger
+    @log_writer = LogWriter.new(logger)
     @failure_handled = false
   end
 
-  # シミュレーションを開始する
   def run(command_bus)
     @command_bus = command_bus
-    @command_bus.execute(Commands::GameStart.new)
+    command_bus.execute(Commands::GameStart.new)
   end
 
   def handle_event(event)
-    @logger.info "Simulator: イベント[#{event.class.name}]を処理しました。"
+    log_writer.event_processed(event.class.name)
+
+    if event.is_a?(GameStartedEvent)
+      query_service = QueryService.new(event.game_number)
+      hand_set = query_service.player_hand_set
+      log_writer.initial_hand(hand_set)
+    end
 
     next_command = determine_next_command(event)
-    @command_bus.execute(next_command) if next_command
+    command_bus.execute(next_command) if next_command
   end
 
   def handle_failure(error)
     @failure_handled = true
-    @logger.error "[HANDLER] コマンド失敗がハンドルされました: #{error.message}" if error
+    log_writer.command_failure_handled(error.message) if error
   end
 
   private
+
+  attr_reader :log_writer, :command_bus
 
   def determine_next_command(event)
     case event

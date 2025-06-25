@@ -48,13 +48,13 @@ module Aggregates
 
     def load_board_aggregate_for_current_state(game_number)
       events = load_all_events_in_order(game_number)
-      aggregate = Aggregates::BoardAggregate.new(game_number: game_number)
+      aggregate = Aggregates::BoardAggregate.build_for_existing_game(game_number)
       events.each { |event| aggregate.apply(event) }
       aggregate
     end
 
-    def build_board_aggregate
-      Aggregates::BoardAggregate.new(game_number: nil)
+    def build_board_aggregate(custom_deck_cards = nil)
+      Aggregates::BoardAggregate.build_for_new_game(custom_deck_cards: custom_deck_cards)
     end
 
     delegate :current_version_for_game, to: :Event

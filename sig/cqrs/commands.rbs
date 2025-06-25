@@ -80,7 +80,6 @@ module CommandErrors
 end
 
 interface _CommandHandler
-  def initialize: (EventBus) -> void
   def handle: (_Command) -> CommandResult
 end
 
@@ -110,11 +109,15 @@ module CommandHandlers
     private
     attr_reader event_bus: EventBus
     attr_reader aggregate_store: Aggregates::Store
+    attr_reader custom_deck_cards: Array[HandSet::Card]?
+    def initialize: (EventBus, ?Array[HandSet::Card]?) -> void
     def append_event_to_store!: (HandSet) -> CommandResult
   end
 
   class InGame
     include _CommandHandler
+
+    def initialize: (EventBus) -> void
 
     private
     attr_reader event_bus: EventBus
@@ -158,7 +161,7 @@ module Aggregates
     def load_board_aggregate_for_current_state: (
       GameNumber
     ) -> Aggregates::BoardAggregate
-    def build_board_aggregate: () -> Aggregates::BoardAggregate
+    def build_board_aggregate: (?Array[HandSet::Card]?) -> Aggregates::BoardAggregate
 
     private
     def persist_and_finalize_event: (_Event, GameNumber) -> CommandResult
@@ -195,7 +198,9 @@ module Aggregates
     attr_reader game_ended: bool
     attr_reader current_hand: HandSet?
 
-    def initialize: (?game_number: GameNumber?) -> void
+    def self.build_for_new_game: (?custom_deck_cards: Array[HandSet::Card]?) -> BoardAggregate
+    def self.build_for_existing_game: (GameNumber) -> BoardAggregate
+
     def apply: (_Event event) -> void
     def draw_initial_hand: () -> HandSet
     def draw: () -> HandSet::Card
@@ -211,6 +216,7 @@ module Aggregates
     def empty_trash?: () -> bool
 
     private
+    def initialize: (?game_number: GameNumber?, ?custom_deck_cards: Array[HandSet::Card]?) -> void
     attr_reader current_hand_set: HandSet?
     def apply_game_started_event: (GameStartedEvent) -> void
     def apply_card_exchanged_event: (CardExchangedEvent) -> void
@@ -225,15 +231,12 @@ module Aggregates
     attr_reader cards: Array[HandSet::Card]
 
     def self.from_cards: (Array[HandSet::Card]) -> Deck
-    def initialize: () -> void
+    def initialize: (?cards: Array[HandSet::Card]?) -> void
     def draw_initial_hand: () -> HandSet
     def remove: (HandSet::Card) -> void
     def draw: () -> HandSet::Card
     def remaining_count: () -> Integer
     def has?: (HandSet::Card) -> bool
-
-    private
-    def generate_initial_cards: () -> Array[HandSet::Card]
   end
 
   class Trash
@@ -262,12 +265,13 @@ class CommandResult
 end
 
 class CommandBus
-  def initialize: (EventBus event_bus, _FailureHandler? failure_handler) -> void
+  def initialize: (EventBus event_bus, _FailureHandler? failure_handler, ?Array[HandSet::Card]? custom_deck_cards) -> void
   def execute: (_Command command) -> CommandResult
 
   private
   attr_reader event_bus: EventBus
   attr_reader failure_handler: _FailureHandler
+  attr_reader custom_deck_cards: Array[HandSet::Card]?
   def build_handler: (_Command) -> (CommandHandlers::GameStart | CommandHandlers::InGame)
   def handle_failure_if_needed: (CommandResult) -> void
 end

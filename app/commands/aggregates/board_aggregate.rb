@@ -4,9 +4,21 @@ module Aggregates
   class BoardAggregate
     attr_reader :game_number, :deck, :trash, :current_turn, :last_event_id, :game_started, :game_ended, :current_hand
 
-    def initialize(game_number: nil)
+    # 新規ゲーム用（game_numberはまだない、山札はカスタマイズ可能）
+    def self.build_for_new_game(custom_deck_cards: nil)
+      new(game_number: nil, custom_deck_cards: custom_deck_cards)
+    end
+
+    # 既存ゲーム復元用（game_numberあり、山札は標準）
+    def self.build_for_existing_game(game_number)
+      new(game_number: game_number, custom_deck_cards: nil)
+    end
+
+    private_class_method :new
+
+    def initialize(game_number: nil, custom_deck_cards: nil)
       @game_number = game_number
-      @deck = Deck.new
+      @deck = custom_deck_cards ? Deck.new(cards: custom_deck_cards) : Deck.new
       @trash = Trash.new
       @game_started = false
       @game_ended = false

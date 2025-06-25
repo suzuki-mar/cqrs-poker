@@ -1,7 +1,8 @@
 class CommandBus
-  def initialize(event_bus, failure_handler)
+  def initialize(event_bus, failure_handler, custom_deck_cards = nil)
     @event_bus = event_bus
     @failure_handler = failure_handler
+    @custom_deck_cards = custom_deck_cards
   end
 
   def execute(command)
@@ -15,11 +16,11 @@ class CommandBus
 
   private
 
-  attr_reader :event_bus, :failure_handler
+  attr_reader :event_bus, :failure_handler, :custom_deck_cards
 
   def build_handler(command)
     handler = if command.is_a?(Commands::GameStart)
-                CommandHandlers::GameStart.new(event_bus)
+                CommandHandlers::GameStart.new(event_bus, custom_deck_cards)
               else
                 CommandHandlers::InGame.new(event_bus)
               end

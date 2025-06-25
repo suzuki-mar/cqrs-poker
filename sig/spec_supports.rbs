@@ -1,0 +1,107 @@
+# テスト用の各種サポートクラス・モジュールの型定義
+
+# テスト専用のロガー
+# 本番用のRails.logger等と異なり、出力内容を配列（messages）で保持
+class TestLogger
+  LEVELS: Array[Symbol]
+  LEVEL_MAP: Hash[Symbol, Integer]
+
+  attr_reader messages: Array[Hash[Symbol, untyped]]
+  attr_accessor level: Integer
+
+  def initialize: () -> void
+  def clear: () -> void
+  def silence: (?Symbol) { () -> void } -> void
+  def messages_for_level: (Symbol) -> Array[String]
+  def full_log: () -> String
+
+  # 動的に定義されるログメソッド
+  def debug: (String) -> void
+  def info: (String) -> void
+  def warn: (String) -> void
+  def error: (String) -> void
+  def fatal: (String) -> void
+end
+
+# テスト用のダミーFailureHandler
+class DummyFailureHandler
+  def handle_failure: (StandardError) -> void
+end
+
+# テスト用のAggregateヘルパー
+module AggregateTestHelper
+  def self.load_board_aggregate: (CommandResult) -> Aggregates::BoardAggregate
+end
+
+# テスト用のFakerモジュール
+module CustomFaker
+  def self.suit: () -> String
+  def self.rank: () -> String
+  def self.number_rank: () -> String
+  def self.face_number: () -> String
+  def self.valid_card: () -> HandSet::Card
+  def self.invalid_card: () -> HandSet::Card
+  def self.card_with_suit: (String) -> HandSet::Card
+  def self.card_with_rank: (String) -> HandSet::Card
+  def self.card_with_number: (String) -> HandSet::Card
+  def self.card_of_face_number: (String) -> HandSet::Card
+
+  def self.high_card_hand: () -> HandSet
+  def self.one_pair_hand: () -> HandSet
+  def self.two_pair_hand: () -> HandSet
+  def self.straight_flush_hand: () -> HandSet
+  def self.four_of_a_kind_hand: () -> HandSet
+  def self.full_house_hand: () -> HandSet
+  def self.flush_hand: () -> HandSet
+  def self.straight_hand: () -> HandSet
+  def self.three_of_a_kind_hand: () -> HandSet
+  def self.royal_flush_hand: () -> HandSet
+  def self.from_cards: (Array[HandSet::Card]) -> HandSet
+  def self.not_in_hand_card: (HandSet) -> HandSet::Card
+
+  def self.event_type: () -> String
+  def self.event_data: () -> String
+  def self.occurred_at: () -> Time
+  def self.ended_at: () -> Time
+  def self.event_id: () -> Integer
+  def self.hand_set_strings: (?Integer) -> Array[String]
+  def self.random_status: () -> Symbol
+  def self.random_current_turn: () -> Integer
+  def self.status: () -> Symbol
+  def self.turn: () -> Integer
+  def self.game_number: () -> Integer
+
+  module Card
+    def self.suit: () -> String
+    def self.number: () -> String
+    def self.number_rank: () -> String
+    def self.face_number: () -> String
+    def self.valid_card: () -> HandSet::Card
+    def self.invalid_card: () -> HandSet::Card
+    def self.card_with_suit: (String) -> HandSet::Card
+    def self.card_with_number: (String) -> HandSet::Card
+    def self.reset_unique_cards: () -> void
+
+    private
+    def self.card_str: () -> String
+    def self.unique_card_str: () -> String
+  end
+
+  module Hand
+    def self.high_card_hand: () -> HandSet
+    def self.one_pair_hand: () -> HandSet
+    def self.two_pair_hand: () -> HandSet
+    def self.three_of_a_kind_hand: () -> HandSet
+    def self.straight_hand: () -> HandSet
+    def self.flush_hand: () -> HandSet
+    def self.full_house_hand: () -> HandSet
+    def self.four_of_a_kind_hand: () -> HandSet
+    def self.straight_flush_hand: () -> HandSet
+    def self.royal_flush_hand: () -> HandSet
+    def self.from_cards: (Array[HandSet::Card]) -> HandSet
+    def self.not_in_hand_card: (HandSet) -> HandSet::Card
+
+    private
+    def self.create_hand: (Array[HandSet::Card]) -> HandSet
+  end
+end

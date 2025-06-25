@@ -4,8 +4,8 @@ module Aggregates
   class Deck
     attr_reader :cards
 
-    def initialize
-      @cards = generate_initial_cards
+    def initialize(cards: nil)
+      @cards = cards || GameRule.generate_standard_deck
     end
 
     def draw_initial_hand
@@ -16,8 +16,8 @@ module Aggregates
     def draw
       raise ArgumentError, 'デッキの残り枚数が不足しています' if cards.empty?
 
-      drawn_card = cards.sample
-      @cards = cards - [drawn_card]
+      drawn_card = cards.first
+      @cards = cards.drop(1)
       drawn_card
     end
 
@@ -34,15 +34,6 @@ module Aggregates
 
     def has?(card)
       cards.include?(card)
-    end
-
-    private
-
-    def generate_initial_cards
-      suit_number_pairs = HandSet::Card::VALID_SUITS.product(HandSet::Card::VALID_NUMBERS)
-      suit_number_pairs.map do |suit, number|
-        HandSet.build_card("#{suit}#{number}")
-      end
     end
   end
 end

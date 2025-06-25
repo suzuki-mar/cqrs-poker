@@ -2,15 +2,16 @@
 
 module CommandHandlers
   class GameStart
-    def initialize(event_bus)
+    def initialize(event_bus, custom_deck_cards = nil)
       @event_bus = event_bus
+      @custom_deck_cards = custom_deck_cards
       @aggregate_store = Aggregates::Store.new
     end
 
     def handle(command)
       raise ArgumentError, '不正なコマンドです' unless command.is_a?(Commands::GameStart)
 
-      board = aggregate_store.build_board_aggregate
+      board = aggregate_store.build_board_aggregate(custom_deck_cards)
 
       initial_hand = board.start_game
       result = append_event_to_store!(initial_hand)
@@ -24,7 +25,7 @@ module CommandHandlers
 
     private
 
-    attr_reader :event_bus, :aggregate_store
+    attr_reader :event_bus, :aggregate_store, :custom_deck_cards
 
     def append_event_to_store!(initial_hand)
       event = GameStartedEvent.new(initial_hand)
