@@ -368,6 +368,14 @@ GEM
     spring (4.2.1)
     spring-commands-rspec (1.0.4)
       spring (>= 0.9.1)
+    sqlite3 (2.7.0-aarch64-linux-gnu)
+    sqlite3 (2.7.0-aarch64-linux-musl)
+    sqlite3 (2.7.0-arm-linux-gnu)
+    sqlite3 (2.7.0-arm-linux-musl)
+    sqlite3 (2.7.0-arm64-darwin)
+    sqlite3 (2.7.0-x86_64-darwin)
+    sqlite3 (2.7.0-x86_64-linux-gnu)
+    sqlite3 (2.7.0-x86_64-linux-musl)
     sshkit (1.24.0)
       base64
       logger
@@ -470,6 +478,7 @@ DEPENDENCIES
   solid_queue
   spring
   spring-commands-rspec
+  sqlite3 (>= 2.1)
   steep
   thruster
   tty-prompt

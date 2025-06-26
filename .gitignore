@@ -54,6 +54,7 @@ capybara-*.html
 /coverage/
 /spec/tmp
 *.orig
+db/*.sqlite3
 
 # Node specific (if using webpacker or other JS tools)
 /node_modules
