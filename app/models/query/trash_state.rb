@@ -3,6 +3,7 @@ module Query
     include DefineCurrentTurnColumn
     include DefineLastEventIdColumn
     include DefineGameNumberColumn
+    serialize :discarded_cards, JSON
 
     validate :validate_discarded_cards_format
 
