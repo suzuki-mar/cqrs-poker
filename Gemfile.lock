@@ -211,7 +211,6 @@ GEM
       racc
     pastel (0.8.0)
       tty-color (~> 0.5)
-    pg (1.5.9)
     pp (0.6.2)
       prettyprint
     prettyprint (0.2.0)
@@ -460,7 +459,6 @@ DEPENDENCIES
   kamal
   lefthook (~> 1.11)
   pastel
-  pg (~> 1.1)
   pry-byebug
   puma (>= 5.0)
   rails (~> 8.0.1)

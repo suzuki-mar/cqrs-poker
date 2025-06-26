@@ -3,6 +3,7 @@
 
 class Event < ApplicationRecord
   include DefineGameNumberColumn
+  serialize :event_data, JSON
 
   EVENT_TYPES = %w[game_started card_exchanged game_ended invalid_command_event].freeze
 
