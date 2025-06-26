@@ -11,8 +11,6 @@ class EventPublisher
     event_listeners.each do |listener|
       subscribe(listener)
     end
-
-    subscribe(projection)
   end
 
   def broadcast(event_name, *args)

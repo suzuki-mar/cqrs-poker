@@ -68,6 +68,7 @@ group :development, :test do
 end
 
 group :test do
+  gem 'sqlite3', '>= 2.1'
   gem 'rspec-parameterized', group: :test
   gem 'shoulda-matchers', '~> 5.0'
 end
