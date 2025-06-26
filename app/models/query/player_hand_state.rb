@@ -3,6 +3,7 @@ module Query
     include DefineCurrentTurnColumn
     include DefineLastEventIdColumn
     include DefineGameNumberColumn
+    serialize :hand_set, JSON
 
     enum :status, { initial: 0, started: 1, ended: 2 }
 

@@ -2,8 +2,9 @@ source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem 'rails', '~> 8.0.1'
+gem 'sqlite3', '~> 1.4'
 # Use postgresql as the database for Active Record
-gem 'pg', '~> 1.1'
+# gem 'pg', '~> 1.1'
 # Use the Puma web server [https://github.com/puma/puma]
 gem 'puma', '>= 5.0'
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
@@ -67,6 +68,7 @@ group :development, :test do
 end
 
 group :test do
+  gem 'sqlite3', '>= 2.1'
   gem 'rspec-parameterized', group: :test
   gem 'shoulda-matchers', '~> 5.0'
 end

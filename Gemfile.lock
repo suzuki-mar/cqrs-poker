@@ -211,7 +211,6 @@ GEM
       racc
     pastel (0.8.0)
       tty-color (~> 0.5)
-    pg (1.5.9)
     pp (0.6.2)
       prettyprint
     prettyprint (0.2.0)
@@ -368,6 +367,14 @@ GEM
     spring (4.2.1)
     spring-commands-rspec (1.0.4)
       spring (>= 0.9.1)
+    sqlite3 (2.7.0-aarch64-linux-gnu)
+    sqlite3 (2.7.0-aarch64-linux-musl)
+    sqlite3 (2.7.0-arm-linux-gnu)
+    sqlite3 (2.7.0-arm-linux-musl)
+    sqlite3 (2.7.0-arm64-darwin)
+    sqlite3 (2.7.0-x86_64-darwin)
+    sqlite3 (2.7.0-x86_64-linux-gnu)
+    sqlite3 (2.7.0-x86_64-linux-musl)
     sshkit (1.24.0)
       base64
       logger
@@ -452,7 +459,6 @@ DEPENDENCIES
   kamal
   lefthook (~> 1.11)
   pastel
-  pg (~> 1.1)
   pry-byebug
   puma (>= 5.0)
   rails (~> 8.0.1)
@@ -470,6 +476,7 @@ DEPENDENCIES
   solid_queue
   spring
   spring-commands-rspec
+  sqlite3 (>= 2.1)
   steep
   thruster
   tty-prompt
