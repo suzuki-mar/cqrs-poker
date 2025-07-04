@@ -1,0 +1,127 @@
+class ExchangeCardSelector
+  def self.execute: (
+      ReadModels::PlayerHandState player_hand_state,
+      ReadModels::TrashState trash_state,
+      ?Array[_ExchangeCardStrategy] strategies
+    ) -> EvaluationResult
+
+  def initialize: (
+      ReadModels::PlayerHandState player_hand_state,
+      ReadModels::TrashState trash_state,
+      ?Array[_ExchangeCardStrategy] strategies
+    ) -> void
+  def execute: () -> EvaluationResult
+
+  attr_reader hand_set: HandSet
+  attr_reader trash_state: ReadModels::TrashState
+  attr_reader strategies: Array[_ExchangeCardStrategy]
+
+
+  interface _ExchangeCardStrategy
+    def initialize: (HandSet, ReadModels::TrashState) -> void
+    def execute: () -> EvaluationResult
+  end
+
+  class EvaluationResult
+    module Confidence
+      ALREADY_COMPLETE: Integer
+      ONE_AWAY_GUARANTEED: Integer
+      HIGH: Integer
+      MEDIUM: Integer
+      LOW: Integer
+      DO_NOT_EXCHANGE: Integer
+    end
+
+    attr_reader confidence: Integer
+    attr_reader exchange_cards: Array[HandSet::Card]
+
+    def initialize: (Integer confidence, Array[HandSet::Card] exchange_cards) -> void
+    def self.build_do_not_exchange: () -> EvaluationResult
+    def self.build_no_exchange_needed: () -> EvaluationResult
+    def better_than?: (EvaluationResult other_result) -> bool
+
+    private
+
+    def raise_if_invalid_comparison: (EvaluationResult other_result) -> void
+  end
+
+  class HighCardStrategy
+    include _ExchangeCardStrategy
+
+    private
+
+    attr_reader hand_set: HandSet
+    attr_reader trash_state: ReadModels::TrashState
+  end
+
+  class FullHouseStrategy
+    include _ExchangeCardStrategy
+
+    private
+
+    attr_reader hand_set: HandSet
+    attr_reader trash_state: ReadModels::TrashState
+    def build_exchange_strategy_result: (Hash[String, Array[HandSet::Card]] pairs) -> EvaluationResult
+    def determine_confidence: (Hash[String, Array[HandSet::Card]] pairs, Array[HandSet::Card] exchange_cards) -> Integer
+  end
+
+  class FourOfAKindStrategy
+    include _ExchangeCardStrategy
+
+    private
+
+    attr_reader hand_set: HandSet
+    attr_reader trash_state: ReadModels::TrashState
+    def find_three_card_number: (HandSet hand_set) -> String?
+    def build_exchange_result: (HandSet hand_set, String three_card_number) -> EvaluationResult
+    def count_trashed_cards_by_number: (ReadModels::TrashState trash_state, String target_number) -> Integer
+  end
+
+  class CompleteHandStrategy
+    include _ExchangeCardStrategy
+
+    private
+
+    attr_reader hand_set: HandSet
+    attr_reader trash_state: ReadModels::TrashState
+    def straight_or_flush_completed?: (String rank) -> bool
+    def evaluate_with_analyzer: (_HandSetAnalyzer analyzer) -> EvaluationResult?
+    def evaluate_with_pair_check: (Array[HandSet::Card] exchange_cards) -> EvaluationResult
+  end
+
+  interface _HandSetAnalyzer
+    def initialize: (HandSet hand_set) -> void
+    def matching_card_count: () -> Integer
+    def exchange_cards_for_count: (Integer count) -> Array[HandSet::Card]
+  end
+
+  class StraightAnalyzer
+    include _HandSetAnalyzer
+
+    private
+
+    attr_reader hand_set: HandSet
+    def sorted_card_values: () -> Array[Integer]
+    def sorted_cards: () -> Array[HandSet::Card]
+    def calculate_max_consecutive: (Array[Integer] values) -> Integer
+    def consecutive_numbers?: (Integer current, Integer previous) -> bool
+    def find_non_consecutive_cards: (Array[HandSet::Card] cards, Range[Integer] consecutive_range) -> Array[HandSet::Card]
+    def select_lowest_value_cards: (Array[HandSet::Card] cards, Integer count) -> Array[HandSet::Card]
+    def find_longest_consecutive_range: (Array[Integer] values) -> Range[Integer]
+    def find_consecutive_sequences: (Array[Integer] values) -> Array[[Integer, Integer]]
+    def handle_single_value_case: (Array[Integer] values) -> Array[[Integer, Integer]]
+    def process_consecutive_calculation: (Array[Integer] values) -> Array[[Integer, Integer]]
+    def scan_consecutive_values: (Array[Integer] values, Array[[Integer, Integer]] sequences) -> Array[[Integer, Integer]]
+    def update_sequence_state: (Integer current_value, Integer previous_value, Array[[Integer, Integer]] sequences, Integer current_start, Integer current_length) -> [Integer, Integer]
+    def finalize_sequences: (Array[[Integer, Integer]] sequences, Integer current_start, Integer current_length) -> Array[[Integer, Integer]]
+    def card_value: (HandSet::Card card) -> Integer
+  end
+
+  class FlushAnalyzer
+    include _HandSetAnalyzer
+
+    private
+
+    attr_reader hand_set: HandSet
+  end
+end

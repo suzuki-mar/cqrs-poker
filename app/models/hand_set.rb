@@ -39,12 +39,16 @@ class HandSet
     @cards = cards.freeze
   end
 
+  def as_json(_options = nil)
+    cards.map(&:to_s)
+  end
+
   def rebuild_after_exchange(discarded_card, new_card)
     raise ArgumentError, 'discarded_cardはCardでなければなりません' unless HandSet.card?(discarded_card)
     raise ArgumentError, 'new_cardはCardでなければなりません' unless HandSet.card?(new_card)
 
     # バージョン競合チェックの後でカードの存在チェックを行う
-    index = @cards.find_index { |card| card == discarded_card }
+    index = cards.find_index { |card| card == discarded_card }
     return nil if index.nil?
 
     new_cards = @cards.dup
@@ -68,17 +72,17 @@ class HandSet
   end
 
   def valid?
-    self.class.valid_cards?(@cards)
+    self.class.valid_cards?(cards)
   end
 
   def fetch_by_number(number)
     raise ArgumentError, 'Invalid number' unless number.is_a?(Integer) &&
                                                  number.between?(1, ::GameRule::MAX_HAND_SIZE)
 
-    @cards[number - 1]
+    cards[number - 1]
   end
 
-  delegate :include?, to: :@cards
+  delegate :include?, to: :cards
 
   def <=>(other)
     raise ArgumentError, 'HandSet expected' unless other.is_a?(HandSet)

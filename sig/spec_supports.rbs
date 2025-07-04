@@ -23,17 +23,14 @@ class TestLogger
   def fatal: (String) -> void
 end
 
-# テスト用のダミーFailureHandler
 class DummyFailureHandler
   def handle_failure: (StandardError) -> void
 end
 
-# テスト用のAggregateヘルパー
 module AggregateTestHelper
   def self.load_board_aggregate: (CommandResult) -> Aggregates::BoardAggregate
 end
 
-# テスト用のFakerモジュール
 module CustomFaker
   def self.suit: () -> String
   def self.rank: () -> String
@@ -104,4 +101,9 @@ module CustomFaker
     private
     def self.create_hand: (Array[HandSet::Card]) -> HandSet
   end
+end
+
+module SimulatorTestHelper
+  def self.build_card: (String) -> HandSet::Card
+  def self.build_hand: (Array[String]) -> HandSet
 end

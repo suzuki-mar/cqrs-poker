@@ -4,6 +4,10 @@ class QueryService
     @projection_versions = nil
   end
 
+  def player_hand_state
+    ReadModels::PlayerHandState.load_by_game_number(game_number)
+  end
+
   def player_hand_set
     phs = ReadModels::PlayerHandState.load_by_game_number(game_number)
     phs.hand_set

@@ -155,6 +155,7 @@ class QueryService
   def initialize: (GameNumber) -> void
   def trash_state: () -> ReadModels::TrashState
   def player_hand_set: () -> HandSet
+  def player_hand_state: () -> ReadModels::PlayerHandState
   def all_projection_versions: () -> Array[ReadModels::ProjectionVersions::VersionInfo]
   def player_hand_summary: () -> {
     hand_set: Array[String],
